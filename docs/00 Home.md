@@ -19,6 +19,8 @@ A **stress test of Grok Build (Grok 4.5 / Super Heavy)** — how far a capable a
 | [[Decisions]] | Product / design calls (why unrest, mobile, etc.) |
 | [[Shipping]] | Deploy, marketing, domains |
 | [[Next Steps]] | GitHub, backlog, future |
+| [[Public Launch Checklist]] | Before flipping the repo public |
+| [[screenshots/README\|Screenshots]] | How images appear on GitHub |
 
 ## For coding agents
 

@@ -2,11 +2,25 @@
 
 A browser-based cyberpunk crime-war strategy game **inspired by** classic 1990s overlord strategy (*Chaos Overlords* vibes — original build, not an official remake).
 
-**Live:** https://sector-lords.pages.dev
+**Play:** https://sector-lords.pages.dev  
+**Author:** Morgan Sinclair ([@morganinc](https://x.com/morganinc))
 
 Also used as a **Grok Build (Grok 4.5) evaluation**: ship a multi-system game under human direction. Notes live in the Obsidian vault under [`docs/`](docs/00%20Home.md).
 
 Cyberpunk crime war on a city grid: hire weird gangs, claim sectors, influence sites, raise **unrest** (and police heat), card-style combat, full turn resolve.
+
+## Screenshots
+
+<!-- Add PNGs under docs/screenshots/ then uncomment / fix filenames.
+     See docs/screenshots/README.md and docs/Public Launch Checklist.md -->
+
+<!--
+![Title menu](docs/screenshots/menu.png)
+![War table board](docs/screenshots/board.png)
+![Combat / hire](docs/screenshots/combat.png)
+-->
+
+_Drop `menu.png`, `board.png`, and `combat.png` into [`docs/screenshots/`](docs/screenshots/README.md), then remove the HTML comment markers above._
 
 ## Stack
 
@@ -64,4 +78,8 @@ tests/             # vitest
 
 ## License / IP
 
-Original-inspired systems and **new** names/art. Not affiliated with Stick Man Games or New World Computing. Do not ship trademarked original assets.
+Source code: **[MIT](./LICENSE)** (Copyright © 2026 Morgan Sinclair).
+
+Game systems and art are original. Project is **inspired by** classic overlord-strategy games; **not** affiliated with Stick Man Games, New World Computing, or any rights holders of *Chaos Overlords*. Do not ship trademarked original assets from that game.
+
+Music credited to Gemini on the in-game menu.
