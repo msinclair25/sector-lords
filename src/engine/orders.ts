@@ -133,6 +133,20 @@ export function cancelOrder(state: GameState, orderId: string, playerId: PlayerI
   };
 }
 
+/** Stable unique id — never reuse after deaths (length-based ids used to collide). */
+export function nextHireGangId(
+  state: GameState,
+  playerId: PlayerId,
+): string {
+  let n = Object.keys(state.gangs).length + 1;
+  let id = `gang_${playerId}_${n}_${state.turn}`;
+  while (state.gangs[id]) {
+    n += 1;
+    id = `gang_${playerId}_${n}_${state.turn}`;
+  }
+  return id;
+}
+
 export function hireGang(
   state: GameState,
   playerId: PlayerId,
@@ -147,7 +161,7 @@ export function hireGang(
   if (!sector || sector.owner !== playerId) throw new Error('Must hire into owned sector.');
   if (!state.hirePool.some((h) => h.defId === defId)) throw new Error('Gang not in hire pool.');
 
-  const id = `gang_${playerId}_${Object.keys(state.gangs).length + 1}_${state.turn}`;
+  const id = nextHireGangId(state, playerId);
   const gangs = {
     ...state.gangs,
     [id]: {
@@ -164,7 +178,8 @@ export function hireGang(
     ...state.sectors,
     [sectorId]: {
       ...sector,
-      gangIds: [...sector.gangIds, id],
+      // Drop stale ids first so re-hires never leave ghost stacks
+      gangIds: [...sector.gangIds.filter((g) => g !== id && state.gangs[g]), id],
     },
   };
   const players = {

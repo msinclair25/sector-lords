@@ -439,6 +439,26 @@ export class Game3DScene extends Phaser.Scene {
       state.gangs[this.selectedGang]?.ownerId === this.controller.humanId &&
       state.gangs[this.selectedGang]!.hp > 0;
 
+    // Hire drawer open → board picks are deploy targets only (no accidental move/claim).
+    if (this.drawer === 'hire') {
+      this.selected = id;
+      if (mine.length > 0) {
+        const free = mine.find((gid) => !state.orders.some((o) => o.gangId === gid));
+        this.selectedGang = free ?? mine[0]!;
+      } else {
+        this.selectedGang = null;
+      }
+      const owned = s.owner === this.controller.humanId;
+      this.statusMsg = owned
+        ? `Hire deploys to block ${id}. Pick a crew card to hire.`
+        : `Block ${id} is not yours — click an owned block, then hire.`;
+      this.refreshBoard();
+      this.board?.focusSector(id);
+      this.render();
+      SFX.play(owned ? 'ui' : 'error');
+      return;
+    }
+
     // Click the pending order's destination (or origin) to cancel
     if (gangStillValid) {
       const pending = state.orders.find(
@@ -498,8 +518,9 @@ export class Game3DScene extends Phaser.Scene {
       return;
     }
 
-    // Just focus the sector (no crew here)
+    // Just focus the sector (no crew here) — clear crew pick so hire/deploy matches the tile
     this.selected = id;
+    this.selectedGang = null;
     this.statusMsg = this.describeSelection();
     this.refreshBoard();
     this.board?.focusSector(id);
@@ -1564,9 +1585,12 @@ export class Game3DScene extends Phaser.Scene {
     if (this.drawer === 'hire') {
       const cash = me.cash;
       const deploy = this.hireDeploySector();
-      const deployLine = deploy
-        ? `Deploys to <b>block ${escapeHtml(deploy.sid)}</b> (${escapeHtml(deploy.reason)}). Click an owned tile first to choose.`
-        : `No owned block — claim turf before hiring.`;
+      const deployLine =
+        deploy && 'sid' in deploy
+          ? `Deploys to <b>block ${escapeHtml(deploy.sid)}</b> (${escapeHtml(deploy.reason)}). Click another owned tile to change — board clicks won’t move crews while hiring.`
+          : deploy && 'error' in deploy
+            ? escapeHtml(deploy.error)
+            : `No owned block — claim turf before hiring.`;
       const cards = state.hirePool
         .map((h, i) => {
           const d = gangDefById(h.defId);
@@ -2530,11 +2554,15 @@ export class Game3DScene extends Phaser.Scene {
 
   /**
    * Where a hire should land:
-   * 1) Selected tile if you own it
+   * 1) Selected tile if you own it (explicit pick)
    * 2) Selected crew's block if you own it
-   * 3) Home / first owned block
+   * 3) Only if nothing is selected: first owned / home block
+   * Never silently place on a different tile than a non-owned selection.
    */
-  private hireDeploySector(): { sid: SectorId; reason: string } | null {
+  private hireDeploySector():
+    | { sid: SectorId; reason: string }
+    | { error: string }
+    | null {
     const state = this.controller.state;
     const human = this.controller.humanId;
     const owned = (id: SectorId | null | undefined): id is SectorId =>
@@ -2542,6 +2570,12 @@ export class Game3DScene extends Phaser.Scene {
 
     if (owned(this.selected)) {
       return { sid: this.selected, reason: 'selected block' };
+    }
+    // User clicked a non-owned tile — do not quietly hire elsewhere
+    if (this.selected && !owned(this.selected)) {
+      return {
+        error: `Block ${this.selected} is not yours. Click an owned block, then hire.`,
+      };
     }
     const gangSector = this.selectedGang
       ? state.gangs[this.selectedGang]?.sectorId
@@ -2568,13 +2602,11 @@ export class Game3DScene extends Phaser.Scene {
       this.render();
       return;
     }
-    // Warn when selection wasn't valid deploy ground (used to silently hire elsewhere)
-    if (
-      this.selected &&
-      this.selected !== deploy.sid &&
-      this.controller.state.sectors[this.selected]?.owner !== this.controller.humanId
-    ) {
-      // still hire to fallback — message after success will name the real block
+    if ('error' in deploy) {
+      this.statusMsg = deploy.error;
+      SFX.play('error');
+      this.render();
+      return;
     }
 
     const beforeGangs = new Set(Object.keys(this.controller.state.gangs));

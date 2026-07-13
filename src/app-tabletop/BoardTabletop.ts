@@ -838,16 +838,22 @@ export class BoardTabletop {
   ): void {
     host.replaceChildren();
     const tileId = host.parentElement?.dataset?.sectorId;
-    // Dedupe + drop stale ids so a corrupted list never draws the same face twice
-    const seen = new Set<string>();
-    for (const gid of gangIds) {
-      if (seen.has(gid)) continue;
-      seen.add(gid);
-      if (seen.size > 3) break;
+    // Living crews on this tile only
+    const living = gangIds.filter((gid) => {
       const g = state.gangs[gid];
-      if (!g || g.hp <= 0) continue;
-      if (tileId && g.sectorId !== tileId) continue;
-
+      return !!g && g.hp > 0 && (!tileId || g.sectorId === tileId);
+    });
+    const unique = [...new Set(living)];
+    // Selected / newest-hire first so stacked tiles always show the focused crew
+    unique.sort((a, b) => {
+      if (a === selectedCrewId) return -1;
+      if (b === selectedCrewId) return 1;
+      return 0;
+    });
+    const maxShow = 4;
+    const shown = unique.slice(0, maxShow);
+    for (const gid of shown) {
+      const g = state.gangs[gid]!;
       const def = gangDefById(g.defId);
       const img = document.createElement('img');
       const src = def.art.portrait ?? 'assets/portraits/neon_jackals.jpg';
@@ -863,6 +869,13 @@ export class BoardTabletop {
       img.className = g.ownerId === this.humanId ? 'mine' : 'enemy';
       if (gid === selectedCrewId) img.classList.add('selected-crew');
       host.appendChild(img);
+    }
+    if (unique.length > maxShow) {
+      const more = document.createElement('span');
+      more.className = 'sl-portrait-more';
+      more.textContent = `+${unique.length - maxShow}`;
+      more.title = `${unique.length - maxShow} more crew on this block`;
+      host.appendChild(more);
     }
   }
 
@@ -897,10 +910,18 @@ export class BoardTabletop {
           const g = state.gangs[id];
           return g && g.hp > 0 && g.sectorId === sector.id;
         });
-        // Unique ids only
+        // Unique ids only; selected first so hire/focus always paints
         const unique = [...new Set(living)];
-        const need = Math.min(3, unique.length);
-        const sig = unique.slice(0, 3).join(',');
+        unique.sort((a, b) => {
+          if (a === selectedCrewId) return -1;
+          if (b === selectedCrewId) return 1;
+          return 0;
+        });
+        const maxShow = 4;
+        const shown = unique.slice(0, maxShow);
+        const need =
+          shown.length + (unique.length > maxShow ? 1 : 0); // +1 for +N chip
+        const sig = `${shown.join(',')}|${unique.length}|${selectedCrewId ?? ''}`;
         if (
           portraits.childElementCount !== need ||
           portraits.dataset.gangSig !== sig
@@ -911,7 +932,7 @@ export class BoardTabletop {
           this.rectCache = null;
         } else {
           portraits.querySelectorAll('img').forEach((img, i) => {
-            const gid = unique[i];
+            const gid = shown[i];
             img.classList.toggle('selected-crew', !!gid && gid === selectedCrewId);
           });
         }

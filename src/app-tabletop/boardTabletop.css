@@ -1132,6 +1132,25 @@
   box-shadow: 0 0 16px rgba(255, 193, 74, 0.8);
 }
 
+.sl-tile-portraits .sl-portrait-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-family: "Orbitron", "Segoe UI", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fcee0a;
+  background: rgba(8, 6, 18, 0.92);
+  border: 1px solid rgba(252, 238, 10, 0.55);
+  box-shadow: 0 0 10px rgba(252, 238, 10, 0.25);
+  pointer-events: none;
+}
+
 /* ── Order routes (multi-crew pathing) ── */
 .sl-order-routes {
   position: absolute;
