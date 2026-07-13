@@ -32,7 +32,7 @@ const WIN_CARDS: EndingCardDef[] = [
     subhead: 'The city stamped your name. Twice. In triplicate.',
     body: 'You did not “liberate” Sector Lords — you balanced the ledger until the rivals ran out of ink. Congratulations: the skyline now reports to your voicemail.',
     thankYou: 'Thanks for playing Sector Lords. The gangs clocked out. You did not.',
-    art: '/assets/districts/corporate.jpg',
+    art: '/assets/endings/win_crown_of_receipts.jpg',
   },
   {
     id: 'win_neon_eulogy',
@@ -43,7 +43,7 @@ const WIN_CARDS: EndingCardDef[] = [
     subhead: 'The billboards learned your silhouette.',
     body: 'Every block you claimed still hums at 3 a.m. The city does not cheer — it recalibrates. Somewhere a rival deletes a save that never existed.',
     thankYou: 'Thank you for the interference pattern. Come burn another skyline sometime.',
-    art: '/assets/districts/neon_strip.jpg',
+    art: '/assets/endings/win_neon_eulogy.jpg',
   },
   {
     id: 'win_polite_apocalypse',
@@ -54,7 +54,7 @@ const WIN_CARDS: EndingCardDef[] = [
     subhead: 'You won. Please take a pamphlet.',
     body: 'The last rival sent a fruit basket and a ceasefire emoji. You sent them to the hire pool. Democracy is dead; the hire screen thrives.',
     thankYou: 'Thanks for playing. Tip your dealers. Feed your crews. Touch grass (the digital kind).',
-    art: '/assets/events/tone_funny.jpg',
+    art: '/assets/endings/win_polite_apocalypse.jpg',
   },
   {
     id: 'win_static_gospel',
@@ -65,7 +65,7 @@ const WIN_CARDS: EndingCardDef[] = [
     subhead: 'The radio found a god and it was payroll.',
     body: 'Saints of the undergrid whisper your gang tags like prayers. Or spam. Hard to tell. Either way, the map is yours and the dice finally shut up.',
     thankYou: 'Gratitude protocol complete. You made the weird city weirder. We appreciate that.',
-    art: '/assets/events/tone_weird.jpg',
+    art: '/assets/endings/win_static_gospel.jpg',
   },
   {
     id: 'win_iron_procession',
@@ -76,7 +76,7 @@ const WIN_CARDS: EndingCardDef[] = [
     subhead: 'Boots on asphalt. Flags on rooftops. Silence where rivals used to shout.',
     body: 'You took the grid the old-fashioned way: orders, blood, and a refusal to retreat. The city bends. Your crews still want overtime.',
     thankYou: 'Thank you, Overlord. The war table remembers. So do we.',
-    art: '/assets/combat/clash_impact.jpg',
+    art: '/assets/endings/win_iron_procession.jpg',
   },
   {
     id: 'win_void_signature',
@@ -87,7 +87,7 @@ const WIN_CARDS: EndingCardDef[] = [
     subhead: 'You signed in heat, not ink.',
     body: 'There is no parade — only a quieter police scanner and a skyline that finally loads your color. Ownership is a mood. You set it.',
     thankYou: 'Thanks for the campaign. The void keeps your seat warm.',
-    art: '/assets/districts/lab.jpg',
+    art: '/assets/endings/win_void_signature.jpg',
   },
 ];
 
@@ -101,7 +101,7 @@ const LOSE_CARDS: EndingCardDef[] = [
     subhead: 'You were not bankrupt. You were “restructured.”',
     body: 'A rival filed the winning paperwork first. Your crews still look heroic in the after-action photos. Shame about the fine print.',
     thankYou: 'Thanks for playing Sector Lords. Defeat builds character. And loadouts. Try again.',
-    art: '/assets/events/tone_grim.jpg',
+    art: '/assets/endings/lose_beautiful_audit.jpg',
   },
   {
     id: 'lose_kind_obituary',
@@ -112,7 +112,7 @@ const LOSE_CARDS: EndingCardDef[] = [
     subhead: 'The city wrote you out of the subtitle track.',
     body: 'Your colors fade from the map like a bad ad buy. The blocks you loved still exist — they just answer to someone else’s ringtone.',
     thankYou: 'Thank you for the attempt. Ghosts get free rematches.',
-    art: '/assets/districts/slums.jpg',
+    art: '/assets/endings/lose_kind_obituary.jpg',
   },
   {
     id: 'lose_participation_trophy',
@@ -123,7 +123,7 @@ const LOSE_CARDS: EndingCardDef[] = [
     subhead: 'It is shaped like a slightly smaller skyline.',
     body: 'You almost had it, which is what people say at funerals and board meetings. The hire pool sends thoughts and expensive prayers.',
     thankYou: 'Thanks for the chaos. Come back when the dice are sober.',
-    art: '/assets/events/free_pizza_friday.jpg',
+    art: '/assets/endings/lose_participation_trophy.jpg',
   },
   {
     id: 'lose_heat_death',
@@ -134,7 +134,7 @@ const LOSE_CARDS: EndingCardDef[] = [
     subhead: 'The police did not win. Time did. Or a rival. Same difference.',
     body: 'Orders stacked. Cash thinned. Someone else owned the arithmetic. The city does not do moral victories — only sector counts.',
     thankYou: 'Thanks for standing in the fire. Next run, bring a bigger ledger.',
-    art: '/assets/events/blackout.jpg',
+    art: '/assets/endings/lose_heat_death.jpg',
   },
   {
     id: 'lose_wrong_channel',
@@ -145,7 +145,7 @@ const LOSE_CARDS: EndingCardDef[] = [
     subhead: 'The winners heard a different song.',
     body: 'Somewhere a seagull owns three docks and more hope than you had on turn twelve. The map is honest. Brutal, but honest.',
     thankYou: 'Thank you for tuning in. Static loves company. Replay loves you more.',
-    art: '/assets/events/ufo_over_docks.jpg',
+    art: '/assets/endings/lose_wrong_channel.jpg',
   },
   {
     id: 'lose_courtesy_defeat',
@@ -156,7 +156,7 @@ const LOSE_CARDS: EndingCardDef[] = [
     subhead: 'The rival left your HQ standing out of pity. Or aesthetics.',
     body: 'You can rebrand this as “early access feedback for the enemy AI.” They will not read it. You will. At 2 a.m. With a new strategy.',
     thankYou: 'Thanks for playing. Rage-quit is free. So is another Jack In.',
-    art: '/assets/districts/industrial.jpg',
+    art: '/assets/endings/lose_courtesy_defeat.jpg',
   },
 ];
 
