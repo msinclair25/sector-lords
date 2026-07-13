@@ -2902,6 +2902,12 @@ export class Game3DScene extends Phaser.Scene {
         : youDef
           ? 'YOU ARE DEFENDING'
           : 'RIVAL CLASH';
+      // Legend matches visual layout: YOU always on the left when you're in the fight
+      const stanceMap = youAtk
+        ? 'LEFT = YOU (ASSAULT) · RIGHT = ENEMY'
+        : youDef
+          ? 'LEFT = YOU (DEFEND) · RIGHT = ENEMY ASSAULT'
+          : 'LEFT = ASSAULT · RIGHT = DEFENDERS';
       const edgeLabel = youAtk ? 'YOUR EDGE' : youDef ? 'THEIR EDGE' : 'ATK EDGE';
       const dieHint = youAtk
         ? `under ${winPct} = YOU win · power is not a guarantee`
@@ -2982,7 +2988,7 @@ export class Game3DScene extends Phaser.Scene {
           </div>
           <div class="slb-stance ${youAtk ? 'you' : youDef ? 'you def' : ''}" data-stance>
             <span class="stance-pill ${youAtk || youDef ? 'you' : ''}">${stanceLine}</span>
-            <span class="stance-map">LEFT = ASSAULT · RIGHT = DEFENDERS</span>
+            <span class="stance-map">${stanceMap}</span>
           </div>
 
           <div class="slb-arena">
@@ -3033,9 +3039,29 @@ export class Game3DScene extends Phaser.Scene {
             <div class="slb-phase" data-phase>LOCKING TARGETS…</div>
 
             <div class="slb-crew">
+              ${
+                // YOU always on the left in the crew strip when you're in the fight
+                youDef
+                  ? `
+              <div class="side def ${defAllegiance}">
+                <div class="badge ${defAllegiance}">YOU</div>
+                <div class="role">YOUR DEFENSE</div>
+                <div class="who">${escapeHtml(result.defenderPlayerName ?? 'Defender')}</div>
+                <div class="crew">${escapeHtml(defNames)}</div>
+                <div class="pow"><span>PWR</span>${defPow}</div>
+              </div>
+              <div class="mid">${edgeLabel}<b>${winPct}%</b></div>
+              <div class="side atk ${atkAllegiance}">
+                <div class="badge ${atkAllegiance}">ENEMY</div>
+                <div class="role">THEIR ASSAULT</div>
+                <div class="who">${escapeHtml(result.attackerPlayerName ?? 'Attacker')}</div>
+                <div class="crew">${escapeHtml(atkNames)}</div>
+                <div class="pow">${atkPow}<span>PWR</span></div>
+              </div>`
+                  : `
               <div class="side atk ${atkAllegiance}">
                 <div class="badge ${atkAllegiance}">${youAtk ? 'YOU' : 'ENEMY'}</div>
-                <div class="role">ASSAULT</div>
+                <div class="role">${youAtk ? 'YOUR ASSAULT' : 'ASSAULT'}</div>
                 <div class="who">${escapeHtml(result.attackerPlayerName ?? 'Attacker')}</div>
                 <div class="crew">${escapeHtml(atkNames)}</div>
                 <div class="pow"><span>PWR</span>${atkPow}</div>
@@ -3043,11 +3069,12 @@ export class Game3DScene extends Phaser.Scene {
               <div class="mid">${edgeLabel}<b>${winPct}%</b></div>
               <div class="side def ${defAllegiance}">
                 <div class="badge ${defAllegiance}">${youDef ? 'YOU' : 'ENEMY'}</div>
-                <div class="role">DEFENDERS</div>
+                <div class="role">${youAtk ? 'THEIR DEFENSE' : 'DEFENDERS'}</div>
                 <div class="who">${escapeHtml(result.defenderPlayerName ?? 'Defender')}</div>
                 <div class="crew">${escapeHtml(defNames)}</div>
                 <div class="pow">${defPow}<span>PWR</span></div>
-              </div>
+              </div>`
+              }
             </div>
 
             <div class="slb-dice" data-dice>
