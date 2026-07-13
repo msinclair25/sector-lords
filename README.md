@@ -11,16 +11,9 @@ Cyberpunk crime war on a city grid: hire weird gangs, claim sectors, influence s
 
 ## Screenshots
 
-<!-- Add PNGs under docs/screenshots/ then uncomment / fix filenames.
-     See docs/screenshots/README.md and docs/Public Launch Checklist.md -->
-
-<!--
-![Title menu](docs/screenshots/menu.png)
-![War table board](docs/screenshots/board.png)
-![Combat / hire](docs/screenshots/combat.png)
--->
-
-_Drop `menu.png`, `board.png`, and `combat.png` into [`docs/screenshots/`](docs/screenshots/README.md), then remove the HTML comment markers above._
+| Menu | War table | In-game |
+|:----:|:---------:|:-------:|
+| ![Title menu](docs/screenshots/menu.png) | ![Board](docs/screenshots/game1.png) | ![Gameplay](docs/screenshots/game2.png) |
 
 ## Stack
 

@@ -15,13 +15,13 @@ Images in this folder show up on the repo homepage when linked from the root `RE
 
 `https://github.com/msinclair25/sector-lords`
 
-## Recommended set (3)
+## Current set (in repo README)
 
 | File | Shot |
 |------|------|
-| `menu.png` | Title logo + Jack In |
-| `board.png` | War table + crews / order routes |
-| `combat.png` or `hire.png` | Card duel **or** hire pool |
+| `menu.png` | Title menu |
+| `game1.png` | War table / board |
+| `game2.png` | Gameplay |
 
 ## Capture tips
 
