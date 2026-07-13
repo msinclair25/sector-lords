@@ -2791,10 +2791,10 @@ export class Game3DScene extends Phaser.Scene {
           : 'RIVAL CLASH';
       const edgeLabel = youAtk ? 'YOUR EDGE' : youDef ? 'THEIR EDGE' : 'ATK EDGE';
       const dieHint = youAtk
-        ? 'under edge = YOU win the assault'
+        ? `under ${winPct} = YOU win · power is not a guarantee`
         : youDef
-          ? 'under edge = they take the block · high roll helps YOU'
-          : 'under edge = attacker wins';
+          ? `under ${winPct} = they take the block · high roll helps YOU`
+          : `under ${winPct} = attacker wins · not guaranteed`;
       const dieNeed = youAtk
         ? `Need under <b>${winPct}</b> for YOU`
         : youDef

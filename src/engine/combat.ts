@@ -151,12 +151,23 @@ export function siteCombatBonus(state: GameState, sectorId: SectorId, ownerId: P
   return bonus;
 }
 
+/**
+ * Probabilistic assault odds from power totals.
+ * Mild curve so big edges convert more often (e.g. ~18 vs 5 → high 80%s),
+ * while even fights stay near a coin flip. Always clamped 5–95% (never sure).
+ * Same formula for human and AI — difficulty should live in armies, not dice.
+ */
 export function estimateWinChance(attackerPower: number, defenderPower: number): number {
   if (attackerPower <= 0 && defenderPower <= 0) return 0.5;
   if (defenderPower <= 0) return 0.95;
   if (attackerPower <= 0) return 0.05;
   const ratio = attackerPower / (attackerPower + defenderPower);
-  return Math.min(0.95, Math.max(0.05, 0.15 + ratio * 0.7));
+  // Slightly super-linear in ratio so leads pull harder than the old flat 0.15+0.7*ratio
+  let p = 0.1 + Math.pow(ratio, 1.18) * 0.86;
+  // Soft thresholds: clear superiority is rewarded for both player and AI
+  if (attackerPower >= defenderPower * 2) p += 0.07;
+  if (attackerPower >= defenderPower * 3) p += 0.04;
+  return Math.min(0.95, Math.max(0.05, p));
 }
 
 export function previewAttack(
@@ -334,8 +345,12 @@ export function resolveCombat(
   }
 
   const summary = attackerWon
-    ? `${state.players[attackerId]?.name ?? 'Attacker'} seizes ${sectorId} (roll ${(roll * 100).toFixed(0)}% < ${(preview.winChance * 100).toFixed(0)}%).`
-    : `${state.players[attackerId]?.name ?? 'Attacker'} fails to take ${sectorId} (roll ${(roll * 100).toFixed(0)}% ≥ ${(preview.winChance * 100).toFixed(0)}%).`;
+    ? `${state.players[attackerId]?.name ?? 'Attacker'} seizes ${sectorId} (roll ${(roll * 100).toFixed(0)} < ${ (preview.winChance * 100).toFixed(0)}% edge).`
+    : `${state.players[attackerId]?.name ?? 'Attacker'} fails to take ${sectorId} — ${
+        preview.winChance >= 0.65
+          ? 'favorable fight, bad roll'
+          : 'assault failed'
+      } (roll ${(roll * 100).toFixed(0)} ≥ ${(preview.winChance * 100).toFixed(0)}% edge).`;
 
   return {
     sectorId,

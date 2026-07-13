@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createNewGame, previewAttack, resolveCombat, livingGangsOf } from '../../src/engine';
+import {
+  createNewGame,
+  estimateWinChance,
+  previewAttack,
+  resolveCombat,
+  livingGangsOf,
+} from '../../src/engine';
 
 describe('combat', () => {
   it('estimates win chance between 5% and 95%', () => {
@@ -14,6 +20,21 @@ describe('combat', () => {
     const prev = previewAttack(state, [gang.id], enemySector.id, human);
     expect(prev.winChance).toBeGreaterThanOrEqual(0.05);
     expect(prev.winChance).toBeLessThanOrEqual(0.95);
+  });
+
+  it('rewards big power edges without guaranteeing wins', () => {
+    const even = estimateWinChance(10, 10);
+    expect(even).toBeGreaterThan(0.45);
+    expect(even).toBeLessThan(0.55);
+
+    // Classic salt case: ~18 vs 5 should feel like a strong favorite (~80%+), not ~70%
+    const blowout = estimateWinChance(18, 5);
+    expect(blowout).toBeGreaterThanOrEqual(0.78);
+    expect(blowout).toBeLessThanOrEqual(0.95);
+
+    const twoToOne = estimateWinChance(20, 10);
+    expect(twoToOne).toBeGreaterThan(even);
+    expect(twoToOne).toBeGreaterThanOrEqual(0.68);
   });
 
   it('resolveCombat mutates sector ownership on win with overwhelming force', () => {

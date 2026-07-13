@@ -150,9 +150,15 @@ export function previewAttackWithIntel(
 
 export function formatOdds(preview: OddsPreview): string {
   if (!preview.fogged) {
-    return `~${Math.round(preview.winChance * 100)}% win`;
+    const pct = Math.round(preview.winChance * 100);
+    // Always remind that power edges are not auto-wins
+    if (pct >= 80) return `~${pct}% win · strong, can fail`;
+    if (pct >= 65) return `~${pct}% win · favorable, can fail`;
+    if (pct >= 50) return `~${pct}% win · slight edge`;
+    if (pct >= 40) return `~${pct}% win · even`;
+    return `~${pct}% win · risky`;
   }
-  return `~${Math.round(preview.winChanceMin * 100)}–${Math.round(preview.winChanceMax * 100)}% win (intel ${preview.intel}/2)`;
+  return `~${Math.round(preview.winChanceMin * 100)}–${Math.round(preview.winChanceMax * 100)}% win · fog (intel ${preview.intel}/2)`;
 }
 
 /** Visible enemy gang count string for UI. */

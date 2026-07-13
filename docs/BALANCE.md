@@ -19,6 +19,10 @@
 - Empty sector militia: 2.0 defense stub
 - Stack power scales with HP; armor mitigates losses
 - Signatures: ambush, surgical, encore, overwatch, iron nuns, salvage
+- **Win chance** (same for player & AI): `0.10 + ratio^1.18 * 0.86`, plus soft bonuses at 2× / 3× power, clamp 5–95%
+  - Even fights ~50%; big edges (e.g. 18 vs 5) high 80%s — still not guaranteed
+  - Difficulty should come from AI economy/aggression, not a different dice formula
+- UI: `formatOdds` labels strong/favorable/risky and reminds “can fail”
 
 ## AI
 - Adaptive weights from human style
