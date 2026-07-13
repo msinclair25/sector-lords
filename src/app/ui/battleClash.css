@@ -2689,78 +2689,258 @@
   box-shadow: 0 0 26px rgba(255, 61, 90, 0.26);
 }
 
-@media (max-width: 520px) {
+/* ═══ Phone / narrow — combat card only (desktop rules unchanged) ═══ */
+@media (max-width: 720px) {
+  #sl-battle-overlay {
+    /* Allow button taps + summary list pan; block background page scroll */
+    touch-action: manipulation;
+    padding: max(4px, env(safe-area-inset-top, 0px)) max(4px, env(safe-area-inset-right, 0px))
+      max(4px, env(safe-area-inset-bottom, 0px)) max(4px, env(safe-area-inset-left, 0px));
+  }
+
+  #sl-battle-overlay .slb-card {
+    width: min(100%, calc(100vw - 8px));
+    max-height: min(100dvh - 8px, 100vh - 8px);
+  }
+
   #sl-battle-overlay .slb-head {
     flex-wrap: wrap;
+    gap: 6px 8px;
+    padding: 6px 8px 6px 12px;
   }
+
+  #sl-battle-overlay .slb-head .tag {
+    font-size: 10px;
+  }
+
+  #sl-battle-overlay .slb-head .sector {
+    font-size: 9px;
+  }
+
   #sl-battle-overlay .slb-minimap {
     max-width: none;
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
   }
+
   #sl-battle-overlay .slb-minimap .mm-grid {
-    width: 48px;
-    height: 48px;
-  }
-  #sl-battle-overlay .slb-skip-bar {
-    margin-left: auto;
-  }
-  #sl-battle-overlay .slb-arena {
-    height: clamp(100px, 18vh, 150px);
-  }
-  #sl-battle-overlay .fighter {
-    width: 88px;
-  }
-  #sl-battle-overlay .fighter .frame {
-    width: 80px;
-    height: 80px;
-  }
-  #sl-battle-overlay .fighter .ghost {
-    width: 80px;
-    height: 80px;
-    margin-left: -40px;
-  }
-  #sl-battle-overlay .fighter.atk {
-    left: 2%;
-  }
-  #sl-battle-overlay .fighter.def {
-    right: 2%;
-  }
-  #sl-battle-overlay .slb-d100 .die {
     width: 44px;
     height: 44px;
-    font-size: 16px;
   }
-  #sl-battle-overlay .slb-crew .who,
-  #sl-battle-overlay .slb-crew .role {
-    display: none;
+
+  #sl-battle-overlay .slb-skip-bar {
+    margin-left: auto;
+    gap: 8px;
   }
+
+  /* Finger-friendly skip controls */
+  #sl-battle-overlay button.slb-skip {
+    min-height: 40px;
+    min-width: 64px;
+    padding: 8px 12px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    touch-action: manipulation;
+  }
+
+  #sl-battle-overlay .slb-stance {
+    padding: 4px 10px;
+  }
+
+  #sl-battle-overlay .slb-stance .stance-pill {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
   #sl-battle-overlay .slb-stance .stance-map {
     display: none;
   }
-  #sl-battle-overlay button.slb-btn .sub {
+
+  #sl-battle-overlay .slb-arena {
+    height: clamp(100px, 18vh, 150px);
+  }
+
+  #sl-battle-overlay .fighter {
+    width: 84px;
+    bottom: 12px;
+  }
+
+  #sl-battle-overlay .fighter .frame {
+    width: 76px;
+    height: 76px;
+  }
+
+  #sl-battle-overlay .fighter .ghost {
+    width: 76px;
+    height: 76px;
+    margin-left: -38px;
+  }
+
+  #sl-battle-overlay .fighter.atk {
+    left: 2%;
+  }
+
+  #sl-battle-overlay .fighter.def {
+    right: 2%;
+  }
+
+  /* Keep YOU-left when defending on narrow screens */
+  #sl-battle-overlay .slb-card.you-defend .fighter.atk {
+    left: auto;
+    right: 2%;
+  }
+
+  #sl-battle-overlay .slb-card.you-defend .fighter.def {
+    right: auto;
+    left: 2%;
+  }
+
+  #sl-battle-overlay .slb-body {
+    padding: 6px 10px max(10px, env(safe-area-inset-bottom, 0px));
+    gap: 5px;
+  }
+
+  #sl-battle-overlay .slb-crew .who {
     display: none;
   }
-}
 
-/* Short viewports (landscape phones / small laptops) */
-@media (max-height: 640px) {
-  #sl-battle-overlay .slb-arena {
-    height: clamp(88px, 16vh, 120px);
+  #sl-battle-overlay .slb-crew .side {
+    padding: 5px 8px;
   }
+
   #sl-battle-overlay .slb-crew .crew {
     font-size: 11px;
   }
-  #sl-battle-overlay .slb-dice {
-    padding: 4px 8px 6px;
-  }
-  #sl-battle-overlay .slb-d100 .die {
-    width: 40px;
-    height: 40px;
-    font-size: 15px;
-  }
-  #sl-battle-overlay .slb-result .outcome {
+
+  #sl-battle-overlay .slb-crew .pow {
     font-size: 13px;
   }
+
+  #sl-battle-overlay .slb-crew .mid {
+    font-size: 9px;
+    min-width: 56px;
+  }
+
+  #sl-battle-overlay .slb-crew .mid b {
+    font-size: 14px;
+  }
+
+  #sl-battle-overlay .slb-d100 .die {
+    width: 48px;
+    height: 48px;
+    font-size: 17px;
+  }
+
+  #sl-battle-overlay .slb-d100 .die-meta {
+    min-width: 0;
+    gap: 3px;
+  }
+
+  #sl-battle-overlay .slb-d100 .die-meta .line {
+    font-size: 12px;
+  }
+
+  #sl-battle-overlay .slb-d100 .die-meta .hint {
+    font-size: 10px;
+  }
+
+  #sl-battle-overlay .slb-result .outcome {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+  }
+
+  #sl-battle-overlay .slb-result .summary {
+    font-size: 11px;
+    -webkit-line-clamp: 3;
+  }
+
+  #sl-battle-overlay button.slb-btn {
+    min-height: 48px;
+    font-size: 13px;
+    padding: 10px 14px;
+    touch-action: manipulation;
+    /* Clear home indicator */
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  #sl-battle-overlay button.slb-btn .sub {
+    display: none;
+  }
+
+  /* Skip-all summary: list pans, continue stays pinned */
+  #sl-battle-overlay .slb-summary-card {
+    width: min(100%, calc(100vw - 8px));
+    max-height: min(100dvh - 8px, 100vh - 8px);
+  }
+
+  #sl-battle-overlay .slb-sum-list {
+    touch-action: pan-y;
+    gap: 6px;
+    max-height: none;
+  }
+
+  #sl-battle-overlay .slb-sum-row {
+    padding: 8px 8px;
+  }
+
+  #sl-battle-overlay .slb-sum-row .sum-out {
+    font-size: 10px;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  #sl-battle-overlay .slb-sum-row .sum-meta {
+    font-size: 10px;
+  }
+
+  #sl-battle-overlay .slb-sum-row .sum-line {
+    font-size: 11px;
+  }
+}
+
+/* Phone landscape / short phone — not desktop short windows */
+@media (max-width: 900px) and (max-height: 480px) {
+  #sl-battle-overlay .slb-arena {
+    height: clamp(72px, 22vh, 100px);
+  }
+
+  #sl-battle-overlay .slb-card.has-result .slb-arena {
+    display: none;
+  }
+
+  #sl-battle-overlay .slb-crew .role,
+  #sl-battle-overlay .slb-crew .who {
+    display: none;
+  }
+
+  #sl-battle-overlay .slb-crew .crew {
+    font-size: 10px;
+  }
+
+  #sl-battle-overlay .slb-dice {
+    padding: 3px 6px;
+  }
+
+  #sl-battle-overlay .slb-d100 .die {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  #sl-battle-overlay .slb-result .outcome {
+    font-size: 12px;
+  }
+
+  #sl-battle-overlay .slb-stay-note {
+    padding: 4px 8px;
+  }
+
   #sl-battle-overlay .slb-stay-note p {
     font-size: 10px;
+  }
+
+  #sl-battle-overlay button.slb-btn {
+    min-height: 42px;
   }
 }

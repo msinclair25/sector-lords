@@ -495,11 +495,34 @@
   box-shadow: 0 0 34px rgba(180, 120, 255, 0.4), 0 12px 26px rgba(0, 0, 0, 0.52);
 }
 
-@media (max-width: 480px) {
-  #sl-event-overlay .sle-art {
-    height: 160px;
+/* Phone — event card fits short screens, big acknowledge target */
+@media (max-width: 720px) {
+  #sl-event-overlay {
+    padding: max(8px, env(safe-area-inset-top, 0px)) max(8px, env(safe-area-inset-right, 0px))
+      max(8px, env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+    touch-action: manipulation;
   }
+
+  #sl-event-overlay .sle-card {
+    width: min(100%, calc(100vw - 12px));
+    max-height: min(100dvh - 12px, 100vh - 12px);
+  }
+
+  #sl-event-overlay .sle-art {
+    height: clamp(120px, 22vh, 160px);
+  }
+
   #sl-event-overlay .sle-name {
-    font-size: 18px;
+    font-size: 17px;
+  }
+
+  #sl-event-overlay .sle-desc {
+    font-size: 13px;
+  }
+
+  #sl-event-overlay button.sle-btn {
+    min-height: 48px;
+    touch-action: manipulation;
+    margin-bottom: env(safe-area-inset-bottom, 0px);
   }
 }

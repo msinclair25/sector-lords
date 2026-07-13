@@ -1863,16 +1863,27 @@ button.crew-filter:disabled {
 /* ═══ Phone / narrow — board first, crew panel as slide-over ═══
    Desktop rules above are unchanged outside this media query. */
 @media (max-width: 720px) {
+  #sl-hybrid-root {
+    /* iOS notch / home indicator */
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
   #sl-hybrid-root button.act {
-    min-width: 84px;
+    min-width: 72px;
+    min-height: 44px;
     font-size: 12px;
-    padding: 8px 10px;
+    padding: 10px 10px;
+    touch-action: manipulation;
+  }
+
+  #sl-hybrid-root button.act .act-sub {
+    font-size: 9px;
   }
 
   #sl-top {
     left: 6px;
     right: 6px;
-    top: 6px;
+    top: max(6px, env(safe-area-inset-top, 0px));
     gap: 6px;
   }
 
@@ -1896,6 +1907,12 @@ button.crew-filter:disabled {
     gap: 4px;
   }
 
+  #sl-brand .brand-audio button {
+    min-height: 36px;
+    min-width: 36px;
+    touch-action: manipulation;
+  }
+
   #sl-brand .now-playing {
     max-width: 100%;
     margin-top: 4px;
@@ -1909,6 +1926,7 @@ button.crew-filter:disabled {
     overflow-x: auto;
     flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
   }
 
   #sl-stats .stat {
@@ -1927,13 +1945,14 @@ button.crew-filter:disabled {
     align-items: center;
     justify-content: center;
     position: absolute;
-    right: 10px;
+    right: max(8px, env(safe-area-inset-right, 0px));
     top: 50%;
     transform: translateY(-50%);
     z-index: 17;
     margin: 0;
-    padding: 10px 8px;
-    min-width: 36px;
+    padding: 14px 10px;
+    min-width: 40px;
+    min-height: 88px;
     writing-mode: vertical-rl;
     text-orientation: mixed;
     font-family: var(--font-display);
@@ -1948,6 +1967,7 @@ button.crew-filter:disabled {
     clip-path: polygon(0 8px, 8px 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
     cursor: pointer;
     pointer-events: auto;
+    touch-action: manipulation;
   }
 
   #sl-side-fab.is-open {
@@ -1968,7 +1988,8 @@ button.crew-filter:disabled {
     width: min(100vw - 28px, 360px);
     max-height: none;
     height: 100%;
-    padding: 48px 12px 120px;
+    padding: max(48px, calc(12px + env(safe-area-inset-top, 0px))) 12px
+      max(120px, calc(100px + env(safe-area-inset-bottom, 0px)));
     font-size: 13px;
     z-index: 18;
     transform: translateX(105%);
@@ -1976,6 +1997,8 @@ button.crew-filter:disabled {
     box-shadow: -12px 0 40px rgba(0, 0, 0, 0.55);
     border-left: 1px solid rgba(255, 43, 214, 0.4);
     border-color: rgba(255, 43, 214, 0.4);
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   #sl-side.is-open {
@@ -1986,20 +2009,21 @@ button.crew-filter:disabled {
     display: grid;
     place-items: center;
     position: absolute;
-    top: 10px;
+    top: max(10px, env(safe-area-inset-top, 0px));
     right: 10px;
     z-index: 2;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     margin: 0;
     padding: 0;
     border: 1px solid rgba(43, 240, 255, 0.45);
     background: rgba(8, 6, 16, 0.92);
     color: var(--cyan);
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     cursor: pointer;
     pointer-events: auto;
+    touch-action: manipulation;
   }
 
   #sl-crew-dock {
@@ -2012,20 +2036,28 @@ button.crew-filter:disabled {
     min-height: 100px;
   }
 
+  #sl-side button.gang-pick {
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+
   #sl-bottom {
-    padding: 8px 6px 10px;
+    padding: 8px 6px max(10px, env(safe-area-inset-bottom, 0px));
     gap: 6px;
   }
 
   #sl-status {
     font-size: 12px;
-    padding: 6px 12px;
+    padding: 8px 12px;
     max-width: 96vw;
+    line-height: 1.35;
   }
 
   #sl-actions {
     gap: 6px;
     max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   #sl-hint {
@@ -2040,30 +2072,66 @@ button.crew-filter:disabled {
     left: 6px;
     right: 6px;
     width: auto;
-    bottom: 120px;
-    max-height: min(50vh, calc(100vh - 200px));
+    bottom: max(120px, calc(108px + env(safe-area-inset-bottom, 0px)));
+    max-height: min(50vh, calc(100dvh - 200px));
   }
 
   #sl-drawer.hire-wide {
     left: 4px;
     right: 4px;
-    top: 56px;
+    top: max(56px, calc(48px + env(safe-area-inset-top, 0px)));
     transform: none;
     width: auto;
-    max-height: calc(100vh - 56px - 130px);
+    max-height: calc(100dvh - 56px - 130px - env(safe-area-inset-bottom, 0px));
   }
 
   #sl-drawer.hire-wide.open {
     transform: none;
   }
 
+  #sl-drawer button.drawer-x {
+    width: 44px;
+    height: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Hire cards: taller tap targets, readable meta */
+  #sl-hybrid-root button.hire-card {
+    touch-action: manipulation;
+  }
+
+  #sl-hybrid-root button.hire-card .hire-meta {
+    padding: 10px 10px 12px;
+  }
+
+  #sl-hybrid-root button.hire-card .hire-name {
+    font-size: 12px;
+  }
+
+  #sl-hybrid-root button.hire-card .hire-cost {
+    font-size: 12px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+  }
+
+  #sl-drawer .drawer-body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
   #sl-coach {
     top: auto;
-    bottom: 130px;
+    bottom: max(130px, calc(118px + env(safe-area-inset-bottom, 0px)));
     left: 8px;
     right: 8px;
     transform: none;
     max-width: none;
+  }
+
+  #sl-coach button {
+    min-height: 40px;
+    touch-action: manipulation;
   }
 }
 

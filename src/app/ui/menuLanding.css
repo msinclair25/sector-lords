@@ -663,8 +663,19 @@
 @media (max-width: 720px) {
   #sl-menu-root .sl-menu-layout {
     justify-content: flex-start;
-    padding: 20px 12px max(28px, env(safe-area-inset-bottom, 0px));
+    padding: max(16px, env(safe-area-inset-top, 0px)) 12px
+      max(28px, env(safe-area-inset-bottom, 0px));
     gap: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #sl-menu-root button.sl-btn {
+    touch-action: manipulation;
+    min-height: 44px;
+  }
+
+  #sl-menu-root button.sl-btn.primary {
+    min-height: 48px;
   }
 
   #sl-menu-root .sl-menu-hero h1.sl-title-art img {
