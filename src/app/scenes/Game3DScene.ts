@@ -16,7 +16,6 @@ import {
   areAdjacent,
   computeIncomeBreakdown,
   formatOdds,
-  parseSectorId,
   pathsToVictory,
   previewAttackWithIntel,
   researchableItems,
@@ -141,6 +140,8 @@ export class Game3DScene extends Phaser.Scene {
    * before actually resolving.
    */
   private endTurnConfirm = false;
+  /** When true, remaining clash cards jump straight to the result (skip all). */
+  private combatSkipRemaining = false;
   /**
    * Phone layout: crew panel is a slide-over drawer (desktop always visible).
    * Starts closed so the board gets the full width.
@@ -771,11 +772,12 @@ export class Game3DScene extends Phaser.Scene {
       await this.wait(REEL_STEP_MS);
     }
 
-    // Full battle presentation for each fight
+    // Full battle presentation for each fight (player can skip / skip all)
+    this.combatSkipRemaining = false;
     for (const c of combats) {
       this.board?.focusSector(c.sectorId);
       this.board?.pulseTile(c.sectorId, 'attack', false);
-      SFX.play('combat');
+      if (!this.combatSkipRemaining) SFX.play('combat');
       await this.showBattleCard(c);
     }
   }
@@ -2760,50 +2762,22 @@ export class Game3DScene extends Phaser.Scene {
   }
 
   /**
-   * Compact schematic of the clash neighborhood — origin tiles + contested block.
-   * Not a full board copy: local window around the fight (max 5×5).
+   * Compact full-board schematic for the clash card — every sector as a tiny cell.
+   * Marks assault origin(s) and the contested block.
    */
   private buildClashMinimapHtml(
     result: import('../../engine').CombatResult,
   ): string {
     const state = this.controller.state;
     const human = this.controller.humanId;
-    const { x: fx, y: fy } = parseSectorId(result.sectorId);
     const origins = result.attackerOriginSectorIds ?? [];
     const originSet = new Set(origins);
-
-    let minX = fx;
-    let maxX = fx;
-    let minY = fy;
-    let maxY = fy;
-    for (const oid of origins) {
-      const p = parseSectorId(oid);
-      minX = Math.min(minX, p.x);
-      maxX = Math.max(maxX, p.x);
-      minY = Math.min(minY, p.y);
-      maxY = Math.max(maxY, p.y);
-    }
-    // Pad one ring of context, then clamp to map
-    minX = Math.max(0, minX - 1);
-    minY = Math.max(0, minY - 1);
-    maxX = Math.min(state.mapWidth - 1, maxX + 1);
-    maxY = Math.min(state.mapHeight - 1, maxY + 1);
-
-    // Cap UI footprint at 5×5, bias-keep the clash tile centered
-    const shrink = (lo: number, hi: number, keep: number, maxSpan: number) => {
-      while (hi - lo + 1 > maxSpan) {
-        if (keep - lo > hi - keep) lo += 1;
-        else hi -= 1;
-      }
-      return [lo, hi] as const;
-    };
-    [minX, maxX] = shrink(minX, maxX, fx, 5);
-    [minY, maxY] = shrink(minY, maxY, fy, 5);
-
-    const cols = maxX - minX + 1;
+    const w = state.mapWidth;
+    const h = state.mapHeight;
     const cells: string[] = [];
-    for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) {
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
         const id = `${x},${y}` as SectorId;
         const sector = state.sectors[id];
         const isClash = id === result.sectorId;
@@ -2818,46 +2792,34 @@ export class Game3DScene extends Phaser.Scene {
           youOwn ? 'you' : '',
           enemyOwn ? 'enemy' : '',
           !owner ? 'neutral' : '',
-          isClash && result.attackerWon ? 'seized' : '',
-          isClash && !result.attackerWon ? 'held' : '',
         ]
           .filter(Boolean)
           .join(' ');
-        const label = isClash ? '★' : isOrigin ? '▶' : '';
         const title = isClash
           ? `Clash ${id}`
           : isOrigin
-            ? `Assault from ${id}`
+            ? `From ${id}`
             : id;
         cells.push(
-          `<div class="${classes}" title="${escapeHtml(title)}" data-sid="${escapeHtml(id)}">${label}</div>`,
+          `<div class="${classes}" title="${escapeHtml(title)}"></div>`,
         );
       }
     }
 
     const fromLine =
       origins.length > 0
-        ? origins.map((o) => escapeHtml(o)).join(' · ')
-        : 'adjacent';
-    const outcomeHint = result.attackerWon
-      ? 'SEIZED'
-      : 'PINNED · NO RETREAT';
+        ? origins.map((o) => escapeHtml(o)).join('·')
+        : '—';
+    const out = result.attackerWon ? 'SEIZED' : 'PINNED';
 
     return `
-      <div class="slb-minimap ${result.attackerWon ? 'won' : 'lost'}" aria-label="Clash grid schematic">
-        <div class="mm-head">
-          <span class="mm-title">GRID</span>
-          <span class="mm-route">FROM ${fromLine} → <b>${escapeHtml(result.sectorId)}</b></span>
-          <span class="mm-out ${result.attackerWon ? 'ok' : 'bad'}">${outcomeHint}</span>
-        </div>
-        <div class="mm-grid" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">
+      <div class="slb-minimap ${result.attackerWon ? 'won' : 'lost'}" aria-label="Full sector grid" title="Full ${w}×${h} grid">
+        <div class="mm-grid" style="grid-template-columns:repeat(${w},minmax(0,1fr))">
           ${cells.join('')}
         </div>
-        <div class="mm-legend">
-          <span class="lg origin"><i></i>FROM</span>
-          <span class="lg clash"><i></i>CLASH</span>
-          <span class="lg you"><i></i>YOU</span>
-          <span class="lg enemy"><i></i>ENEMY</span>
+        <div class="mm-meta">
+          <span class="mm-route">${fromLine}→${escapeHtml(result.sectorId)}</span>
+          <span class="mm-out ${result.attackerWon ? 'ok' : 'bad'}">${out}</span>
         </div>
       </div>`;
   }
@@ -2993,14 +2955,20 @@ export class Game3DScene extends Phaser.Scene {
       overlay.innerHTML = `
         <div class="slb-card idle style-atk-${atkStyle} style-def-${defStyle} ${youAtk ? 'you-attack' : youDef ? 'you-defend' : ''}" role="dialog" aria-modal="true" aria-label="Sector clash" data-card>
           <div class="slb-head">
-            <span class="tag">SECTOR CLASH</span>
-            <span class="sector">// ${escapeHtml(result.sectorId)} · ${atkStyle.toUpperCase()} vs ${defStyle.toUpperCase()}</span>
+            <div class="slb-head-main">
+              <span class="tag">SECTOR CLASH</span>
+              <span class="sector">// ${escapeHtml(result.sectorId)} · ${atkStyle.toUpperCase()} vs ${defStyle.toUpperCase()}</span>
+            </div>
+            ${minimapHtml}
+            <div class="slb-skip-bar" data-skip-bar>
+              <button type="button" class="slb-skip" data-skip title="Skip fight animation">SKIP</button>
+              <button type="button" class="slb-skip all" data-skip-all title="Skip all remaining battles this turn">SKIP ALL</button>
+            </div>
           </div>
           <div class="slb-stance ${youAtk ? 'you' : youDef ? 'you def' : ''}" data-stance>
             <span class="stance-pill ${youAtk || youDef ? 'you' : ''}">${stanceLine}</span>
             <span class="stance-map">LEFT = ASSAULT · RIGHT = DEFENDERS</span>
           </div>
-          ${minimapHtml}
 
           <div class="slb-arena">
             <div class="vignette"></div>
@@ -3100,7 +3068,7 @@ export class Game3DScene extends Phaser.Scene {
 
             <button type="button" class="slb-btn hidden" data-dismiss>
               CONTINUE
-              <span class="sub">Back to the war table</span>
+              <span class="sub">Next · or wait a moment</span>
             </button>
           </div>
         </div>
@@ -3116,10 +3084,16 @@ export class Game3DScene extends Phaser.Scene {
       const dieEl = overlay.querySelector('[data-die]') as HTMLElement;
       const diceBox = overlay.querySelector('[data-dice]') as HTMLElement;
       const qualityEl = overlay.querySelector('[data-quality]') as HTMLElement;
+      const skipBar = overlay.querySelector('[data-skip-bar]') as HTMLElement | null;
+      const skipBtn = overlay.querySelector('[data-skip]') as HTMLButtonElement | null;
+      const skipAllBtn = overlay.querySelector('[data-skip-all]') as HTMLButtonElement | null;
 
       let done = false;
+      let revealed = false;
       let scrambleId: number | null = null;
       const timers: number[] = [];
+      // Instant path when player hit SKIP ALL earlier this turn
+      const instant = this.combatSkipRemaining;
 
       /** How good the roll was for the attacker (lower under the gate = better). */
       const rollQuality = (
@@ -3162,29 +3136,118 @@ export class Game3DScene extends Phaser.Scene {
         for (const c of classes) card.classList.add(c);
       };
 
+      const clearTimers = () => {
+        if (scrambleId != null) {
+          window.clearInterval(scrambleId);
+          scrambleId = null;
+        }
+        for (const t of timers) window.clearTimeout(t);
+        timers.length = 0;
+      };
+
+      const onKey = (ev: KeyboardEvent) => {
+        if (ev.key === 'Escape' || ev.key === ' ') {
+          ev.preventDefault();
+          if (!revealed) revealResult();
+          else finish();
+        } else if (ev.key === 'Enter' && revealed) {
+          ev.preventDefault();
+          finish();
+        }
+      };
+
       const finish = () => {
         if (done) return;
         done = true;
-        if (scrambleId != null) window.clearInterval(scrambleId);
-        for (const t of timers) window.clearTimeout(t);
+        clearTimers();
+        window.removeEventListener('keydown', onKey);
         overlay.remove();
         resolve();
       };
 
-      // Card duel reel — longer holds so each card move reads (no modal shake)
+      const revealResult = (opts?: { quiet?: boolean; holdMs?: number }) => {
+        if (revealed || done) return;
+        revealed = true;
+        clearTimers();
+
+        const roll = result.roll ?? 0;
+        const q = rollQuality(roll, result.attackerWinChance);
+
+        dieEl.classList.remove('spin');
+        dieEl.classList.add('land');
+        dieEl.classList.add(result.attackerWon ? 'ok' : 'fail');
+        dieEl.classList.add(`q-${q.tier}`);
+        rollEl.textContent = String(rollD100);
+        dieEl.textContent = String(rollD100);
+
+        diceBox.classList.add('revealed', `roll-${q.tier}`);
+        clearMotion();
+        card.classList.add(`roll-${q.tier}`);
+        card.classList.add(result.attackerWon ? 'won' : 'lost');
+        qualityEl.textContent = q.label;
+
+        const under = roll < result.attackerWinChance;
+        phaseEl.textContent = under
+          ? `HIT // ${rollD100} < ${winPct}`
+          : `MISS // ${rollD100} ≥ ${winPct}`;
+        phaseEl.classList.add(result.attackerWon ? 'win' : 'lose');
+        resultEl.classList.remove('hidden');
+        dismiss.classList.remove('hidden');
+        skipBar?.classList.add('hidden');
+
+        if (!opts?.quiet) {
+          SFX.play(result.attackerWon ? 'claim' : 'error');
+        }
+
+        // Short hold on the summary — no long dead pause at the end
+        const hold = opts?.holdMs ?? (instant ? 900 : 2200);
+        timers.push(window.setTimeout(finish, hold));
+      };
+
+      window.addEventListener('keydown', onKey);
+
+      dismiss.addEventListener('click', () => {
+        SFX.play('ui');
+        finish();
+      });
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay && revealed) {
+          SFX.play('ui');
+          finish();
+        }
+      });
+      skipBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        SFX.play('ui');
+        revealResult();
+      });
+      skipAllBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        SFX.play('ui');
+        this.combatSkipRemaining = true;
+        revealResult({ holdMs: 600 });
+      });
+
+      if (instant) {
+        revealResult({ quiet: true, holdMs: 700 });
+        return;
+      }
+
+      // Snappier duel reel (was ~11s fight + up to 32s idle)
       const beats: Array<{ t: number; label: string; pose: string[]; sfx: 'ui' | 'attack' | 'combat' }> = [
-        { t: 100, label: 'LOCKING TARGETS…', pose: ['locking'], sfx: 'ui' },
-        { t: 1200, label: `${atkStyle.toUpperCase()} vs ${defStyle.toUpperCase()}`, pose: ['idle'], sfx: 'ui' },
-        { t: 2200, label: labels[0]!, pose: ['exchange', 'hit-1'], sfx: 'attack' },
-        { t: 3400, label: labels[1]!, pose: ['exchange', 'hit-2'], sfx: 'attack' },
-        { t: 4600, label: labels[2]!, pose: ['exchange', 'hit-3'], sfx: 'combat' },
-        { t: 5900, label: labels[3]!, pose: ['exchange', 'hit-4'], sfx: 'attack' },
-        { t: 7200, label: labels[4]!, pose: ['finale'], sfx: 'combat' },
+        { t: 80, label: 'LOCKING…', pose: ['locking'], sfx: 'ui' },
+        { t: 550, label: `${atkStyle.toUpperCase()} vs ${defStyle.toUpperCase()}`, pose: ['idle'], sfx: 'ui' },
+        { t: 1000, label: labels[0]!, pose: ['exchange', 'hit-1'], sfx: 'attack' },
+        { t: 1550, label: labels[1]!, pose: ['exchange', 'hit-2'], sfx: 'attack' },
+        { t: 2100, label: labels[2]!, pose: ['exchange', 'hit-3'], sfx: 'combat' },
+        { t: 2650, label: labels[3]!, pose: ['exchange', 'hit-4'], sfx: 'attack' },
+        { t: 3200, label: labels[4]!, pose: ['finale'], sfx: 'combat' },
       ];
 
       for (const b of beats) {
         timers.push(
           window.setTimeout(() => {
+            if (revealed) return;
             phaseEl.textContent = b.label;
             pose(...b.pose);
             SFX.play(b.sfx);
@@ -3194,6 +3257,7 @@ export class Game3DScene extends Phaser.Scene {
 
       timers.push(
         window.setTimeout(() => {
+          if (revealed) return;
           phaseEl.textContent = 'FATE DIE…';
           card.classList.remove('finale');
           card.classList.add('rolling');
@@ -3202,56 +3266,20 @@ export class Game3DScene extends Phaser.Scene {
             const n = 1 + Math.floor(Math.random() * 100);
             rollEl.textContent = String(n);
             dieEl.textContent = String(n);
-          }, 55);
+          }, 50);
           SFX.play('ui');
-        }, 8600),
+        }, 3800),
       );
 
+      timers.push(window.setTimeout(() => revealResult(), 5000));
+
+      // Hard cap so a stuck card never freezes the turn
       timers.push(
         window.setTimeout(() => {
-          if (scrambleId != null) {
-            window.clearInterval(scrambleId);
-            scrambleId = null;
-          }
-          const roll = result.roll ?? 0;
-          const q = rollQuality(roll, result.attackerWinChance);
-
-          dieEl.classList.remove('spin');
-          dieEl.classList.add('land');
-          dieEl.classList.add(result.attackerWon ? 'ok' : 'fail');
-          dieEl.classList.add(`q-${q.tier}`);
-          rollEl.textContent = String(rollD100);
-          dieEl.textContent = String(rollD100);
-
-          diceBox.classList.add('revealed', `roll-${q.tier}`);
-          card.classList.add(`roll-${q.tier}`);
-          qualityEl.textContent = q.label;
-
-          const under = roll < result.attackerWinChance;
-          phaseEl.textContent = under
-            ? `HIT // ${rollD100} < ${winPct}`
-            : `MISS // ${rollD100} ≥ ${winPct}`;
-          phaseEl.classList.add(result.attackerWon ? 'win' : 'lose');
-          card.classList.remove('rolling');
-          card.classList.add(result.attackerWon ? 'won' : 'lost');
-          resultEl.classList.remove('hidden');
-          dismiss.classList.remove('hidden');
-          SFX.play(result.attackerWon ? 'claim' : 'error');
-        }, 10800),
+          if (!revealed) revealResult({ quiet: true, holdMs: 400 });
+          else finish();
+        }, 12000),
       );
-
-      dismiss.addEventListener('click', () => {
-        SFX.play('ui');
-        finish();
-      });
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay && !resultEl.classList.contains('hidden')) {
-          SFX.play('ui');
-          finish();
-        }
-      });
-
-      timers.push(window.setTimeout(finish, 32000));
     });
   }
 

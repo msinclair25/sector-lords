@@ -127,10 +127,11 @@
 /* ── Head ── */
 #sl-battle-overlay .slb-head {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  padding: 11px 18px 10px 20px;
+  gap: 8px 12px;
+  padding: 8px 12px 8px 16px;
   background: linear-gradient(
     90deg,
     rgba(255, 43, 214, 0.18) 0%,
@@ -142,20 +143,73 @@
   z-index: 4;
 }
 
+#sl-battle-overlay .slb-head-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 #sl-battle-overlay .slb-head .tag {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   color: var(--gold);
   text-shadow: 0 0 14px rgba(252, 238, 10, 0.4);
 }
 
 #sl-battle-overlay .slb-head .sector {
   font-family: var(--font-display);
-  font-size: 11px;
-  letter-spacing: 0.14em;
+  font-size: 10px;
+  letter-spacing: 0.12em;
   color: var(--cyan);
+}
+
+/* Skip controls — always available during the fight reel */
+#sl-battle-overlay .slb-skip-bar {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+#sl-battle-overlay .slb-skip-bar.hidden {
+  display: none !important;
+}
+
+#sl-battle-overlay button.slb-skip {
+  cursor: pointer;
+  border: 1px solid rgba(43, 240, 255, 0.45);
+  background: rgba(4, 10, 20, 0.88);
+  color: var(--cyan);
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding: 6px 10px;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+#sl-battle-overlay button.slb-skip:hover,
+#sl-battle-overlay button.slb-skip:focus-visible {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(20, 14, 4, 0.95);
+  outline: none;
+}
+
+#sl-battle-overlay button.slb-skip.all {
+  border-color: rgba(255, 43, 214, 0.5);
+  color: var(--magenta);
+}
+
+#sl-battle-overlay button.slb-skip.all:hover,
+#sl-battle-overlay button.slb-skip.all:focus-visible {
+  border-color: var(--magenta);
+  color: #fff;
+  background: rgba(40, 8, 32, 0.95);
 }
 
 /* ═══════════════════════════════════════════
@@ -1157,204 +1211,113 @@
   color: rgba(143, 168, 184, 0.85);
 }
 
-/* ── Schematic mini-map (local neighborhood, not full board) ── */
+/* ── Compact full-board mini-map (sits in the head row) ── */
 #sl-battle-overlay .slb-minimap {
-  padding: 8px 16px 10px 18px;
-  border-bottom: 1px solid rgba(43, 240, 255, 0.16);
-  background:
-    linear-gradient(180deg, rgba(6, 10, 22, 0.92), rgba(4, 2, 12, 0.55)),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 11px,
-      rgba(43, 240, 255, 0.03) 11px 12px
-    );
-  position: relative;
-  z-index: 4;
-}
-
-#sl-battle-overlay .slb-minimap .mm-head {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  margin-bottom: 8px;
-}
-
-#sl-battle-overlay .slb-minimap .mm-title {
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.2em;
-  color: var(--cyan);
-  text-shadow: 0 0 10px rgba(43, 240, 255, 0.35);
-}
-
-#sl-battle-overlay .slb-minimap .mm-route {
-  flex: 1 1 auto;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
-
-#sl-battle-overlay .slb-minimap .mm-route b {
-  color: var(--gold);
-  font-weight: 800;
-}
-
-#sl-battle-overlay .slb-minimap .mm-out {
-  font-family: var(--font-display);
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  padding: 3px 8px;
-  border: 1px solid rgba(143, 168, 184, 0.35);
-  color: var(--muted);
-}
-
-#sl-battle-overlay .slb-minimap .mm-out.ok {
-  border-color: rgba(125, 255, 107, 0.55);
-  color: var(--ok);
-  box-shadow: 0 0 12px rgba(125, 255, 107, 0.2);
-}
-
-#sl-battle-overlay .slb-minimap .mm-out.bad {
-  border-color: rgba(255, 61, 90, 0.55);
-  color: var(--danger);
-  box-shadow: 0 0 12px rgba(255, 61, 90, 0.2);
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(43, 240, 255, 0.2);
+  max-width: 160px;
 }
 
 #sl-battle-overlay .slb-minimap .mm-grid {
   display: grid;
-  gap: 3px;
-  width: min(220px, 72%);
-  margin: 0 auto 8px;
-  padding: 6px;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(43, 240, 255, 0.22);
-  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.55);
+  gap: 1px;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  padding: 2px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(43, 240, 255, 0.18);
 }
 
 #sl-battle-overlay .slb-minimap .mm-cell {
-  aspect-ratio: 1;
-  min-height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 900;
-  color: transparent;
-  background: rgba(18, 22, 36, 0.95);
-  border: 1px solid rgba(80, 100, 120, 0.35);
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+  min-width: 0;
+  min-height: 0;
+  background: rgba(22, 26, 40, 0.95);
+  border: none;
 }
 
 #sl-battle-overlay .slb-minimap .mm-cell.you {
-  background: rgba(40, 52, 20, 0.95);
-  border-color: rgba(125, 255, 107, 0.35);
+  background: rgba(70, 120, 50, 0.9);
 }
 
 #sl-battle-overlay .slb-minimap .mm-cell.enemy {
-  background: rgba(48, 16, 28, 0.95);
-  border-color: rgba(255, 61, 90, 0.35);
+  background: rgba(130, 40, 55, 0.9);
 }
 
 #sl-battle-overlay .slb-minimap .mm-cell.neutral {
-  background: rgba(16, 18, 28, 0.9);
+  background: rgba(28, 30, 42, 0.9);
 }
 
 #sl-battle-overlay .slb-minimap .mm-cell.origin {
-  color: var(--cyan);
-  border-color: rgba(43, 240, 255, 0.7);
-  box-shadow:
-    0 0 10px rgba(43, 240, 255, 0.35),
-    inset 0 0 8px rgba(43, 240, 255, 0.12);
-  background: rgba(8, 28, 40, 0.98);
+  background: var(--cyan);
+  box-shadow: 0 0 4px rgba(43, 240, 255, 0.7);
 }
 
 #sl-battle-overlay .slb-minimap .mm-cell.clash {
-  color: var(--gold);
-  border-color: rgba(252, 238, 10, 0.85);
-  box-shadow:
-    0 0 14px rgba(252, 238, 10, 0.4),
-    inset 0 0 10px rgba(252, 238, 10, 0.12);
-  background: rgba(36, 28, 8, 0.98);
-  animation: slb-mm-pulse 1.6s ease-in-out infinite;
+  background: var(--gold);
+  box-shadow: 0 0 5px rgba(252, 238, 10, 0.75);
+  animation: slb-mm-pulse 1.4s ease-in-out infinite;
 }
 
 #sl-battle-overlay .slb-minimap.won .mm-cell.clash {
-  border-color: rgba(125, 255, 107, 0.85);
-  color: var(--ok);
-  box-shadow: 0 0 14px rgba(125, 255, 107, 0.4);
+  background: var(--ok);
+  box-shadow: 0 0 5px rgba(125, 255, 107, 0.7);
   animation: none;
 }
 
 #sl-battle-overlay .slb-minimap.lost .mm-cell.clash {
-  border-color: rgba(255, 61, 90, 0.85);
-  color: var(--danger);
-  box-shadow: 0 0 14px rgba(255, 61, 90, 0.35);
+  background: var(--danger);
+  box-shadow: 0 0 5px rgba(255, 61, 90, 0.65);
+  animation: none;
 }
 
 @keyframes slb-mm-pulse {
   0%,
   100% {
-    box-shadow:
-      0 0 10px rgba(252, 238, 10, 0.28),
-      inset 0 0 8px rgba(252, 238, 10, 0.08);
+    opacity: 1;
   }
   50% {
-    box-shadow:
-      0 0 18px rgba(252, 238, 10, 0.55),
-      inset 0 0 12px rgba(252, 238, 10, 0.18);
+    opacity: 0.55;
   }
 }
 
-#sl-battle-overlay .slb-minimap .mm-legend {
+#sl-battle-overlay .slb-minimap .mm-meta {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px 14px;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+#sl-battle-overlay .slb-minimap .mm-route {
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
+}
+
+#sl-battle-overlay .slb-minimap .mm-out {
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
   color: var(--muted);
 }
 
-#sl-battle-overlay .slb-minimap .mm-legend .lg {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+#sl-battle-overlay .slb-minimap .mm-out.ok {
+  color: var(--ok);
 }
 
-#sl-battle-overlay .slb-minimap .mm-legend .lg i {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border: 1px solid rgba(143, 168, 184, 0.5);
-  background: rgba(18, 22, 36, 0.95);
-}
-
-#sl-battle-overlay .slb-minimap .mm-legend .lg.origin i {
-  border-color: rgba(43, 240, 255, 0.75);
-  background: rgba(8, 28, 40, 0.98);
-  box-shadow: 0 0 6px rgba(43, 240, 255, 0.4);
-}
-
-#sl-battle-overlay .slb-minimap .mm-legend .lg.clash i {
-  border-color: rgba(252, 238, 10, 0.8);
-  background: rgba(36, 28, 8, 0.98);
-  box-shadow: 0 0 6px rgba(252, 238, 10, 0.4);
-}
-
-#sl-battle-overlay .slb-minimap .mm-legend .lg.you i {
-  border-color: rgba(125, 255, 107, 0.55);
-  background: rgba(40, 52, 20, 0.95);
-}
-
-#sl-battle-overlay .slb-minimap .mm-legend .lg.enemy i {
-  border-color: rgba(255, 61, 90, 0.55);
-  background: rgba(48, 16, 28, 0.95);
+#sl-battle-overlay .slb-minimap .mm-out.bad {
+  color: var(--danger);
 }
 
 /* ── Card motion states (the duel choreography) ── */
@@ -2449,12 +2412,18 @@
 }
 
 @media (max-width: 520px) {
-  #sl-battle-overlay .slb-minimap .mm-grid {
-    width: min(180px, 88%);
+  #sl-battle-overlay .slb-minimap {
+    max-width: 100%;
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
   }
-  #sl-battle-overlay .slb-minimap .mm-cell {
-    min-height: 18px;
-    font-size: 10px;
+  #sl-battle-overlay .slb-minimap .mm-grid {
+    width: 64px;
+    height: 64px;
+  }
+  #sl-battle-overlay .slb-skip-bar {
+    margin-left: auto;
   }
   #sl-battle-overlay .slb-arena {
     height: 270px;
