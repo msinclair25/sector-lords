@@ -140,8 +140,10 @@ export class Game3DScene extends Phaser.Scene {
    * before actually resolving.
    */
   private endTurnConfirm = false;
-  /** When true, remaining clash cards jump straight to the result (skip all). */
+  /** When true, remaining fights are batched into one skip-all summary. */
   private combatSkipRemaining = false;
+  /** Fights deferred by Skip All (current + remaining). */
+  private combatSkipBatch: import('../../engine').CombatResult[] = [];
   /**
    * Phone layout: crew panel is a slide-over drawer (desktop always visible).
    * Starts closed so the board gets the full width.
@@ -774,11 +776,24 @@ export class Game3DScene extends Phaser.Scene {
 
     // Full battle presentation for each fight (player can skip / skip all)
     this.combatSkipRemaining = false;
+    this.combatSkipBatch = [];
     for (const c of combats) {
+      if (this.combatSkipRemaining) {
+        // Already queued current when Skip All was hit; collect the rest
+        if (!this.combatSkipBatch.includes(c)) this.combatSkipBatch.push(c);
+        continue;
+      }
       this.board?.focusSector(c.sectorId);
       this.board?.pulseTile(c.sectorId, 'attack', false);
-      if (!this.combatSkipRemaining) SFX.play('combat');
+      SFX.play('combat');
       await this.showBattleCard(c);
+    }
+    // One readable summary for everything Skip All deferred
+    if (this.combatSkipBatch.length > 0) {
+      const batch = this.combatSkipBatch;
+      this.combatSkipBatch = [];
+      this.combatSkipRemaining = false;
+      await this.showCombatSkipSummary(batch);
     }
   }
 
@@ -3094,8 +3109,6 @@ export class Game3DScene extends Phaser.Scene {
       let revealed = false;
       let scrambleId: number | null = null;
       const timers: number[] = [];
-      // Instant path when player hit SKIP ALL earlier this turn
-      const instant = this.combatSkipRemaining;
 
       /** How good the roll was for the attacker (lower under the gate = better). */
       const rollQuality = (
@@ -3168,7 +3181,7 @@ export class Game3DScene extends Phaser.Scene {
         resolve();
       };
 
-      const revealResult = (opts?: { quiet?: boolean; autoMs?: number }) => {
+      const revealResult = (opts?: { quiet?: boolean }) => {
         if (revealed || done) return;
         revealed = true;
         clearTimers();
@@ -3205,11 +3218,6 @@ export class Game3DScene extends Phaser.Scene {
 
         // Focus Continue so it's obvious and keyboard-ready
         window.setTimeout(() => dismiss.focus(), 30);
-
-        // Only auto-advance on skip-all / instant path — never steal Continue
-        if (opts?.autoMs != null && opts.autoMs > 0) {
-          timers.push(window.setTimeout(finish, opts.autoMs));
-        }
       };
 
       window.addEventListener('keydown', onKey);
@@ -3232,17 +3240,15 @@ export class Game3DScene extends Phaser.Scene {
       skipAllBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
         SFX.play('ui');
+        // Batch this fight + remaining into one summary card after the reel
         this.combatSkipRemaining = true;
-        // Brief flash then next fight — skip-all is opt-in speed
-        revealResult({ quiet: true, autoMs: 900 });
+        if (!this.combatSkipBatch.includes(result)) {
+          this.combatSkipBatch.push(result);
+        }
+        finish();
       });
 
-      if (instant) {
-        revealResult({ quiet: true, autoMs: 800 });
-        return;
-      }
-
-      // Medium pace: readable strikes, not a slog (~7.5s to outcome, ~3.5s hold)
+      // Medium pace: readable strikes, not a slog (~7.5s to outcome)
       const beats: Array<{ t: number; label: string; pose: string[]; sfx: 'ui' | 'attack' | 'combat' }> = [
         { t: 100, label: 'LOCKING TARGETS…', pose: ['locking'], sfx: 'ui' },
         { t: 900, label: `${atkStyle.toUpperCase()} vs ${defStyle.toUpperCase()}`, pose: ['idle'], sfx: 'ui' },
@@ -3288,6 +3294,156 @@ export class Game3DScene extends Phaser.Scene {
           if (!revealed) revealResult({ quiet: true });
         }, 16000),
       );
+    });
+  }
+
+  /**
+   * Skip All recap — one readable card for every deferred fight.
+   * Waits for Continue (no auto-dismiss).
+   */
+  private showCombatSkipSummary(
+    results: import('../../engine').CombatResult[],
+  ): Promise<void> {
+    if (results.length === 0) return Promise.resolve();
+    return new Promise((resolve) => {
+      const human = this.controller.humanId;
+      let st = document.getElementById('sl-battle-style') as HTMLStyleElement | null;
+      if (!st) {
+        st = document.createElement('style');
+        st.id = 'sl-battle-style';
+        document.head.appendChild(st);
+      }
+      st.textContent = battleCss;
+
+      const rows = results
+        .map((r, i) => {
+          const youAtk = r.attackerId === human;
+          const youDef = r.defenderId === human;
+          const youWon =
+            (youAtk && r.attackerWon) || (youDef && !r.attackerWon);
+          const involved = youAtk || youDef;
+          const outcome = youAtk
+            ? r.attackerWon
+              ? 'YOU WIN — ASSAULT SUCCESS'
+              : 'YOU LOSE — ASSAULT REPELLED'
+            : youDef
+              ? r.attackerWon
+                ? 'YOU LOSE — BLOCK FALLS'
+                : 'YOU HOLD — ASSAULT REPELLED'
+              : r.attackerWon
+                ? 'ASSAULT SUCCESS'
+                : 'ASSAULT REPELLED';
+          const rollD100 = Math.max(
+            1,
+            Math.min(100, Math.round((r.roll ?? 0) * 100) || 1),
+          );
+          const winPct = Math.round(r.attackerWinChance * 100);
+          const atkNames = (r.attackerNames ?? ['Attack force']).join(', ');
+          const defNames = (r.defenderNames?.length
+            ? r.defenderNames
+            : ['Defenders']
+          ).join(', ');
+          const casYou = youAtk
+            ? Math.round(r.attackerLosses)
+            : youDef
+              ? Math.round(r.defenderLosses)
+              : null;
+          const casThem = youAtk
+            ? Math.round(r.defenderLosses)
+            : youDef
+              ? Math.round(r.attackerLosses)
+              : null;
+          const cas =
+            casYou != null && casThem != null
+              ? `YOU ${casYou} HP · ENEMY ${casThem} HP`
+              : `ATK ${Math.round(r.attackerLosses)} HP · DEF ${Math.round(r.defenderLosses)} HP`;
+          const stay =
+            !r.attackerWon
+              ? youAtk
+                ? 'NO RETREAT — your survivors stay on the block'
+                : youDef
+                  ? 'NO RETREAT — enemy survivors remain on your block'
+                  : 'NO RETREAT — attackers stay on the block'
+              : '';
+          const tone = involved
+            ? youWon
+              ? 'win'
+              : 'lose'
+            : r.attackerWon
+              ? 'win'
+              : 'lose';
+
+          return `
+            <article class="slb-sum-row ${tone}">
+              <div class="sum-head">
+                <span class="sum-n">#${i + 1}</span>
+                <span class="sum-sec">${escapeHtml(r.sectorId)}</span>
+                <span class="sum-out">${escapeHtml(outcome)}</span>
+              </div>
+              <div class="sum-meta">
+                <span>${escapeHtml(atkNames)} → ${escapeHtml(defNames)}</span>
+                <span>Roll ${rollD100} · edge ${winPct}%</span>
+                <span>${cas}</span>
+              </div>
+              ${stay ? `<div class="sum-stay">${escapeHtml(stay)}</div>` : ''}
+              <p class="sum-line">${escapeHtml(r.summary)}</p>
+            </article>`;
+        })
+        .join('');
+
+      const overlay = document.createElement('div');
+      overlay.id = 'sl-battle-overlay';
+      overlay.innerHTML = `
+        <div class="slb-card has-result slb-summary-card" role="dialog" aria-modal="true" aria-label="Clash summary" data-card>
+          <div class="slb-head">
+            <div class="slb-head-main">
+              <span class="tag">CLASH SUMMARY</span>
+              <span class="sector">// ${results.length} fight${results.length === 1 ? '' : 's'} skipped</span>
+            </div>
+          </div>
+          <div class="slb-body slb-sum-body">
+            <div class="slb-sum-list">${rows}</div>
+            <button type="button" class="slb-btn" data-dismiss>
+              CONTINUE
+              <span class="sub">Back to the war table · Enter</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      const dismiss = overlay.querySelector('[data-dismiss]') as HTMLButtonElement;
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        window.removeEventListener('keydown', onKey);
+        document.body.style.overflow = prevOverflow;
+        overlay.remove();
+        resolve();
+      };
+      const onKey = (ev: KeyboardEvent) => {
+        if (ev.key === 'Enter' || ev.key === 'Escape' || ev.key === ' ') {
+          ev.preventDefault();
+          finish();
+        }
+      };
+      window.addEventListener('keydown', onKey);
+      dismiss.addEventListener('click', () => {
+        SFX.play('ui');
+        finish();
+      });
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          SFX.play('ui');
+          finish();
+        }
+      });
+      SFX.play('ui');
+      window.setTimeout(() => dismiss.focus(), 30);
     });
   }
 

@@ -2400,6 +2400,119 @@
   display: none !important;
 }
 
+/* ── Skip All summary card ── */
+#sl-battle-overlay .slb-summary-card {
+  width: min(640px, calc(100vw - 12px));
+  max-height: min(100dvh - 12px, 100vh - 12px, 720px);
+}
+
+#sl-battle-overlay .slb-sum-body {
+  gap: 10px;
+}
+
+#sl-battle-overlay .slb-sum-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+#sl-battle-overlay .slb-sum-list::-webkit-scrollbar {
+  width: 5px;
+}
+#sl-battle-overlay .slb-sum-list::-webkit-scrollbar-thumb {
+  background: rgba(43, 240, 255, 0.35);
+}
+
+#sl-battle-overlay .slb-sum-row {
+  padding: 8px 10px;
+  border: 1px solid rgba(43, 240, 255, 0.2);
+  background: rgba(0, 0, 0, 0.32);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+
+#sl-battle-overlay .slb-sum-row.win {
+  border-color: rgba(125, 255, 107, 0.35);
+  background: linear-gradient(135deg, rgba(125, 255, 107, 0.08), rgba(0, 0, 0, 0.32));
+}
+
+#sl-battle-overlay .slb-sum-row.lose {
+  border-color: rgba(255, 61, 90, 0.35);
+  background: linear-gradient(135deg, rgba(255, 61, 90, 0.08), rgba(0, 0, 0, 0.32));
+}
+
+#sl-battle-overlay .slb-sum-row .sum-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  margin-bottom: 4px;
+}
+
+#sl-battle-overlay .slb-sum-row .sum-n {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+#sl-battle-overlay .slb-sum-row .sum-sec {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--cyan);
+}
+
+#sl-battle-overlay .slb-sum-row .sum-out {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin-left: auto;
+}
+
+#sl-battle-overlay .slb-sum-row.win .sum-out {
+  color: var(--ok);
+}
+
+#sl-battle-overlay .slb-sum-row.lose .sum-out {
+  color: var(--danger);
+}
+
+#sl-battle-overlay .slb-sum-row .sum-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
+#sl-battle-overlay .slb-sum-row .sum-stay {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  margin-bottom: 2px;
+}
+
+#sl-battle-overlay .slb-sum-row .sum-line {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+
 /* ── Button — always pinned at bottom of body, never scrolled away ── */
 #sl-battle-overlay button.slb-btn {
   width: 100%;
