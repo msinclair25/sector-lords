@@ -22,7 +22,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 8px;
   background:
     radial-gradient(ellipse 70% 50% at 50% 40%, rgba(255, 43, 214, 0.08), transparent 55%),
     radial-gradient(ellipse 60% 45% at 50% 70%, rgba(43, 240, 255, 0.06), transparent 50%),
@@ -49,12 +49,13 @@
   }
 }
 
-/* ── Card ── */
+/* ── Card — fits viewport, no scroll ── */
 #sl-battle-overlay .slb-card {
-  width: min(760px, 97vw);
-  max-height: min(94vh, 980px);
-  overflow: auto;
-  overflow-x: hidden;
+  width: min(720px, 96vw);
+  max-height: min(92vh, 860px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: var(--panel);
   border: 1px solid var(--stroke);
   clip-path: var(--clip);
@@ -66,13 +67,6 @@
   position: relative;
   animation: slb-card-in 0.42s cubic-bezier(0.2, 0.85, 0.25, 1);
   z-index: 2;
-}
-
-#sl-battle-overlay .slb-card::-webkit-scrollbar {
-  width: 6px;
-}
-#sl-battle-overlay .slb-card::-webkit-scrollbar-thumb {
-  background: rgba(43, 240, 255, 0.35);
 }
 
 #sl-battle-overlay .slb-card::before {
@@ -213,16 +207,46 @@
 }
 
 /* ═══════════════════════════════════════════
-   ARENA — portrait duel stage
+   ARENA — portrait duel stage (viewport-fit)
    ═══════════════════════════════════════════ */
 #sl-battle-overlay .slb-arena {
   position: relative;
-  height: 340px;
+  height: clamp(150px, 26vh, 220px);
+  flex: 0 0 auto;
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(6, 2, 14, 0.1) 0%, rgba(4, 2, 10, 0.45) 50%, rgba(2, 0, 8, 0.88) 100%),
     url("/assets/combat/arena_stage.jpg") center 38% / cover no-repeat;
   border-bottom: 1px solid rgba(43, 240, 255, 0.22);
+}
+
+/* After outcome: shrink arena so result + continue fit without scroll */
+#sl-battle-overlay .slb-card.has-result .slb-arena {
+  height: clamp(96px, 14vh, 130px);
+}
+#sl-battle-overlay .slb-card.has-result .fighter .style-tag,
+#sl-battle-overlay .slb-card.has-result .fighter .gear-row {
+  display: none;
+}
+#sl-battle-overlay .slb-card.has-result .slb-crew {
+  display: none;
+}
+#sl-battle-overlay .slb-card.has-result .slb-dice .hint,
+#sl-battle-overlay .slb-card.has-result .slb-dice .lbl {
+  display: none;
+}
+#sl-battle-overlay .slb-card.has-result .slb-dice {
+  margin-bottom: 0;
+  padding: 6px 10px;
+}
+#sl-battle-overlay .slb-card.has-result .fighter .frame {
+  width: 72px;
+  height: 72px;
+  padding: 3px;
+}
+#sl-battle-overlay .slb-card.has-result .fighter .chip {
+  font-size: 8px;
+  padding: 1px 5px;
 }
 
 #sl-battle-overlay .slb-arena .vignette {
@@ -907,16 +931,22 @@
    ═══════════════════════════════════════════ */
 #sl-battle-overlay .fighter {
   position: absolute;
-  bottom: 36px;
-  width: 148px;
+  bottom: 18px;
+  width: 112px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   z-index: 10;
   will-change: transform, filter;
   transform-style: preserve-3d;
   perspective: 600px;
+}
+
+#sl-battle-overlay .slb-card.has-result .fighter {
+  width: 84px;
+  bottom: 10px;
+  gap: 2px;
 }
 
 #sl-battle-overlay .fighter.atk {
@@ -932,12 +962,18 @@
   position: absolute;
   top: 0;
   left: 50%;
-  width: 132px;
-  height: 132px;
-  margin-left: -66px;
+  width: 100px;
+  height: 100px;
+  margin-left: -50px;
   opacity: 0;
   pointer-events: none;
   z-index: 0;
+}
+
+#sl-battle-overlay .slb-card.has-result .fighter .ghost {
+  width: 72px;
+  height: 72px;
+  margin-left: -36px;
 }
 
 #sl-battle-overlay .fighter .ghost img {
@@ -992,9 +1028,9 @@
 
 #sl-battle-overlay .fighter .frame {
   position: relative;
-  width: 132px;
-  height: 132px;
-  padding: 5px;
+  width: 100px;
+  height: 100px;
+  padding: 4px;
   z-index: 1;
   background:
     linear-gradient(145deg, rgba(43, 240, 255, 0.45), rgba(0, 0, 0, 0.7)),
@@ -1670,19 +1706,26 @@
 
 /* ── Body ── */
 #sl-battle-overlay .slb-body {
-  padding: 12px 18px 18px 20px;
+  padding: 8px 14px 12px 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 #sl-battle-overlay .slb-phase {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-align: center;
   color: var(--cyan);
   text-shadow: 0 0 14px rgba(43, 240, 255, 0.4);
-  margin: 0 0 12px;
-  min-height: 1.3em;
+  margin: 0;
+  min-height: 1.2em;
+  flex-shrink: 0;
 }
 
 #sl-battle-overlay .slb-phase.win {
@@ -1699,13 +1742,14 @@
 #sl-battle-overlay .slb-crew {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 #sl-battle-overlay .slb-crew .side {
-  padding: 10px 12px;
+  padding: 6px 10px;
   border: 1px solid rgba(43, 240, 255, 0.28);
   background: linear-gradient(165deg, rgba(43, 240, 255, 0.06), rgba(0, 0, 0, 0.36));
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
@@ -1772,16 +1816,19 @@
 }
 
 #sl-battle-overlay .slb-crew .crew {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #fff;
-  line-height: 1.25;
-  margin-bottom: 4px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #sl-battle-overlay .slb-crew .pow {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 900;
   letter-spacing: 0.05em;
   color: var(--cyan);
@@ -1836,21 +1883,22 @@
 
 /* ── Fate die only (no track bar) ── */
 #sl-battle-overlay .slb-dice {
-  margin-bottom: 14px;
-  padding: 14px 16px 16px;
+  margin-bottom: 0;
+  padding: 8px 12px 10px;
   border: 1px solid rgba(252, 238, 10, 0.32);
   background: linear-gradient(165deg, rgba(252, 238, 10, 0.07), rgba(0, 0, 0, 0.4));
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
   text-align: center;
+  flex-shrink: 0;
 }
 
 #sl-battle-overlay .slb-dice .lbl {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   color: var(--gold);
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   text-shadow: 0 0 8px rgba(252, 238, 10, 0.3);
 }
 
@@ -1858,17 +1906,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 14px;
 }
 
 #sl-battle-overlay .slb-d100 .die {
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 900;
   color: var(--gold);
   background: linear-gradient(145deg, rgba(30, 20, 50, 0.95), rgba(8, 4, 18, 0.98));
@@ -2223,11 +2271,14 @@
 /* ── Result ── */
 #sl-battle-overlay .slb-result {
   text-align: center;
-  margin-bottom: 14px;
-  padding: 12px 10px;
+  margin-bottom: 0;
+  padding: 8px 10px;
   border: 1px solid rgba(43, 240, 255, 0.18);
   background: rgba(0, 0, 0, 0.28);
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 #sl-battle-overlay .slb-card.won .slb-result {
@@ -2242,12 +2293,12 @@
 
 #sl-battle-overlay .slb-result .outcome {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 900;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   color: var(--ok);
   text-shadow: 0 0 18px rgba(125, 255, 107, 0.45);
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   animation: slb-outcome 0.55s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
@@ -2258,9 +2309,9 @@
 
 @keyframes slb-outcome {
   0% {
-    transform: scale(1.2);
+    transform: scale(1.12);
     opacity: 0;
-    filter: blur(4px);
+    filter: blur(3px);
   }
   100% {
     transform: scale(1);
@@ -2270,15 +2321,19 @@
 }
 
 #sl-battle-overlay .slb-result .summary {
-  margin: 0 0 8px;
-  font-size: 14px;
+  margin: 0 0 4px;
+  font-size: 12px;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.3;
   color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 #sl-battle-overlay .slb-result .cas {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--muted);
   letter-spacing: 0.04em;
@@ -2286,8 +2341,8 @@
 
 /* Hard stay-on-fail rule — only shown when assault is repelled */
 #sl-battle-overlay .slb-stay-note {
-  margin-top: 12px;
-  padding: 10px 12px;
+  margin-top: 6px;
+  padding: 6px 10px;
   text-align: left;
   border: 1px solid rgba(255, 61, 90, 0.4);
   background: linear-gradient(
@@ -2303,22 +2358,22 @@
 #sl-battle-overlay .slb-stay-note .stay-tag {
   display: inline-block;
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 900;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   color: var(--danger);
   border: 1px solid rgba(255, 61, 90, 0.55);
-  padding: 2px 8px;
-  margin-bottom: 6px;
+  padding: 1px 6px;
+  margin-bottom: 3px;
   text-shadow: 0 0 10px rgba(255, 61, 90, 0.4);
   background: rgba(0, 0, 0, 0.35);
 }
 
 #sl-battle-overlay .slb-stay-note p {
   margin: 0;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.3;
   color: var(--text);
 }
 
@@ -2334,7 +2389,8 @@
 /* ── Button ── */
 #sl-battle-overlay button.slb-btn {
   width: 100%;
-  min-height: 54px;
+  min-height: 44px;
+  flex-shrink: 0;
   cursor: pointer;
   border: 1px solid rgba(255, 43, 214, 0.8);
   border-radius: 0;
@@ -2347,11 +2403,11 @@
   );
   color: #fff;
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 12px 16px;
+  padding: 8px 14px;
   box-shadow: 0 0 26px rgba(255, 43, 214, 0.28), 0 10px 22px rgba(0, 0, 0, 0.48);
   transition: border-color 0.12s, box-shadow 0.12s, transform 0.1s;
   animation: slb-btn-in 0.4s ease-out;
@@ -2426,19 +2482,22 @@
     margin-left: auto;
   }
   #sl-battle-overlay .slb-arena {
-    height: 270px;
+    height: clamp(130px, 22vh, 180px);
+  }
+  #sl-battle-overlay .slb-card.has-result .slb-arena {
+    height: clamp(80px, 12vh, 110px);
   }
   #sl-battle-overlay .fighter {
-    width: 112px;
+    width: 96px;
   }
   #sl-battle-overlay .fighter .frame {
-    width: 100px;
-    height: 100px;
+    width: 88px;
+    height: 88px;
   }
   #sl-battle-overlay .fighter .ghost {
-    width: 100px;
-    height: 100px;
-    margin-left: -50px;
+    width: 88px;
+    height: 88px;
+    margin-left: -44px;
   }
   #sl-battle-overlay .fighter.atk {
     left: 2%;
@@ -2447,14 +2506,18 @@
     right: 2%;
   }
   #sl-battle-overlay .slb-d100 .die {
-    width: 58px;
-    height: 58px;
-    font-size: 20px;
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
   }
   #sl-battle-overlay .slb-crew {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto 1fr;
   }
-  #sl-battle-overlay .slb-crew .mid {
-    order: -1;
+  #sl-battle-overlay .slb-crew .who,
+  #sl-battle-overlay .slb-crew .role {
+    display: none;
+  }
+  #sl-battle-overlay button.slb-btn .sub {
+    display: none;
   }
 }

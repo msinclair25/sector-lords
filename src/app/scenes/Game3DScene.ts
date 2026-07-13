@@ -3199,8 +3199,9 @@ export class Game3DScene extends Phaser.Scene {
           SFX.play(result.attackerWon ? 'claim' : 'error');
         }
 
-        // Short hold on the summary — no long dead pause at the end
-        const hold = opts?.holdMs ?? (instant ? 900 : 2200);
+        card.classList.add('has-result');
+        // Readable summary hold — not a long dead wait
+        const hold = opts?.holdMs ?? (instant ? 900 : 3600);
         timers.push(window.setTimeout(finish, hold));
       };
 
@@ -3233,15 +3234,15 @@ export class Game3DScene extends Phaser.Scene {
         return;
       }
 
-      // Snappier duel reel (was ~11s fight + up to 32s idle)
+      // Medium pace: readable strikes, not a slog (~7.5s to outcome, ~3.5s hold)
       const beats: Array<{ t: number; label: string; pose: string[]; sfx: 'ui' | 'attack' | 'combat' }> = [
-        { t: 80, label: 'LOCKING…', pose: ['locking'], sfx: 'ui' },
-        { t: 550, label: `${atkStyle.toUpperCase()} vs ${defStyle.toUpperCase()}`, pose: ['idle'], sfx: 'ui' },
-        { t: 1000, label: labels[0]!, pose: ['exchange', 'hit-1'], sfx: 'attack' },
-        { t: 1550, label: labels[1]!, pose: ['exchange', 'hit-2'], sfx: 'attack' },
-        { t: 2100, label: labels[2]!, pose: ['exchange', 'hit-3'], sfx: 'combat' },
-        { t: 2650, label: labels[3]!, pose: ['exchange', 'hit-4'], sfx: 'attack' },
-        { t: 3200, label: labels[4]!, pose: ['finale'], sfx: 'combat' },
+        { t: 100, label: 'LOCKING TARGETS…', pose: ['locking'], sfx: 'ui' },
+        { t: 900, label: `${atkStyle.toUpperCase()} vs ${defStyle.toUpperCase()}`, pose: ['idle'], sfx: 'ui' },
+        { t: 1600, label: labels[0]!, pose: ['exchange', 'hit-1'], sfx: 'attack' },
+        { t: 2500, label: labels[1]!, pose: ['exchange', 'hit-2'], sfx: 'attack' },
+        { t: 3400, label: labels[2]!, pose: ['exchange', 'hit-3'], sfx: 'combat' },
+        { t: 4300, label: labels[3]!, pose: ['exchange', 'hit-4'], sfx: 'attack' },
+        { t: 5200, label: labels[4]!, pose: ['finale'], sfx: 'combat' },
       ];
 
       for (const b of beats) {
@@ -3266,19 +3267,19 @@ export class Game3DScene extends Phaser.Scene {
             const n = 1 + Math.floor(Math.random() * 100);
             rollEl.textContent = String(n);
             dieEl.textContent = String(n);
-          }, 50);
+          }, 55);
           SFX.play('ui');
-        }, 3800),
+        }, 6000),
       );
 
-      timers.push(window.setTimeout(() => revealResult(), 5000));
+      timers.push(window.setTimeout(() => revealResult(), 7800));
 
       // Hard cap so a stuck card never freezes the turn
       timers.push(
         window.setTimeout(() => {
-          if (!revealed) revealResult({ quiet: true, holdMs: 400 });
+          if (!revealed) revealResult({ quiet: true, holdMs: 500 });
           else finish();
-        }, 12000),
+        }, 18000),
       );
     });
   }
