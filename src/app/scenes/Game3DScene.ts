@@ -37,9 +37,12 @@ import {
   type ActionFxKind,
   type TurnActionFx,
 } from '../turnActionFx';
+import { pickEndingCard } from '../../content/endings';
+import type { DebriefReport } from '../../engine';
 import hudCss from '../ui/hybridHud.css?inline';
 import battleCss from '../ui/battleClash.css?inline';
 import eventCss from '../ui/eventCard.css?inline';
+import endingCss from '../ui/endingCard.css?inline';
 
 const COACH_KEY = 'sector-lords-hybrid-coach';
 const SIDE_COLLAPSE_KEY = 'sector-lords-side-collapse';
@@ -2103,8 +2106,12 @@ export class Game3DScene extends Phaser.Scene {
     }
     if (act === 'debrief') {
       const d = this.controller.getDebrief();
-      this.statusMsg = d?.summary ?? 'Game over';
-      this.render();
+      if (d) {
+        void this.showEndingCard(d);
+      } else {
+        this.statusMsg = 'Game over';
+        this.render();
+      }
       return;
     }
     if (act === 'end') {
@@ -2731,8 +2738,9 @@ export class Game3DScene extends Phaser.Scene {
     if (this.controller.state.winnerId) {
       const d = this.controller.getDebrief();
       this.statusMsg = d?.summary ?? 'Game over';
-      SFX.play(this.controller.state.winnerId === this.controller.humanId ? 'win' : 'lose');
       this.render();
+      if (d) void this.showEndingCard(d);
+      else SFX.play(this.controller.state.winnerId === this.controller.humanId ? 'win' : 'lose');
       return;
     }
 
@@ -2766,11 +2774,11 @@ export class Game3DScene extends Phaser.Scene {
         this.render();
         if (combats > 0) SFX.play('combat');
         if (debrief) {
+          this.statusMsg = debrief.summary;
+          this.render();
           window.setTimeout(() => {
-            SFX.play(debrief.winnerId === this.controller.humanId ? 'win' : 'lose');
-            this.statusMsg = debrief.summary + ' — ' + (debrief.reasons[0] ?? '');
-            this.render();
-          }, 400);
+            void this.showEndingCard(debrief);
+          }, 350);
         }
       }
     })();
@@ -3474,6 +3482,111 @@ export class Game3DScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * End-of-run card: unique epitaph + thank-you + light fireworks (win).
+   * Stays until the player dismisses.
+   */
+  private showEndingCard(debrief: DebriefReport): Promise<void> {
+    return new Promise((resolve) => {
+      const human = this.controller.humanId;
+      const won = debrief.winnerId === human;
+      const card = pickEndingCard(debrief, human);
+      const reasons = debrief.reasons
+        .slice(0, 4)
+        .map((r) => `<li>${escapeHtml(r)}</li>`)
+        .join('');
+
+      let st = document.getElementById('sl-ending-style') as HTMLStyleElement | null;
+      if (!st) {
+        st = document.createElement('style');
+        st.id = 'sl-ending-style';
+        document.head.appendChild(st);
+      }
+      st.textContent = endingCss;
+
+      const overlay = document.createElement('div');
+      overlay.id = 'sl-ending-overlay';
+      overlay.className = `${won ? 'win' : 'lose'} tone-${card.tone}`;
+      overlay.innerHTML = `
+        <canvas class="slf-fx" data-fx aria-hidden="true"></canvas>
+        <div class="slf-card" role="dialog" aria-modal="true" aria-label="${won ? 'Victory' : 'Defeat'}">
+          <div class="slf-head">
+            <span class="tag">${won ? 'CITY YOURS' : 'CITY LOST'}</span>
+            <span class="tone">${escapeHtml(card.tone.toUpperCase())}</span>
+          </div>
+          <div class="slf-art" style="background-image:url('${card.art}')">
+            <div class="slf-art-fade"></div>
+            <span class="slf-art-badge">${escapeHtml(card.badge)}</span>
+          </div>
+          <div class="slf-body">
+            <h2 class="slf-headline">${escapeHtml(card.headline)}</h2>
+            <p class="slf-sub">${escapeHtml(card.subhead)}</p>
+            <p class="slf-body-text">${escapeHtml(card.body)}</p>
+            <div class="slf-meta">
+              <span>Style <b>${escapeHtml(debrief.playerStyle)}</b></span>
+              <span>Turns <b>${debrief.turnsPlayed}</b></span>
+              <span>Winner <b>${escapeHtml(debrief.winnerName)}</b></span>
+            </div>
+            ${
+              reasons
+                ? `<ul class="slf-reasons">${reasons}</ul>`
+                : ''
+            }
+            <p class="slf-thanks">
+              <span class="ty-label">// TRANSMISSION</span>
+              ${escapeHtml(card.thankYou)}
+            </p>
+            <div class="slf-actions">
+              <button type="button" class="slf-btn" data-dismiss>
+                ${won ? 'ACKNOWLEDGE VICTORY' : 'ACKNOWLEDGE DEFEAT'}
+                <span class="sub">Close when you have finished gloating or grieving</span>
+              </button>
+              <button type="button" class="slf-btn ghost" data-menu>
+                BACK TO MENU
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      const canvas = overlay.querySelector('[data-fx]') as HTMLCanvasElement;
+      const stopFx = won
+        ? startLightFireworks(canvas)
+        : startDefeatStatic(canvas);
+
+      SFX.play(won ? 'win' : 'lose');
+
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        stopFx();
+        document.body.style.overflow = prevOverflow;
+        overlay.remove();
+        resolve();
+      };
+
+      overlay.querySelector('[data-dismiss]')?.addEventListener('click', () => {
+        SFX.play('ui');
+        finish();
+      });
+      overlay.querySelector('[data-menu]')?.addEventListener('click', () => {
+        SFX.play('ui');
+        finish();
+        this.controller.persist();
+        this.teardown();
+        this.scene.start('Menu');
+      });
+
+      const btn = overlay.querySelector('[data-dismiss]') as HTMLButtonElement | null;
+      btn?.focus();
+    });
+  }
+
   /** Full-screen event card — stays until ACKNOWLEDGE (no auto-timeout). */
   private showEventCard(flash: CityEventFlash): Promise<void> {
     return new Promise((resolve) => {
@@ -3551,4 +3664,154 @@ function escapeHtml(s: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/** Cheap canvas fireworks — few bursts, auto-stops. Returns cancel fn. */
+function startLightFireworks(canvas: HTMLCanvasElement): () => void {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return () => undefined;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let w = 0;
+  let h = 0;
+  const resize = () => {
+    w = canvas.clientWidth || window.innerWidth;
+    h = canvas.clientHeight || window.innerHeight;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  resize();
+
+  type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; hue: number; size: number };
+  const particles: P[] = [];
+  let burstsLeft = 6;
+  let nextBurst = 0;
+  let raf = 0;
+  let alive = true;
+  const t0 = performance.now();
+
+  const burst = (x: number, y: number) => {
+    const hue = 40 + Math.random() * 80; // gold → cyan-ish
+    const n = 22 + Math.floor(Math.random() * 10);
+    for (let i = 0; i < n; i++) {
+      const a = (Math.PI * 2 * i) / n + Math.random() * 0.4;
+      const sp = 1.2 + Math.random() * 3.2;
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 0.6,
+        life: 0,
+        max: 36 + Math.random() * 28,
+        hue: hue + Math.random() * 40,
+        size: 1.5 + Math.random() * 2,
+      });
+    }
+  };
+
+  const tick = (now: number) => {
+    if (!alive) return;
+    // Cap total runtime ~3.5s
+    if (now - t0 > 3600 && particles.length === 0) {
+      ctx.clearRect(0, 0, w, h);
+      return;
+    }
+
+    if (burstsLeft > 0 && now >= nextBurst) {
+      burst(w * (0.15 + Math.random() * 0.7), h * (0.12 + Math.random() * 0.35));
+      burstsLeft -= 1;
+      nextBurst = now + 280 + Math.random() * 320;
+    }
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i]!;
+      p.life += 1;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.04;
+      p.vx *= 0.99;
+      if (p.life >= p.max) {
+        particles.splice(i, 1);
+        continue;
+      }
+      const alpha = 1 - p.life / p.max;
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${p.hue}, 95%, 62%, ${alpha * 0.85})`;
+      ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+
+    if (alive && (particles.length > 0 || burstsLeft > 0 || now - t0 < 3600)) {
+      raf = requestAnimationFrame(tick);
+    }
+  };
+
+  raf = requestAnimationFrame(tick);
+  const onResize = () => resize();
+  window.addEventListener('resize', onResize);
+
+  return () => {
+    alive = false;
+    cancelAnimationFrame(raf);
+    window.removeEventListener('resize', onResize);
+    ctx.clearRect(0, 0, w, h);
+  };
+}
+
+/** Soft static sparkles for defeat — even lighter than fireworks. */
+function startDefeatStatic(canvas: HTMLCanvasElement): () => void {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return () => undefined;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let w = 0;
+  let h = 0;
+  const resize = () => {
+    w = canvas.clientWidth || window.innerWidth;
+    h = canvas.clientHeight || window.innerHeight;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  resize();
+
+  let raf = 0;
+  let alive = true;
+  const t0 = performance.now();
+  const dots = Array.from({ length: 28 }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    s: 0.8 + Math.random() * 1.6,
+    ph: Math.random() * Math.PI * 2,
+  }));
+
+  const tick = (now: number) => {
+    if (!alive) return;
+    if (now - t0 > 2800) {
+      ctx.clearRect(0, 0, w, h);
+      return;
+    }
+    ctx.clearRect(0, 0, w, h);
+    const t = (now - t0) / 1000;
+    for (const d of dots) {
+      const a = 0.15 + 0.35 * (0.5 + 0.5 * Math.sin(t * 3 + d.ph));
+      ctx.fillStyle = `rgba(255, 100, 130, ${a})`;
+      ctx.fillRect(d.x * w, d.y * h, d.s, d.s);
+    }
+    if (alive) raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+  const onResize = () => resize();
+  window.addEventListener('resize', onResize);
+
+  return () => {
+    alive = false;
+    cancelAnimationFrame(raf);
+    window.removeEventListener('resize', onResize);
+    ctx.clearRect(0, 0, w, h);
+  };
 }
