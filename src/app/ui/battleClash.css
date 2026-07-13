@@ -1072,19 +1072,89 @@
 
 #sl-battle-overlay .fighter .chip {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.18em;
-  padding: 4px 11px;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
   border: 1px solid rgba(43, 240, 255, 0.55);
   color: var(--cyan);
   background: rgba(4, 2, 12, 0.92);
   z-index: 1;
+  max-width: 120px;
+  text-align: center;
+  line-height: 1.2;
 }
 
 #sl-battle-overlay .fighter.def .chip {
   border-color: rgba(255, 61, 90, 0.6);
   color: var(--danger);
+}
+
+/* YOU = gold/cyan identity; ENEMY = magenta/danger */
+#sl-battle-overlay .fighter .chip.you {
+  border-color: rgba(252, 238, 10, 0.85);
+  color: var(--gold);
+  background: linear-gradient(180deg, rgba(252, 238, 10, 0.2), rgba(4, 2, 12, 0.95));
+  box-shadow: 0 0 16px rgba(252, 238, 10, 0.35);
+}
+
+#sl-battle-overlay .fighter .chip.enemy {
+  border-color: rgba(255, 43, 214, 0.7);
+  color: #ff9ae8;
+  background: linear-gradient(180deg, rgba(255, 43, 214, 0.16), rgba(4, 2, 12, 0.95));
+  box-shadow: 0 0 14px rgba(255, 43, 214, 0.28);
+}
+
+#sl-battle-overlay .fighter.you .frame {
+  box-shadow:
+    0 0 0 2px rgba(252, 238, 10, 0.55),
+    0 0 28px rgba(252, 238, 10, 0.25);
+}
+
+#sl-battle-overlay .fighter.enemy .frame {
+  box-shadow:
+    0 0 0 2px rgba(255, 43, 214, 0.5),
+    0 0 24px rgba(255, 43, 214, 0.22);
+}
+
+/* Stance banner under head */
+#sl-battle-overlay .slb-stance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 18px 8px 20px;
+  border-bottom: 1px solid rgba(43, 240, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+  position: relative;
+  z-index: 4;
+}
+
+#sl-battle-overlay .slb-stance .stance-pill {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  padding: 5px 12px;
+  border: 1px solid rgba(143, 168, 184, 0.4);
+  color: var(--muted);
+  background: rgba(8, 6, 16, 0.9);
+}
+
+#sl-battle-overlay .slb-stance .stance-pill.you {
+  border-color: rgba(252, 238, 10, 0.75);
+  color: var(--gold);
+  box-shadow: 0 0 18px rgba(252, 238, 10, 0.25);
+  text-shadow: 0 0 12px rgba(252, 238, 10, 0.35);
+}
+
+#sl-battle-overlay .slb-stance .stance-map {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(143, 168, 184, 0.85);
 }
 
 /* ── Card motion states (the duel choreography) ── */
@@ -1485,6 +1555,51 @@
   clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
 }
 
+#sl-battle-overlay .slb-crew .side.you {
+  border-color: rgba(252, 238, 10, 0.55);
+  background: linear-gradient(165deg, rgba(252, 238, 10, 0.12), rgba(0, 0, 0, 0.4));
+  box-shadow: 0 0 20px rgba(252, 238, 10, 0.12);
+}
+
+#sl-battle-overlay .slb-crew .side.enemy {
+  border-color: rgba(255, 43, 214, 0.4);
+  background: linear-gradient(165deg, rgba(255, 43, 214, 0.1), rgba(0, 0, 0, 0.4));
+}
+
+#sl-battle-overlay .slb-crew .badge {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  margin-bottom: 4px;
+  padding: 2px 8px;
+  border: 1px solid rgba(143, 168, 184, 0.35);
+  color: var(--muted);
+}
+
+#sl-battle-overlay .slb-crew .badge.you {
+  border-color: rgba(252, 238, 10, 0.8);
+  color: var(--gold);
+  background: rgba(252, 238, 10, 0.12);
+  box-shadow: 0 0 12px rgba(252, 238, 10, 0.25);
+}
+
+#sl-battle-overlay .slb-crew .badge.enemy {
+  border-color: rgba(255, 43, 214, 0.65);
+  color: #ff9ae8;
+  background: rgba(255, 43, 214, 0.1);
+}
+
+#sl-battle-overlay .slb-crew .role {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
 #sl-battle-overlay .slb-crew .who {
   font-family: var(--font-display);
   font-size: 10px;
@@ -1544,6 +1659,16 @@
   font-size: 17px;
   color: var(--ok);
   text-shadow: 0 0 10px rgba(125, 255, 107, 0.35);
+}
+
+#sl-battle-overlay .slb-result .outcome.you-win {
+  color: var(--ok);
+  text-shadow: 0 0 18px rgba(125, 255, 107, 0.4);
+}
+
+#sl-battle-overlay .slb-result .outcome.you-lose {
+  color: var(--danger);
+  text-shadow: 0 0 18px rgba(255, 61, 90, 0.4);
 }
 
 /* ── Fate die only (no track bar) ── */

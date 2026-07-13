@@ -2776,6 +2776,54 @@ export class Game3DScene extends Phaser.Scene {
               .join('')}</div>`
           : '';
 
+      // Make YOU vs ENEMY obvious (player can be attacker or defender)
+      const human = this.controller.humanId;
+      const youAtk = result.attackerId === human;
+      const youDef = result.defenderId === human;
+      const atkAllegiance = youAtk ? 'you' : 'enemy';
+      const defAllegiance = youDef ? 'you' : 'enemy';
+      const atkRoleChip = youAtk ? 'YOU · ATK' : 'ENEMY · ATK';
+      const defRoleChip = youDef ? 'YOU · DEF' : 'ENEMY · DEF';
+      const stanceLine = youAtk
+        ? 'YOU ARE ATTACKING'
+        : youDef
+          ? 'YOU ARE DEFENDING'
+          : 'RIVAL CLASH';
+      const edgeLabel = youAtk ? 'YOUR EDGE' : youDef ? 'THEIR EDGE' : 'ATK EDGE';
+      const dieHint = youAtk
+        ? 'under edge = YOU win the assault'
+        : youDef
+          ? 'under edge = they take the block · high roll helps YOU'
+          : 'under edge = attacker wins';
+      const dieNeed = youAtk
+        ? `Need under <b>${winPct}</b> for YOU`
+        : youDef
+          ? `They need under <b>${winPct}</b>`
+          : `Need under <b>${winPct}</b>`;
+      const youWon =
+        (youAtk && result.attackerWon) || (youDef && !result.attackerWon);
+      const outcomeLine = youAtk
+        ? result.attackerWon
+          ? 'YOU WIN — ASSAULT SUCCESS'
+          : 'YOU LOSE — ASSAULT REPELLED'
+        : youDef
+          ? result.attackerWon
+            ? 'YOU LOSE — BLOCK FALLS'
+            : 'YOU HOLD — ASSAULT REPELLED'
+          : result.attackerWon
+            ? 'ASSAULT SUCCESS'
+            : 'ASSAULT REPELLED';
+      const casYou = youAtk
+        ? Math.round(result.attackerLosses)
+        : youDef
+          ? Math.round(result.defenderLosses)
+          : null;
+      const casThem = youAtk
+        ? Math.round(result.defenderLosses)
+        : youDef
+          ? Math.round(result.attackerLosses)
+          : null;
+
       let st = document.getElementById('sl-battle-style') as HTMLStyleElement | null;
       if (!st) {
         st = document.createElement('style');
@@ -2787,10 +2835,14 @@ export class Game3DScene extends Phaser.Scene {
       const overlay = document.createElement('div');
       overlay.id = 'sl-battle-overlay';
       overlay.innerHTML = `
-        <div class="slb-card idle style-atk-${atkStyle} style-def-${defStyle}" role="dialog" aria-modal="true" aria-label="Sector clash" data-card>
+        <div class="slb-card idle style-atk-${atkStyle} style-def-${defStyle} ${youAtk ? 'you-attack' : youDef ? 'you-defend' : ''}" role="dialog" aria-modal="true" aria-label="Sector clash" data-card>
           <div class="slb-head">
             <span class="tag">SECTOR CLASH</span>
             <span class="sector">// ${escapeHtml(result.sectorId)} · ${atkStyle.toUpperCase()} vs ${defStyle.toUpperCase()}</span>
+          </div>
+          <div class="slb-stance ${youAtk ? 'you' : youDef ? 'you def' : ''}" data-stance>
+            <span class="stance-pill ${youAtk || youDef ? 'you' : ''}">${stanceLine}</span>
+            <span class="stance-map">LEFT = ASSAULT · RIGHT = DEFENDERS</span>
           </div>
 
           <div class="slb-arena">
@@ -2821,17 +2873,17 @@ export class Game3DScene extends Phaser.Scene {
             <div class="dmg-tick on-atk" data-n="4">−${atkTicks[3]}</div>
             <div class="dmg-float atk">−${atkDmg}</div>
             <div class="dmg-float def">−${defDmg}</div>
-            <div class="fighter atk">
+            <div class="fighter atk ${atkAllegiance}">
               <div class="ghost"><img src="${atkPort}" alt="" /></div>
               <div class="frame"><img src="${atkPort}" alt="" /></div>
-              <span class="chip">ATK</span>
+              <span class="chip ${atkAllegiance}">${atkRoleChip}</span>
               <span class="style-tag">${atkStyle.toUpperCase()}</span>
               ${gearRow(result.attackerGearIcons)}
             </div>
-            <div class="fighter def">
+            <div class="fighter def ${defAllegiance}">
               <div class="ghost"><img src="${defPort}" alt="" /></div>
               <div class="frame"><img src="${defPort}" alt="" /></div>
-              <span class="chip">DEF</span>
+              <span class="chip ${defAllegiance}">${defRoleChip}</span>
               <span class="style-tag">${defStyle.toUpperCase()}</span>
               ${gearRow(result.defenderGearIcons)}
             </div>
@@ -2841,13 +2893,17 @@ export class Game3DScene extends Phaser.Scene {
             <div class="slb-phase" data-phase>LOCKING TARGETS…</div>
 
             <div class="slb-crew">
-              <div class="side atk">
+              <div class="side atk ${atkAllegiance}">
+                <div class="badge ${atkAllegiance}">${youAtk ? 'YOU' : 'ENEMY'}</div>
+                <div class="role">ASSAULT</div>
                 <div class="who">${escapeHtml(result.attackerPlayerName ?? 'Attacker')}</div>
                 <div class="crew">${escapeHtml(atkNames)}</div>
                 <div class="pow"><span>PWR</span>${atkPow}</div>
               </div>
-              <div class="mid">EDGE<b>${winPct}%</b></div>
-              <div class="side def">
+              <div class="mid">${edgeLabel}<b>${winPct}%</b></div>
+              <div class="side def ${defAllegiance}">
+                <div class="badge ${defAllegiance}">${youDef ? 'YOU' : 'ENEMY'}</div>
+                <div class="role">DEFENDERS</div>
                 <div class="who">${escapeHtml(result.defenderPlayerName ?? 'Defender')}</div>
                 <div class="crew">${escapeHtml(defNames)}</div>
                 <div class="pow">${defPow}<span>PWR</span></div>
@@ -2862,19 +2918,24 @@ export class Game3DScene extends Phaser.Scene {
                   <div class="die" data-die>—</div>
                 </div>
                 <div class="die-meta">
-                  <div class="line">Need under <b>${winPct}</b></div>
+                  <div class="line">${dieNeed}</div>
                   <div class="line roll">Rolled <b data-roll>—</b></div>
-                  <div class="hint">lower than edge = assault lands</div>
+                  <div class="hint">${dieHint}</div>
                 </div>
               </div>
               <div class="roll-quality" data-quality></div>
             </div>
 
             <div class="slb-result hidden" data-result>
-              <div class="outcome">${result.attackerWon ? 'ASSAULT SUCCESS' : 'ASSAULT REPELLED'}</div>
+              <div class="outcome ${youAtk || youDef ? (youWon ? 'you-win' : 'you-lose') : ''}">${outcomeLine}</div>
               <p class="summary">${escapeHtml(result.summary)}</p>
               <div class="cas">
-                Casualties — ATK ${Math.round(result.attackerLosses)} HP · DEF ${Math.round(result.defenderLosses)} HP
+                Casualties —
+                ${
+                  casYou != null && casThem != null
+                    ? `YOU ${casYou} HP · ENEMY ${casThem} HP`
+                    : `ATK ${Math.round(result.attackerLosses)} HP · DEF ${Math.round(result.defenderLosses)} HP`
+                }
                 ${result.destroyedGangIds.length ? ` · ${result.destroyedGangIds.length} crew wiped` : ''}
               </div>
             </div>
