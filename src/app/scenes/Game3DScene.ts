@@ -452,29 +452,9 @@ export class Game3DScene extends Phaser.Scene {
       }
     }
 
-    // ── Priority: tiles with YOUR crews always select / cycle crews ──
-    // (Do NOT auto-order onto a tile that has your gangs — that blocked selection.)
-    if (mine.length > 0) {
-      this.selected = id;
-      if (this.selectedGang && mine.includes(this.selectedGang)) {
-        // Same tile again → cycle through stacked crews
-        const idx = mine.indexOf(this.selectedGang);
-        this.selectedGang = mine[(idx + 1) % mine.length]!;
-      } else {
-        // Prefer a crew that still needs an order
-        const free = mine.find((gid) => !state.orders.some((o) => o.gangId === gid));
-        this.selectedGang = free ?? mine[0]!;
-      }
-      this.statusMsg = this.describeSelection();
-      if (this.selectedGang && this.coachStep === 0) this.advanceCoach();
-      this.refreshBoard();
-      this.board?.focusSector(id);
-      this.render();
-      SFX.play('ui');
-      return;
-    }
-
-    // Empty / enemy / friendly-without-crew: auto-order if a free crew is selected
+    // ── Move / claim / attack onto legal neighbors (even if friendly crews stand there) ──
+    // Previously we always selected stacked crews on your tiles, so "move onto ally tile"
+    // was impossible — click only swapped selection.
     if (gangStillValid) {
       const gang = state.gangs[this.selectedGang!]!;
       const alreadyOrdered = state.orders.some((o) => o.gangId === gang.id);
@@ -494,6 +474,27 @@ export class Game3DScene extends Phaser.Scene {
         this.tryAutoOrder('attack', gang.id, id);
         return;
       }
+    }
+
+    // ── No legal order: select / cycle YOUR crews on this tile ──
+    if (mine.length > 0) {
+      this.selected = id;
+      if (this.selectedGang && mine.includes(this.selectedGang)) {
+        // Same tile again → cycle through stacked crews
+        const idx = mine.indexOf(this.selectedGang);
+        this.selectedGang = mine[(idx + 1) % mine.length]!;
+      } else {
+        // Prefer a crew that still needs an order
+        const free = mine.find((gid) => !state.orders.some((o) => o.gangId === gid));
+        this.selectedGang = free ?? mine[0]!;
+      }
+      this.statusMsg = this.describeSelection();
+      if (this.selectedGang && this.coachStep === 0) this.advanceCoach();
+      this.refreshBoard();
+      this.board?.focusSector(id);
+      this.render();
+      SFX.play('ui');
+      return;
     }
 
     // Just focus the sector (no crew here)

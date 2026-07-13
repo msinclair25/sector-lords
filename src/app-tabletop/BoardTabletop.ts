@@ -349,10 +349,20 @@ export class BoardTabletop {
     this.downY = ev.clientY;
     this.lastX = ev.clientX;
     this.lastY = ev.clientY;
-    this.pendingGang = this.pickGangAt(ev.clientX, ev.clientY);
-    this.pendingSelect = this.pendingGang
-      ? null
-      : this.pickTileAt(ev.clientX, ev.clientY);
+    const gangHit = this.pickGangAt(ev.clientX, ev.clientY);
+    const tileHit = this.pickTileAt(ev.clientX, ev.clientY);
+    // Green legal destinations: treat click as tile order even if a friendly
+    // portrait is under the finger (otherwise move-onto-ally is impossible).
+    const tileIsDest =
+      !!tileHit &&
+      !!this.tiles.get(tileHit)?.classList.contains('is-dest');
+    if (gangHit && !tileIsDest) {
+      this.pendingGang = gangHit;
+      this.pendingSelect = null;
+    } else {
+      this.pendingGang = null;
+      this.pendingSelect = tileHit;
+    }
     this.panning = !this.pendingSelect && !this.pendingGang;
     if (this.panning) this.root.classList.add('is-panning');
   };
