@@ -1,0 +1,505 @@
+/* City Event modal — same chrome language as HUD / Sector Clash (self-contained) */
+
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap");
+
+#sl-event-overlay {
+  --gold: #fcee0a;
+  --cyan: #2bf0ff;
+  --magenta: #ff2bd6;
+  --ok: #7dff6b;
+  --danger: #ff3d5a;
+  --muted: #8fa8b8;
+  --text: #f4f0ff;
+  --panel: linear-gradient(165deg, rgba(14, 8, 28, 0.99) 0%, rgba(4, 2, 12, 0.995) 100%);
+  --stroke: rgba(43, 240, 255, 0.5);
+  --clip: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  --font-ui: "Rajdhani", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Orbitron", "Segoe UI", system-ui, sans-serif;
+
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background:
+    radial-gradient(ellipse 65% 50% at 50% 35%, rgba(252, 238, 10, 0.07), transparent 55%),
+    radial-gradient(ellipse 55% 45% at 50% 70%, rgba(43, 240, 255, 0.06), transparent 50%),
+    rgba(1, 0, 6, 0.92);
+  backdrop-filter: blur(16px) saturate(1.3);
+  font-family: var(--font-ui);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  animation: sle-fade 0.3s ease-out;
+  pointer-events: auto;
+}
+
+#sl-event-overlay * {
+  box-sizing: border-box;
+}
+
+@keyframes sle-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Card shell ── */
+#sl-event-overlay .sle-card {
+  width: min(520px, 96vw);
+  max-height: min(92vh, 860px);
+  overflow: auto;
+  overflow-x: hidden;
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  clip-path: var(--clip);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.85),
+    0 0 48px rgba(252, 238, 10, 0.12),
+    0 0 60px rgba(43, 240, 255, 0.1),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+  position: relative;
+  animation: sle-card-in 0.4s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+#sl-event-overlay .sle-card::-webkit-scrollbar {
+  width: 5px;
+}
+#sl-event-overlay .sle-card::-webkit-scrollbar-thumb {
+  background: rgba(43, 240, 255, 0.35);
+}
+
+#sl-event-overlay .sle-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  z-index: 6;
+  background: linear-gradient(180deg, var(--gold), var(--magenta), var(--cyan));
+  box-shadow: 0 0 14px rgba(252, 238, 10, 0.5);
+}
+
+#sl-event-overlay .sle-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  border-top: 2px solid var(--gold);
+  border-right: 2px solid var(--gold);
+  z-index: 6;
+}
+
+@keyframes sle-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Tone accents */
+#sl-event-overlay .sle-card.tone-grim {
+  border-color: rgba(255, 61, 90, 0.55);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.85),
+    0 0 50px rgba(255, 61, 90, 0.2),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+#sl-event-overlay .sle-card.tone-grim::before {
+  background: linear-gradient(180deg, var(--danger), var(--magenta), #4a1020);
+}
+
+#sl-event-overlay .sle-card.tone-funny {
+  border-color: rgba(125, 255, 107, 0.5);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.85),
+    0 0 50px rgba(125, 255, 107, 0.16),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+#sl-event-overlay .sle-card.tone-funny::before {
+  background: linear-gradient(180deg, var(--ok), var(--gold), var(--cyan));
+}
+
+#sl-event-overlay .sle-card.tone-weird {
+  border-color: rgba(180, 120, 255, 0.55);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.85),
+    0 0 50px rgba(180, 120, 255, 0.18),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+#sl-event-overlay .sle-card.tone-weird::before {
+  background: linear-gradient(180deg, #b478ff, var(--magenta), var(--cyan));
+}
+
+/* ── Head strip ── */
+#sl-event-overlay .sle-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px 10px 18px;
+  background: linear-gradient(
+    90deg,
+    rgba(252, 238, 10, 0.14) 0%,
+    rgba(43, 240, 255, 0.07) 50%,
+    rgba(255, 43, 214, 0.08) 100%
+  );
+  border-bottom: 1px solid rgba(43, 240, 255, 0.25);
+  position: relative;
+  z-index: 4;
+}
+
+#sl-event-overlay .sle-card.tone-grim .sle-head {
+  background: linear-gradient(90deg, rgba(255, 61, 90, 0.18), rgba(255, 43, 214, 0.08));
+}
+
+#sl-event-overlay .sle-card.tone-funny .sle-head {
+  background: linear-gradient(90deg, rgba(125, 255, 107, 0.14), rgba(252, 238, 10, 0.08));
+}
+
+#sl-event-overlay .sle-card.tone-weird .sle-head {
+  background: linear-gradient(90deg, rgba(180, 120, 255, 0.16), rgba(43, 240, 255, 0.08));
+}
+
+#sl-event-overlay .sle-head .tag {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(252, 238, 10, 0.4);
+}
+
+#sl-event-overlay .sle-card.tone-grim .sle-head .tag {
+  color: var(--danger);
+  text-shadow: 0 0 12px rgba(255, 61, 90, 0.45);
+}
+
+#sl-event-overlay .sle-card.tone-funny .sle-head .tag {
+  color: var(--ok);
+  text-shadow: 0 0 12px rgba(125, 255, 107, 0.4);
+}
+
+#sl-event-overlay .sle-card.tone-weird .sle-head .tag {
+  color: #c9a0ff;
+  text-shadow: 0 0 12px rgba(180, 120, 255, 0.45);
+}
+
+#sl-event-overlay .sle-head .tone {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: var(--cyan);
+  padding: 3px 8px;
+  border: 1px solid rgba(43, 240, 255, 0.4);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+#sl-event-overlay .sle-card.tone-grim .sle-head .tone {
+  color: var(--danger);
+  border-color: rgba(255, 61, 90, 0.45);
+}
+
+#sl-event-overlay .sle-card.tone-funny .sle-head .tone {
+  color: var(--ok);
+  border-color: rgba(125, 255, 107, 0.4);
+}
+
+#sl-event-overlay .sle-card.tone-weird .sle-head .tone {
+  color: #c9a0ff;
+  border-color: rgba(180, 120, 255, 0.45);
+}
+
+/* ── Art ── */
+#sl-event-overlay .sle-art {
+  position: relative;
+  height: 200px;
+  background-size: cover;
+  background-position: center;
+  border-bottom: 1px solid rgba(43, 240, 255, 0.22);
+}
+
+#sl-event-overlay .sle-art::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0 3px,
+    rgba(43, 240, 255, 0.03) 3px 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+}
+
+#sl-event-overlay .sle-art-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(4, 2, 12, 0.15) 0%, transparent 35%, rgba(4, 2, 12, 0.92) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.25) 0%, transparent 20%, transparent 80%, rgba(0, 0, 0, 0.25) 100%);
+  pointer-events: none;
+}
+
+#sl-event-overlay .sle-art-badge {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  z-index: 2;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #041018;
+  background: var(--gold);
+  padding: 5px 11px;
+  box-shadow: 0 0 16px rgba(252, 238, 10, 0.45);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+
+#sl-event-overlay .sle-card.tone-grim .sle-art-badge {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(255, 61, 90, 0.45);
+}
+
+#sl-event-overlay .sle-card.tone-funny .sle-art-badge {
+  background: var(--ok);
+  color: #041018;
+  box-shadow: 0 0 16px rgba(125, 255, 107, 0.4);
+}
+
+#sl-event-overlay .sle-card.tone-weird .sle-art-badge {
+  background: #b478ff;
+  color: #12081c;
+  box-shadow: 0 0 16px rgba(180, 120, 255, 0.45);
+}
+
+/* ── Body ── */
+#sl-event-overlay .sle-body {
+  padding: 16px 18px 18px 20px;
+}
+
+#sl-event-overlay .sle-name {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: #fff;
+  text-shadow: 0 0 18px rgba(252, 238, 10, 0.28);
+  line-height: 1.2;
+}
+
+#sl-event-overlay .sle-card.tone-grim .sle-name {
+  text-shadow: 0 0 18px rgba(255, 61, 90, 0.3);
+}
+
+#sl-event-overlay .sle-desc {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* Effects panel */
+#sl-event-overlay .sle-effects {
+  margin: 0 0 16px;
+  padding: 0;
+  border: 1px solid rgba(43, 240, 255, 0.28);
+  background: linear-gradient(165deg, rgba(43, 240, 255, 0.07), rgba(0, 0, 0, 0.38));
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  overflow: hidden;
+}
+
+#sl-event-overlay .sle-effects-head {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid rgba(43, 240, 255, 0.18);
+  background: rgba(252, 238, 10, 0.05);
+}
+
+#sl-event-overlay .sle-effects ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#sl-event-overlay .sle-effects li {
+  margin: 0;
+  padding: 9px 12px 9px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+  line-height: 1.35;
+  border-bottom: 1px solid rgba(43, 240, 255, 0.1);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+#sl-event-overlay .sle-effects li:last-child {
+  border-bottom: none;
+}
+
+#sl-event-overlay .sle-effects li::before {
+  content: "▸";
+  color: var(--gold);
+  font-size: 12px;
+  line-height: 1.4;
+  flex-shrink: 0;
+  text-shadow: 0 0 8px rgba(252, 238, 10, 0.4);
+}
+
+#sl-event-overlay .sle-card.tone-grim .sle-effects {
+  border-color: rgba(255, 61, 90, 0.3);
+  background: linear-gradient(165deg, rgba(255, 61, 90, 0.08), rgba(0, 0, 0, 0.38));
+}
+
+#sl-event-overlay .sle-card.tone-grim .sle-effects li {
+  color: #ffb0ba;
+}
+
+#sl-event-overlay .sle-card.tone-funny .sle-effects {
+  border-color: rgba(125, 255, 107, 0.3);
+  background: linear-gradient(165deg, rgba(125, 255, 107, 0.07), rgba(0, 0, 0, 0.38));
+}
+
+#sl-event-overlay .sle-card.tone-funny .sle-effects li {
+  color: #b8ffad;
+}
+
+#sl-event-overlay .sle-card.tone-weird .sle-effects {
+  border-color: rgba(180, 120, 255, 0.32);
+  background: linear-gradient(165deg, rgba(180, 120, 255, 0.08), rgba(0, 0, 0, 0.38));
+}
+
+#sl-event-overlay .sle-card.tone-weird .sle-effects li {
+  color: #d4b8ff;
+}
+
+/* Self-contained button (works outside #sl-hybrid-root) */
+#sl-event-overlay button.sle-btn {
+  width: 100%;
+  min-height: 54px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1px solid rgba(255, 43, 214, 0.8);
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 43, 214, 0.42) 0%,
+    rgba(70, 12, 58, 0.96) 48%,
+    rgba(22, 6, 24, 0.99) 100%
+  );
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  box-shadow: 0 0 26px rgba(255, 43, 214, 0.3), 0 10px 22px rgba(0, 0, 0, 0.48);
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.1s;
+}
+
+#sl-event-overlay button.sle-btn .sub {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+#sl-event-overlay button.sle-btn:hover {
+  border-color: var(--magenta);
+  transform: translateY(-2px);
+  box-shadow: 0 0 36px rgba(255, 43, 214, 0.45), 0 12px 26px rgba(0, 0, 0, 0.52);
+}
+
+#sl-event-overlay button.sle-btn:active {
+  transform: translateY(0);
+}
+
+/* Tone-tinted buttons */
+#sl-event-overlay .sle-card.tone-grim button.sle-btn {
+  border-color: rgba(255, 61, 90, 0.75);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 61, 90, 0.35) 0%,
+    rgba(48, 12, 20, 0.96) 50%,
+    rgba(16, 6, 10, 0.99) 100%
+  );
+  box-shadow: 0 0 26px rgba(255, 61, 90, 0.28), 0 10px 22px rgba(0, 0, 0, 0.48);
+}
+
+#sl-event-overlay .sle-card.tone-grim button.sle-btn:hover {
+  border-color: var(--danger);
+  box-shadow: 0 0 34px rgba(255, 61, 90, 0.4), 0 12px 26px rgba(0, 0, 0, 0.52);
+}
+
+#sl-event-overlay .sle-card.tone-funny button.sle-btn {
+  border-color: rgba(125, 255, 107, 0.7);
+  background: linear-gradient(
+    180deg,
+    rgba(125, 255, 107, 0.3) 0%,
+    rgba(20, 48, 32, 0.96) 50%,
+    rgba(10, 18, 16, 0.99) 100%
+  );
+  box-shadow: 0 0 26px rgba(125, 255, 107, 0.25), 0 10px 22px rgba(0, 0, 0, 0.48);
+}
+
+#sl-event-overlay .sle-card.tone-funny button.sle-btn:hover {
+  border-color: var(--ok);
+  box-shadow: 0 0 34px rgba(125, 255, 107, 0.38), 0 12px 26px rgba(0, 0, 0, 0.52);
+}
+
+#sl-event-overlay .sle-card.tone-weird button.sle-btn {
+  border-color: rgba(180, 120, 255, 0.7);
+  background: linear-gradient(
+    180deg,
+    rgba(180, 120, 255, 0.32) 0%,
+    rgba(40, 18, 60, 0.96) 50%,
+    rgba(14, 8, 24, 0.99) 100%
+  );
+  box-shadow: 0 0 26px rgba(180, 120, 255, 0.28), 0 10px 22px rgba(0, 0, 0, 0.48);
+}
+
+#sl-event-overlay .sle-card.tone-weird button.sle-btn:hover {
+  border-color: #c9a0ff;
+  box-shadow: 0 0 34px rgba(180, 120, 255, 0.4), 0 12px 26px rgba(0, 0, 0, 0.52);
+}
+
+@media (max-width: 480px) {
+  #sl-event-overlay .sle-art {
+    height: 160px;
+  }
+  #sl-event-overlay .sle-name {
+    font-size: 18px;
+  }
+}

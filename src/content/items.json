@@ -1,0 +1,194 @@
+[
+  {
+    "id": "pipe_wrench",
+    "name": "Pipe Wrench",
+    "description": "Honest metal. Closes arguments.",
+    "type": "melee",
+    "techLevel": 1,
+    "researchCost": 18,
+    "fabricateCost": 28,
+    "combatBonus": 1,
+    "defenseBonus": 0,
+    "tags": [],
+    "art": {
+      "icon": "assets/gear/pipe_wrench.jpg",
+      "blueprint": "assets/blueprints/pipe_wrench.jpg"
+    }
+  },
+  {
+    "id": "slug_pistol",
+    "name": "Slug Pistol",
+    "description": "Loud, cheap, effective at bad distances.",
+    "type": "ranged",
+    "techLevel": 2,
+    "researchCost": 35,
+    "fabricateCost": 50,
+    "combatBonus": 2,
+    "defenseBonus": 0,
+    "tags": [],
+    "art": {
+      "icon": "assets/gear/slug_pistol.jpg",
+      "blueprint": "assets/blueprints/slug_pistol.jpg"
+    }
+  },
+  {
+    "id": "kevlar_vest",
+    "name": "Kevlar Vest",
+    "description": "Stops most knives and some regret.",
+    "type": "armor",
+    "techLevel": 2,
+    "researchCost": 30,
+    "fabricateCost": 45,
+    "combatBonus": 0,
+    "defenseBonus": 2,
+    "tags": [],
+    "art": {
+      "icon": "assets/gear/kevlar_vest.jpg",
+      "blueprint": "assets/blueprints/kevlar_vest.jpg"
+    }
+  },
+  {
+    "id": "cool_shades",
+    "name": "Cool Shades",
+    "description": "Intimidation is a force multiplier.",
+    "type": "misc",
+    "techLevel": 1,
+    "researchCost": 12,
+    "fabricateCost": 18,
+    "combatBonus": 1,
+    "defenseBonus": 0,
+    "tags": ["propaganda"],
+    "art": {
+      "icon": "assets/gear/cool_shades.jpg",
+      "blueprint": "assets/blueprints/cool_shades.jpg"
+    }
+  },
+  {
+    "id": "emp_grenade",
+    "name": "EMP Grenade",
+    "description": "Frags chrome choirs mid-hymn.",
+    "type": "misc",
+    "techLevel": 3,
+    "researchCost": 50,
+    "fabricateCost": 70,
+    "combatBonus": 1,
+    "defenseBonus": 0,
+    "tags": ["emp"],
+    "art": {
+      "icon": "assets/gear/emp_grenade.jpg",
+      "blueprint": "assets/blueprints/emp_grenade.jpg"
+    }
+  },
+  {
+    "id": "riot_shield",
+    "name": "Riot Shield",
+    "description": "Advance behind translucent fear.",
+    "type": "armor",
+    "techLevel": 3,
+    "researchCost": 45,
+    "fabricateCost": 60,
+    "combatBonus": 0,
+    "defenseBonus": 3,
+    "tags": [],
+    "art": {
+      "icon": "assets/gear/riot_shield.jpg",
+      "blueprint": "assets/blueprints/riot_shield.jpg"
+    }
+  },
+  {
+    "id": "smart_rifle",
+    "name": "Smart Rifle",
+    "description": "It aims. You only approve.",
+    "type": "ranged",
+    "techLevel": 4,
+    "researchCost": 70,
+    "fabricateCost": 100,
+    "combatBonus": 4,
+    "defenseBonus": 0,
+    "tags": [],
+    "art": {
+      "icon": "assets/gear/smart_rifle.jpg",
+      "blueprint": "assets/blueprints/smart_rifle.jpg"
+    }
+  },
+  {
+    "id": "power_frame",
+    "name": "Power Frame",
+    "description": "Exo-rig that turns thugs into tanks.",
+    "type": "armor",
+    "techLevel": 5,
+    "researchCost": 90,
+    "fabricateCost": 140,
+    "combatBonus": 1,
+    "defenseBonus": 5,
+    "tags": [],
+    "art": {
+      "icon": "assets/gear/power_frame.jpg",
+      "blueprint": "assets/blueprints/power_frame.jpg"
+    }
+  },
+  {
+    "id": "neuro_spike",
+    "name": "Neuro Spike",
+    "description": "Melee wetware that bypasses plating.",
+    "type": "melee",
+    "techLevel": 4,
+    "researchCost": 65,
+    "fabricateCost": 90,
+    "combatBonus": 3,
+    "defenseBonus": 0,
+    "tags": ["anti_armor"],
+    "art": {
+      "icon": "assets/gear/neuro_spike.jpg",
+      "blueprint": "assets/blueprints/neuro_spike.jpg"
+    }
+  },
+  {
+    "id": "propaganda_drone",
+    "name": "Propaganda Drone",
+    "description": "Broadcasts your logo over rival blocks.",
+    "type": "misc",
+    "techLevel": 3,
+    "researchCost": 40,
+    "fabricateCost": 55,
+    "combatBonus": 0,
+    "defenseBonus": 1,
+    "tags": ["propaganda"],
+    "art": {
+      "icon": "assets/gear/propaganda_drone.jpg",
+      "blueprint": "assets/blueprints/propaganda_drone.jpg"
+    }
+  },
+  {
+    "id": "mono_blade",
+    "name": "Mono Blade",
+    "description": "One molecule thick. Zero patience.",
+    "type": "melee",
+    "techLevel": 3,
+    "researchCost": 40,
+    "fabricateCost": 55,
+    "combatBonus": 3,
+    "defenseBonus": 0,
+    "tags": [],
+    "art": {
+      "icon": "assets/gear/mono_blade.jpg",
+      "blueprint": "assets/blueprints/mono_blade.jpg"
+    }
+  },
+  {
+    "id": "smoke_canisters",
+    "name": "Smoke Canisters",
+    "description": "Vanish, regroup, reappear meaner.",
+    "type": "misc",
+    "techLevel": 2,
+    "researchCost": 25,
+    "fabricateCost": 35,
+    "combatBonus": 0,
+    "defenseBonus": 1,
+    "tags": [],
+    "art": {
+      "icon": "assets/gear/smoke_canisters.jpg",
+      "blueprint": "assets/blueprints/smoke_canisters.jpg"
+    }
+  }
+]

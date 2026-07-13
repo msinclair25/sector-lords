@@ -1,0 +1,26 @@
+{
+  "name": "chaosoverlords",
+  "private": true,
+  "version": "0.7.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name sector-lords",
+    "deploy:preview": "npm run build && wrangler pages deploy dist --project-name sector-lords --branch preview"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.110.0"
+  },
+  "dependencies": {
+    "phaser": "^4.2.1",
+    "three": "^0.185.1"
+  }
+}

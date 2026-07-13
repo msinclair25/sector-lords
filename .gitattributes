@@ -1,0 +1,26 @@
+# Normalize text
+* text=auto eol=lf
+
+# Source
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Lockfile — always commit as-is
+package-lock.json text eol=lf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.mp3 binary
+*.wav binary
+*.woff binary
+*.woff2 binary
+*.gz binary

@@ -1,0 +1,252 @@
+[
+  {
+    "id": "blackout",
+    "name": "Grid Blackout",
+    "description": "Neon dies citywide. Unrest cools — but nobody can find the ATM.",
+    "weight": 3,
+    "effect": "reduce_unrest_all",
+    "magnitude": 2,
+    "secondaryEffect": "tax_cash",
+    "secondaryMagnitude": 15,
+    "tone": "neutral"
+  },
+  {
+    "id": "corporate_raid",
+    "name": "Corporate Raid",
+    "description": "WUS auditors seize liquid assets. Compliance is mandatory. Fun is optional.",
+    "weight": 2,
+    "effect": "tax_cash",
+    "magnitude": 40,
+    "tone": "grim"
+  },
+  {
+    "id": "celebrity_scandal",
+    "name": "Celebrity Scandal",
+    "description": "A star confesses everything on a livestream. Support swings like a broken crane.",
+    "weight": 2,
+    "effect": "support_swing",
+    "magnitude": 4,
+    "tone": "funny"
+  },
+  {
+    "id": "gang_revolt",
+    "name": "Gang Revolt",
+    "description": "Someone skipped pizza night. Random crews take a beating.",
+    "weight": 2,
+    "effect": "damage_gangs",
+    "magnitude": 18,
+    "tone": "grim"
+  },
+  {
+    "id": "heat_wave",
+    "name": "Heat Wave",
+    "description": "Police flood the net. The skyline smells like badges and bad coffee.",
+    "weight": 2,
+    "effect": "heat_spike",
+    "magnitude": 18,
+    "tone": "grim"
+  },
+  {
+    "id": "contraband_boom",
+    "name": "Contraband Boom",
+    "description": "Smugglers flood the market. Loose cash for everyone — scanners too.",
+    "weight": 3,
+    "effect": "cash_bonus",
+    "magnitude": 45,
+    "secondaryEffect": "heat_spike",
+    "secondaryMagnitude": 8,
+    "tone": "funny"
+  },
+  {
+    "id": "lab_leak",
+    "name": "Lab Leak",
+    "description": "Stolen schematics hit the darknet. Free science, questionable ethics.",
+    "weight": 2,
+    "effect": "research_boost",
+    "magnitude": 15,
+    "tone": "weird"
+  },
+  {
+    "id": "media_blitz",
+    "name": "Media Blitz",
+    "description": "Every camera is watching. Media hubs mint soft power overnight.",
+    "weight": 2,
+    "effect": "media_support",
+    "magnitude": 2,
+    "tone": "neutral"
+  },
+  {
+    "id": "rat_king_parade",
+    "name": "Rat King Parade",
+    "description": "A cursed knot of subway rats becomes a local celebrity. Tourists tip. Clinics stay busy.",
+    "weight": 3,
+    "effect": "cash_bonus",
+    "magnitude": 25,
+    "secondaryEffect": "heal_gangs",
+    "secondaryMagnitude": 8,
+    "tone": "funny"
+  },
+  {
+    "id": "influencer_meltdown",
+    "name": "Influencer Meltdown",
+    "description": "A streamer rage-quits mid-sponsorship. Brands dump cash; the street dumps unrest.",
+    "weight": 3,
+    "effect": "cash_bonus",
+    "magnitude": 35,
+    "secondaryEffect": "unrest_spike_all",
+    "secondaryMagnitude": 1,
+    "tone": "funny"
+  },
+  {
+    "id": "free_pizza_friday",
+    "name": "Free Pizza Friday",
+    "description": "Anonymous drone drops greasy salvation. Morale up, arteries optional.",
+    "weight": 3,
+    "effect": "heal_gangs",
+    "magnitude": 15,
+    "secondaryEffect": "support_flat",
+    "secondaryMagnitude": 1,
+    "tone": "funny"
+  },
+  {
+    "id": "crypto_rug",
+    "name": "Crypto Rug Pull",
+    "description": "The coin was called SafeMoonBeamX. It was neither safe nor a moon. Light tax.",
+    "weight": 2,
+    "effect": "tax_cash",
+    "magnitude": 28,
+    "secondaryEffect": "support_flat",
+    "secondaryMagnitude": -1,
+    "tone": "funny"
+  },
+  {
+    "id": "ufo_over_docks",
+    "name": "UFO Over the Docks",
+    "description": "Something triangulates the harbor. Researchers freak out helpfully. Heat ticks up.",
+    "weight": 2,
+    "effect": "research_boost",
+    "magnitude": 12,
+    "secondaryEffect": "heat_spike",
+    "secondaryMagnitude": 6,
+    "tone": "weird"
+  },
+  {
+    "id": "unionized_drones",
+    "name": "Unionized Delivery Drones",
+    "description": "The drones demand dental. Shipments slow; unrest dips while everyone argues online.",
+    "weight": 2,
+    "effect": "reduce_unrest_all",
+    "magnitude": 1,
+    "secondaryEffect": "tax_cash",
+    "secondaryMagnitude": 20,
+    "tone": "funny"
+  },
+  {
+    "id": "haunted_atm",
+    "name": "Haunted ATM",
+    "description": "It only dispenses on blood moon Tuesdays. Today is Tuesday. Sort of.",
+    "weight": 2,
+    "effect": "cash_bonus",
+    "magnitude": 60,
+    "secondaryEffect": "damage_gangs",
+    "secondaryMagnitude": 10,
+    "tone": "weird"
+  },
+  {
+    "id": "cop_karaoke",
+    "name": "Cop Karaoke Night",
+    "description": "Precinct 7 streams a ballad. Heat cools from sheer secondhand embarrassment.",
+    "weight": 2,
+    "effect": "heat_drop",
+    "magnitude": 12,
+    "secondaryEffect": "support_swing",
+    "secondaryMagnitude": 2,
+    "tone": "funny"
+  },
+  {
+    "id": "black_market_sample_sale",
+    "name": "Black Market Sample Sale",
+    "description": "Everything's 40% off and 90% cursed. Cash in pockets; random crews get 'tester' bruises.",
+    "weight": 2,
+    "effect": "cash_bonus",
+    "magnitude": 40,
+    "secondaryEffect": "damage_gangs",
+    "secondaryMagnitude": 12,
+    "tone": "funny"
+  },
+  {
+    "id": "viral_charity",
+    "name": "Viral Charity Stream",
+    "description": "A rival overlord's soft side trends. Support redistributes like tip jars in a hurricane.",
+    "weight": 2,
+    "effect": "support_redistribute",
+    "magnitude": 3,
+    "tone": "weird"
+  },
+  {
+    "id": "neon_fog",
+    "name": "Neon Fog",
+    "description": "Beautiful, unbreathable. Unrest rises a notch; clinics earn their keep.",
+    "weight": 2,
+    "effect": "unrest_spike_all",
+    "magnitude": 1,
+    "secondaryEffect": "heal_gangs",
+    "secondaryMagnitude": 10,
+    "tone": "weird"
+  },
+  {
+    "id": "audit_the_auditors",
+    "name": "Audit the Auditors",
+    "description": "Someone leaked the WUS expense reports. Kickbacks flow. Heat rises from the paperwork fire.",
+    "weight": 2,
+    "effect": "cash_bonus",
+    "magnitude": 55,
+    "secondaryEffect": "heat_spike",
+    "secondaryMagnitude": 10,
+    "tone": "funny"
+  },
+  {
+    "id": "street_prophet",
+    "name": "Street Prophet",
+    "description": "A hoodie oracle predicts your next three mistakes. Support for the faithful; unrest for everyone else.",
+    "weight": 2,
+    "effect": "support_flat",
+    "magnitude": 2,
+    "secondaryEffect": "unrest_spike_all",
+    "secondaryMagnitude": 1,
+    "tone": "weird"
+  },
+  {
+    "id": "glitch_in_payroll",
+    "name": "Glitch in Payroll",
+    "description": "Double deposits, then clawbacks. Net: a little richer, a little sorer.",
+    "weight": 2,
+    "effect": "cash_bonus",
+    "magnitude": 30,
+    "secondaryEffect": "damage_gangs",
+    "secondaryMagnitude": 8,
+    "tone": "funny"
+  },
+  {
+    "id": "quiet_sunday",
+    "name": "Quiet Sunday",
+    "description": "Even the gunrunners sleep in. City exhales. Enjoy it.",
+    "weight": 2,
+    "effect": "reduce_unrest_all",
+    "magnitude": 1,
+    "secondaryEffect": "heat_drop",
+    "secondaryMagnitude": 8,
+    "tone": "neutral"
+  },
+  {
+    "id": "meme_plague",
+    "name": "Meme Plague",
+    "description": "An unkillable dance challenge seizes the grid. Support goes feral. Nobody is safe.",
+    "weight": 3,
+    "effect": "support_swing",
+    "magnitude": 5,
+    "secondaryEffect": "heat_spike",
+    "secondaryMagnitude": 5,
+    "tone": "funny"
+  }
+]

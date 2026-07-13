@@ -1,0 +1,63 @@
+[
+  {
+    "id": "casino",
+    "name": "Casino",
+    "description": "Protection money pours out of the tables.",
+    "cashBonus": 25,
+    "supportBonus": 0,
+    "researchBonus": 0,
+    "combatBonus": 0,
+    "art": {}
+  },
+  {
+    "id": "lab",
+    "name": "Black Lab",
+    "description": "Illegal R&D under flickering tubes.",
+    "cashBonus": 0,
+    "supportBonus": 0,
+    "researchBonus": 2,
+    "combatBonus": 0,
+    "art": {}
+  },
+  {
+    "id": "armory",
+    "name": "Armory",
+    "description": "Crates of surplus and worse.",
+    "cashBonus": 0,
+    "supportBonus": 0,
+    "researchBonus": 0,
+    "combatBonus": 2,
+    "art": {}
+  },
+  {
+    "id": "media_hub",
+    "name": "Media Hub",
+    "description": "Propaganda on every channel.",
+    "cashBonus": 5,
+    "supportBonus": 3,
+    "researchBonus": 0,
+    "combatBonus": 0,
+    "art": {}
+  },
+  {
+    "id": "factory",
+    "name": "Factory",
+    "description": "Sweat and steel for hire.",
+    "cashBonus": 15,
+    "supportBonus": 1,
+    "researchBonus": 0,
+    "combatBonus": 1,
+    "art": {}
+  },
+  {
+    "id": "clinic",
+    "name": "Street Clinic",
+    "description": "Patches gangs between wars.",
+    "cashBonus": 0,
+    "supportBonus": 2,
+    "researchBonus": 0,
+    "combatBonus": 0,
+    "healBonus": 12,
+    "art": {}
+  }
+]

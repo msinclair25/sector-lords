@@ -1,0 +1,57 @@
+[
+  {
+    "id": "kill_em_all",
+    "name": "Kill 'Em All",
+    "description": "Eliminate every rival overlord. Last crime empire standing wins.",
+    "mapWidth": 8,
+    "mapHeight": 8,
+    "startingCash": 380,
+    "startingGangs": 1,
+    "victory": { "type": "elimination" },
+    "aiCount": 1
+  },
+  {
+    "id": "sector_rush",
+    "name": "Sector Rush",
+    "description": "Control the most sectors after 20 turns.",
+    "mapWidth": 8,
+    "mapHeight": 8,
+    "startingCash": 340,
+    "startingGangs": 1,
+    "victory": { "type": "most_sectors", "turns": 20 },
+    "aiCount": 1
+  },
+  {
+    "id": "cash_kings",
+    "name": "Cash Kings",
+    "description": "Richest overlord after 18 turns wins.",
+    "mapWidth": 8,
+    "mapHeight": 8,
+    "startingCash": 300,
+    "startingGangs": 1,
+    "victory": { "type": "most_cash", "turns": 18 },
+    "aiCount": 1
+  },
+  {
+    "id": "triple_threat",
+    "name": "Triple Threat",
+    "description": "Highest combined score (sectors, cash, support) after 22 turns. Two rivals.",
+    "mapWidth": 8,
+    "mapHeight": 8,
+    "startingCash": 380,
+    "startingGangs": 1,
+    "victory": { "type": "combined", "turns": 22 },
+    "aiCount": 2
+  },
+  {
+    "id": "war_zone",
+    "name": "War Zone",
+    "description": "Three rivals. Elimination only. Bring guns.",
+    "mapWidth": 8,
+    "mapHeight": 8,
+    "startingCash": 450,
+    "startingGangs": 2,
+    "victory": { "type": "elimination" },
+    "aiCount": 3
+  }
+]

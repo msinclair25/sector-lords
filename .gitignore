@@ -1,0 +1,50 @@
+# Dependencies & build
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+
+# Logs & OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Cloudflare / Wrangler
+.wrangler/
+.dev.vars
+
+# Large local perf captures (keep on disk; do not push)
+chrome dev tools saves/
+*.json.gz
+*.cpuprofile
+*.heapprofile
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Editor
+.idea/
+*.swp
+*.swo
+*~
+
+# Obsidian — keep vault notes; skip volatile UI state
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.obsidian/plugins/
+.obsidian/themes/
+.obsidian/space-settings.json
+
+# Optional local image/tool session dumps
+.grok/
+*.tmp

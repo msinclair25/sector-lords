@@ -1,0 +1,86 @@
+[
+  {
+    "id": "shake_casinos",
+    "name": "Shake the Tables",
+    "description": "Influence 2 casino sites before the mark moves on.",
+    "goalType": "influence_site",
+    "goalTarget": "casino",
+    "goalCount": 2,
+    "rewardCash": 90,
+    "rewardSupport": 1,
+    "timeLimit": 8,
+    "weight": 3
+  },
+  {
+    "id": "claim_sprawl",
+    "name": "Claim the Sprawl",
+    "description": "Hold at least 6 sectors at once.",
+    "goalType": "own_sectors",
+    "goalTarget": "",
+    "goalCount": 6,
+    "rewardCash": 120,
+    "rewardSupport": 2,
+    "timeLimit": 12,
+    "weight": 3
+  },
+  {
+    "id": "street_war",
+    "name": "Street War Contract",
+    "description": "Win 2 attacks (successful sector takes).",
+    "goalType": "win_attacks",
+    "goalTarget": "",
+    "goalCount": 2,
+    "rewardCash": 100,
+    "rewardSupport": 0,
+    "timeLimit": 10,
+    "weight": 2
+  },
+  {
+    "id": "lab_capture",
+    "name": "Capture a Lab",
+    "description": "Influence a Black Lab site.",
+    "goalType": "influence_site",
+    "goalTarget": "lab",
+    "goalCount": 1,
+    "rewardCash": 70,
+    "rewardSupport": 1,
+    "timeLimit": 8,
+    "weight": 3
+  },
+  {
+    "id": "unrest_merchant",
+    "name": "Unrest Merchant",
+    "description": "Raise unrest 3 times.",
+    "goalType": "unrest_actions",
+    "goalTarget": "",
+    "goalCount": 3,
+    "rewardCash": 80,
+    "rewardSupport": 0,
+    "timeLimit": 8,
+    "weight": 2
+  },
+  {
+    "id": "arm_the_crew",
+    "name": "Arm the Crew",
+    "description": "Research any item (complete unlock).",
+    "goalType": "research_complete",
+    "goalTarget": "",
+    "goalCount": 1,
+    "rewardCash": 60,
+    "rewardSupport": 1,
+    "timeLimit": 10,
+    "weight": 2
+  },
+  {
+    "id": "border_push",
+    "name": "Border Push",
+    "description": "Claim 3 empty sectors.",
+    "goalType": "claim_sectors",
+    "goalTarget": "",
+    "goalCount": 3,
+    "rewardCash": 85,
+    "rewardSupport": 1,
+    "timeLimit": 10,
+    "weight": 3
+  }
+]
