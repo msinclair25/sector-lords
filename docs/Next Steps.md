@@ -9,15 +9,17 @@ Repo hygiene is ready:
 - [x] `AGENTS.md` + `CONTRIBUTING.md`
 - [x] README hybrid-first + live URL + docs pointer
 
-Still to do when you say go:
+Done (2026-07-13):
 
-- [ ] `git init` (if needed) + create GitHub repo
-- [ ] Decide public vs private
-- [ ] Decide: full `public/assets` in git vs LFS / release zip
+- [x] `git init` + remote `origin` → https://github.com/msinclair25/sector-lords.git
+- [x] Initial commit pushed to `main` (private repo)
+- [x] Assets included in repo (no LFS for now)
+
+Optional later:
+
+- [ ] Flip to public when ready for portfolio
 - [ ] LICENSE if public
-- [ ] Initial commit + push
-
-**Suggested remote name:** `sector-lords`  
+- [ ] GitHub description + homepage URL → sector-lords.pages.dev  
 
 Do **not** force-push or rewrite history on a shared remote without saying so.
 
