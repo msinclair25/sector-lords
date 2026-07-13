@@ -3068,13 +3068,15 @@ export class Game3DScene extends Phaser.Scene {
 
             <button type="button" class="slb-btn hidden" data-dismiss>
               CONTINUE
-              <span class="sub">Next · or wait a moment</span>
+              <span class="sub">Tap when ready · Enter</span>
             </button>
           </div>
         </div>
       `;
 
       document.body.appendChild(overlay);
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
 
       const card = overlay.querySelector('[data-card]') as HTMLElement;
       const phaseEl = overlay.querySelector('[data-phase]') as HTMLElement;
@@ -3161,11 +3163,12 @@ export class Game3DScene extends Phaser.Scene {
         done = true;
         clearTimers();
         window.removeEventListener('keydown', onKey);
+        document.body.style.overflow = prevOverflow;
         overlay.remove();
         resolve();
       };
 
-      const revealResult = (opts?: { quiet?: boolean; holdMs?: number }) => {
+      const revealResult = (opts?: { quiet?: boolean; autoMs?: number }) => {
         if (revealed || done) return;
         revealed = true;
         clearTimers();
@@ -3194,15 +3197,19 @@ export class Game3DScene extends Phaser.Scene {
         resultEl.classList.remove('hidden');
         dismiss.classList.remove('hidden');
         skipBar?.classList.add('hidden');
+        card.classList.add('has-result');
 
         if (!opts?.quiet) {
           SFX.play(result.attackerWon ? 'claim' : 'error');
         }
 
-        card.classList.add('has-result');
-        // Readable summary hold — not a long dead wait
-        const hold = opts?.holdMs ?? (instant ? 900 : 3600);
-        timers.push(window.setTimeout(finish, hold));
+        // Focus Continue so it's obvious and keyboard-ready
+        window.setTimeout(() => dismiss.focus(), 30);
+
+        // Only auto-advance on skip-all / instant path — never steal Continue
+        if (opts?.autoMs != null && opts.autoMs > 0) {
+          timers.push(window.setTimeout(finish, opts.autoMs));
+        }
       };
 
       window.addEventListener('keydown', onKey);
@@ -3226,11 +3233,12 @@ export class Game3DScene extends Phaser.Scene {
         e.stopPropagation();
         SFX.play('ui');
         this.combatSkipRemaining = true;
-        revealResult({ holdMs: 600 });
+        // Brief flash then next fight — skip-all is opt-in speed
+        revealResult({ quiet: true, autoMs: 900 });
       });
 
       if (instant) {
-        revealResult({ quiet: true, holdMs: 700 });
+        revealResult({ quiet: true, autoMs: 800 });
         return;
       }
 
@@ -3274,12 +3282,11 @@ export class Game3DScene extends Phaser.Scene {
 
       timers.push(window.setTimeout(() => revealResult(), 7800));
 
-      // Hard cap so a stuck card never freezes the turn
+      // If animation stalls, force the result — still wait for Continue
       timers.push(
         window.setTimeout(() => {
-          if (!revealed) revealResult({ quiet: true, holdMs: 500 });
-          else finish();
-        }, 18000),
+          if (!revealed) revealResult({ quiet: true });
+        }, 16000),
       );
     });
   }
