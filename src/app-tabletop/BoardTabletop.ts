@@ -384,6 +384,46 @@ export class BoardTabletop {
     this.pinchLastMidY = (a.y + b.y) / 2;
   }
 
+  /**
+   * Untransformed top-left of the stage in client coordinates.
+   * Stage uses transform-origin 0 0 + translate(pan) scale(s).
+   */
+  private stageLayoutClientOrigin(): { x: number; y: number } {
+    const vp = this.viewport ?? this.root;
+    const vr = vp.getBoundingClientRect();
+    // offsetLeft/Top are pre-transform layout offsets within the viewport
+    return {
+      x: vr.left + this.stage.offsetLeft - vp.clientLeft,
+      y: vr.top + this.stage.offsetTop - vp.clientTop,
+    };
+  }
+
+  /**
+   * Zoom so the board point under (clientX, clientY) stays put.
+   * Must match applyView: origin 0 0, translate then scale.
+   */
+  private zoomTowardClient(clientX: number, clientY: number, nextScale: number): void {
+    const prev = this.scale;
+    const next = Math.min(
+      BoardTabletop.SCALE_MAX,
+      Math.max(BoardTabletop.SCALE_MIN, nextScale),
+    );
+    if (prev < 1e-6) {
+      this.scale = next;
+      return;
+    }
+    if (Math.abs(next - prev) < 1e-6) return;
+
+    const origin = this.stageLayoutClientOrigin();
+    // Local content coords under the focal point (pre-scale space)
+    const lx = (clientX - origin.x - this.panX) / prev;
+    const ly = (clientY - origin.y - this.panY) / prev;
+    this.scale = next;
+    // Re-pan so that local point still sits under the focal client point
+    this.panX = clientX - origin.x - lx * next;
+    this.panY = clientY - origin.y - ly * next;
+  }
+
   private updatePinch(): void {
     const pts = [...this.pointers.values()];
     if (pts.length < 2) return;
@@ -393,25 +433,17 @@ export class BoardTabletop {
     const midX = (a.x + b.x) / 2;
     const midY = (a.y + b.y) / 2;
 
-    const ratio = dist / this.pinchStartDist;
-    const next = Math.min(
-      BoardTabletop.SCALE_MAX,
-      Math.max(BoardTabletop.SCALE_MIN, this.pinchStartScale * ratio),
-    );
-    const prev = this.scale;
-    this.scale = next;
-
-    // Keep content under the pinch midpoint stable (approx for center-origin scale)
-    if (prev > 0.001 && Math.abs(next - prev) > 0.0001) {
-      const f = next / prev;
-      this.panX = midX - (midX - this.panX) * f;
-      this.panY = midY - (midY - this.panY) * f;
-    }
-    // Two-finger pan
+    // Two-finger pan first — content follows the pinch midpoint
     this.panX += midX - this.pinchLastMidX;
     this.panY += midY - this.pinchLastMidY;
     this.pinchLastMidX = midX;
     this.pinchLastMidY = midY;
+
+    // Then scale about the current midpoint (fingers stay glued to the map)
+    const ratio = dist / this.pinchStartDist;
+    const next = this.pinchStartScale * ratio;
+    this.zoomTowardClient(midX, midY, next);
+
     this.applyView();
   }
 
@@ -512,23 +544,14 @@ export class BoardTabletop {
 
   private onWheel = (ev: WheelEvent): void => {
     ev.preventDefault();
-    // Zoom toward cursor when possible
-    const prev = this.scale;
     const factor = ev.deltaY > 0 ? 0.92 : 1.08;
-    const next = Math.min(
-      BoardTabletop.SCALE_MAX,
-      Math.max(BoardTabletop.SCALE_MIN, prev * factor),
-    );
-    if (prev > 0.001) {
-      const f = next / prev;
-      this.panX = ev.clientX - (ev.clientX - this.panX) * f;
-      this.panY = ev.clientY - (ev.clientY - this.panY) * f;
-    }
-    this.scale = next;
+    this.zoomTowardClient(ev.clientX, ev.clientY, this.scale * factor);
     this.applyView();
   };
 
   private applyView(): void {
+    // Origin 0 0 matches zoomTowardClient pan math (not center — that drifted focus)
+    this.stage.style.transformOrigin = '0 0';
     this.stage.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.scale})`;
     this.rectCache = null;
   }
