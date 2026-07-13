@@ -300,6 +300,14 @@ export function resolveCombat(
   const defenderGearIcons = gearIconsFor(state, defenderIds);
   const strikeLabels = strikeLabelsFor(attackerStyle, defenderStyle);
 
+  // Capture launch tiles before gangs enter the contested block (mini-map + UX copy)
+  const originSet = new Set<string>();
+  for (const id of attackerGangIds) {
+    const g = state.gangs[id];
+    if (g && g.sectorId !== sectorId) originSet.add(g.sectorId);
+  }
+  const attackerOriginSectorIds = [...originSet];
+
   for (const id of attackerGangIds) {
     const g = state.gangs[id];
     if (!g) continue;
@@ -350,7 +358,7 @@ export function resolveCombat(
         preview.winChance >= 0.65
           ? 'favorable fight, bad roll'
           : 'assault failed'
-      } (roll ${(roll * 100).toFixed(0)} ≥ ${(preview.winChance * 100).toFixed(0)}% edge).`;
+      }; survivors stay on the block (no retreat) (roll ${(roll * 100).toFixed(0)} ≥ ${(preview.winChance * 100).toFixed(0)}% edge).`;
 
   return {
     sectorId,
@@ -376,6 +384,7 @@ export function resolveCombat(
     attackerGearIcons,
     defenderGearIcons,
     strikeLabels,
+    attackerOriginSectorIds,
   };
 }
 

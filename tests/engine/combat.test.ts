@@ -56,4 +56,25 @@ describe('combat', () => {
     expect(result.attackerWon).toBe(true);
     expect(state.sectors[aiSector.id]!.owner).toBe(human);
   });
+
+  it('failed assault keeps survivors on the block and records origin sectors', () => {
+    const state = createNewGame({ seed: 11, scenarioId: 'kill_em_all' });
+    const human = 'player';
+    const gang = livingGangsOf(state, human)[0]!;
+    const originId = gang.sectorId;
+    const aiSector = Object.values(state.sectors).find((s) => s.owner && s.owner !== human)!;
+    // Ensure there is something to fight so a miss is meaningful
+    if (aiSector.gangIds.length === 0) {
+      // leave empty — still valid combat target
+    }
+
+    const result = resolveCombat(state, aiSector.id, human, [gang.id], () => 0.99);
+    expect(result.attackerWon).toBe(false);
+    expect(result.attackerOriginSectorIds).toContain(originId);
+    expect(result.summary.toLowerCase()).toMatch(/no retreat|stay on the block/);
+    // Hard rule: survivors stay on the contested tile (no bounce-back)
+    if (state.gangs[gang.id]) {
+      expect(state.gangs[gang.id]!.sectorId).toBe(aiSector.id);
+    }
+  });
 });

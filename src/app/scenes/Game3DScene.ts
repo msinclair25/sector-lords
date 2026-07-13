@@ -16,6 +16,7 @@ import {
   areAdjacent,
   computeIncomeBreakdown,
   formatOdds,
+  parseSectorId,
   pathsToVictory,
   previewAttackWithIntel,
   researchableItems,
@@ -2727,6 +2728,109 @@ export class Game3DScene extends Phaser.Scene {
   }
 
   /**
+   * Compact schematic of the clash neighborhood — origin tiles + contested block.
+   * Not a full board copy: local window around the fight (max 5×5).
+   */
+  private buildClashMinimapHtml(
+    result: import('../../engine').CombatResult,
+  ): string {
+    const state = this.controller.state;
+    const human = this.controller.humanId;
+    const { x: fx, y: fy } = parseSectorId(result.sectorId);
+    const origins = result.attackerOriginSectorIds ?? [];
+    const originSet = new Set(origins);
+
+    let minX = fx;
+    let maxX = fx;
+    let minY = fy;
+    let maxY = fy;
+    for (const oid of origins) {
+      const p = parseSectorId(oid);
+      minX = Math.min(minX, p.x);
+      maxX = Math.max(maxX, p.x);
+      minY = Math.min(minY, p.y);
+      maxY = Math.max(maxY, p.y);
+    }
+    // Pad one ring of context, then clamp to map
+    minX = Math.max(0, minX - 1);
+    minY = Math.max(0, minY - 1);
+    maxX = Math.min(state.mapWidth - 1, maxX + 1);
+    maxY = Math.min(state.mapHeight - 1, maxY + 1);
+
+    // Cap UI footprint at 5×5, bias-keep the clash tile centered
+    const shrink = (lo: number, hi: number, keep: number, maxSpan: number) => {
+      while (hi - lo + 1 > maxSpan) {
+        if (keep - lo > hi - keep) lo += 1;
+        else hi -= 1;
+      }
+      return [lo, hi] as const;
+    };
+    [minX, maxX] = shrink(minX, maxX, fx, 5);
+    [minY, maxY] = shrink(minY, maxY, fy, 5);
+
+    const cols = maxX - minX + 1;
+    const cells: string[] = [];
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const id = `${x},${y}` as SectorId;
+        const sector = state.sectors[id];
+        const isClash = id === result.sectorId;
+        const isOrigin = originSet.has(id);
+        const owner = sector?.owner ?? null;
+        const youOwn = owner === human;
+        const enemyOwn = owner != null && owner !== human;
+        const classes = [
+          'mm-cell',
+          isClash ? 'clash' : '',
+          isOrigin ? 'origin' : '',
+          youOwn ? 'you' : '',
+          enemyOwn ? 'enemy' : '',
+          !owner ? 'neutral' : '',
+          isClash && result.attackerWon ? 'seized' : '',
+          isClash && !result.attackerWon ? 'held' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+        const label = isClash ? '★' : isOrigin ? '▶' : '';
+        const title = isClash
+          ? `Clash ${id}`
+          : isOrigin
+            ? `Assault from ${id}`
+            : id;
+        cells.push(
+          `<div class="${classes}" title="${escapeHtml(title)}" data-sid="${escapeHtml(id)}">${label}</div>`,
+        );
+      }
+    }
+
+    const fromLine =
+      origins.length > 0
+        ? origins.map((o) => escapeHtml(o)).join(' · ')
+        : 'adjacent';
+    const outcomeHint = result.attackerWon
+      ? 'SEIZED'
+      : 'PINNED · NO RETREAT';
+
+    return `
+      <div class="slb-minimap ${result.attackerWon ? 'won' : 'lost'}" aria-label="Clash grid schematic">
+        <div class="mm-head">
+          <span class="mm-title">GRID</span>
+          <span class="mm-route">FROM ${fromLine} → <b>${escapeHtml(result.sectorId)}</b></span>
+          <span class="mm-out ${result.attackerWon ? 'ok' : 'bad'}">${outcomeHint}</span>
+        </div>
+        <div class="mm-grid" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">
+          ${cells.join('')}
+        </div>
+        <div class="mm-legend">
+          <span class="lg origin"><i></i>FROM</span>
+          <span class="lg clash"><i></i>CLASH</span>
+          <span class="lg you"><i></i>YOU</span>
+          <span class="lg enemy"><i></i>ENEMY</span>
+        </div>
+      </div>`;
+  }
+
+  /**
    * Portrait street fight — style-aware FX (melee / ranged / tech / hybrid).
    * Sequence: lock → standoff → 4 strikes → finale → fate die → outcome.
    * Engine rule: roll < winChance ⇒ attacker wins.
@@ -2824,6 +2928,26 @@ export class Game3DScene extends Phaser.Scene {
           ? Math.round(result.attackerLosses)
           : null;
 
+      // Hard rule: failed assault does not retreat — survivors stay on the block
+      const stayNote = !result.attackerWon
+        ? youAtk
+          ? `<div class="slb-stay-note" data-stay>
+              <span class="stay-tag">NO RETREAT</span>
+              <p>Your survivors <b>stay on this block</b> — stranded on contested ground. Pull them out next turn or dig in.</p>
+            </div>`
+          : youDef
+            ? `<div class="slb-stay-note" data-stay>
+              <span class="stay-tag">NO RETREAT</span>
+              <p>Enemy survivors <b>remain on your block</b> — they did not fall back. Clear them next turn.</p>
+            </div>`
+            : `<div class="slb-stay-note" data-stay>
+              <span class="stay-tag">NO RETREAT</span>
+              <p>Assault failed — attacker survivors <b>stay on the block</b> (no retreat home).</p>
+            </div>`
+        : '';
+
+      const minimapHtml = this.buildClashMinimapHtml(result);
+
       let st = document.getElementById('sl-battle-style') as HTMLStyleElement | null;
       if (!st) {
         st = document.createElement('style');
@@ -2844,6 +2968,7 @@ export class Game3DScene extends Phaser.Scene {
             <span class="stance-pill ${youAtk || youDef ? 'you' : ''}">${stanceLine}</span>
             <span class="stance-map">LEFT = ASSAULT · RIGHT = DEFENDERS</span>
           </div>
+          ${minimapHtml}
 
           <div class="slb-arena">
             <div class="vignette"></div>
@@ -2938,6 +3063,7 @@ export class Game3DScene extends Phaser.Scene {
                 }
                 ${result.destroyedGangIds.length ? ` · ${result.destroyedGangIds.length} crew wiped` : ''}
               </div>
+              ${stayNote}
             </div>
 
             <button type="button" class="slb-btn hidden" data-dismiss>

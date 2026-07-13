@@ -231,6 +231,11 @@ export interface CombatResult {
   defenderGearIcons?: string[];
   /** Five strike callouts for the fight reel */
   strikeLabels?: string[];
+  /**
+   * Sector IDs the attackers left before the clash (unique).
+   * Used by the clash-card schematic mini-map; empty when unknown.
+   */
+  attackerOriginSectorIds?: SectorId[];
 }
 
 export interface TurnLogEntry {
