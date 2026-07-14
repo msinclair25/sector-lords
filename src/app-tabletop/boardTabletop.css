@@ -861,24 +861,22 @@
 }
 
 /*
- * Unrest — slim heat wick + number (cyber HUD, not cartoon icons)
- * lv-1 cool amber · lv-2 orange · lv-3 hot red · lv-4 critical
+ * Unrest — meter only (no number). Fill = unrest/10, color = heat band.
+ * lv-1 amber · lv-2 orange · lv-3 red · lv-4 critical pulse
  */
 .sl-tile-intel .sl-unrest-mark {
-  --wick: #ffc14a;
-  --wick-hi: #ffe9a0;
+  --meter: #ffc14a;
+  --meter-hi: #ffe9a0;
+  --fill: 40%;
   position: absolute;
-  top: 3px;
-  right: 3px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 4px 2px 3px;
+  top: 4px;
+  right: 4px;
+  display: block;
+  padding: 2px;
   border-radius: 3px;
-  background: rgba(6, 4, 14, 0.72);
-  border: 1px solid color-mix(in srgb, var(--wick) 45%, transparent);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  background: rgba(6, 4, 14, 0.75);
+  border: 1px solid color-mix(in srgb, var(--meter) 50%, transparent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   z-index: 4;
 }
 
@@ -887,75 +885,57 @@
 }
 
 .sl-tile-intel .sl-unrest-mark.lv-1 {
-  --wick: #e8c050;
-  --wick-hi: #fff0b8;
+  --meter: #e8c050;
+  --meter-hi: #fff0b8;
 }
 .sl-tile-intel .sl-unrest-mark.lv-2 {
-  --wick: #ff8a28;
-  --wick-hi: #ffd078;
+  --meter: #ff8a28;
+  --meter-hi: #ffd078;
 }
 .sl-tile-intel .sl-unrest-mark.lv-3 {
-  --wick: #ff4a38;
-  --wick-hi: #ffb060;
+  --meter: #ff4a38;
+  --meter-hi: #ffb060;
 }
 .sl-tile-intel .sl-unrest-mark.lv-4 {
-  --wick: #ff2a55;
-  --wick-hi: #ffd0d8;
+  --meter: #ff2a55;
+  --meter-hi: #ffd0d8;
 }
 
-/* Vertical fill bar — height = intensity via CSS vars set… use level classes */
-.sl-tile-intel .sl-unrest-mark .um-wick {
+/* Vertical meter tube */
+.sl-tile-intel .sl-unrest-mark .um-meter {
   position: relative;
-  width: 4px;
-  height: 14px;
-  border-radius: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  display: block;
+  width: 5px;
+  height: 18px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.07);
   overflow: hidden;
-  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
-.sl-tile-intel .sl-unrest-mark .um-wick i {
+.sl-tile-intel .sl-unrest-mark .um-meter i {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 40%;
-  background: linear-gradient(180deg, var(--wick-hi), var(--wick));
+  height: var(--fill, 40%);
+  background: linear-gradient(180deg, var(--meter-hi), var(--meter));
   border-radius: 1px 1px 0 0;
+  transition: height 0.2s ease;
 }
 
-.sl-tile-intel .sl-unrest-mark.lv-1 .um-wick i {
-  height: 30%;
-}
-.sl-tile-intel .sl-unrest-mark.lv-2 .um-wick i {
-  height: 55%;
-}
-.sl-tile-intel .sl-unrest-mark.lv-3 .um-wick i {
-  height: 78%;
-}
-.sl-tile-intel .sl-unrest-mark.lv-4 .um-wick i {
-  height: 100%;
-  animation: sl-wick-pulse 1.1s ease-in-out infinite;
+.sl-tile-intel .sl-unrest-mark.lv-4 .um-meter i {
+  animation: sl-meter-pulse 1.15s ease-in-out infinite;
 }
 
-@keyframes sl-wick-pulse {
+@keyframes sl-meter-pulse {
   0%,
   100% {
-    opacity: 0.85;
+    opacity: 0.88;
   }
   50% {
     opacity: 1;
   }
-}
-
-.sl-tile-intel .sl-unrest-mark .um-n {
-  font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--wick-hi);
-  min-width: 0.7em;
-  text-align: center;
 }
 
 /* Crackdown — mono RAID chip + tile rim only (no cartoon siren) */
@@ -1058,7 +1038,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sl-tile-intel .sl-unrest-mark.lv-4 .um-wick i,
+  .sl-tile-intel .sl-unrest-mark.lv-4 .um-meter i,
   .sl-tile-intel .sl-raid-mark,
   .sl-tile.has-crackdown .sl-tile-top::after {
     animation: none !important;
@@ -1871,11 +1851,9 @@
     width: 6px;
     height: 6px;
   }
-  .sl-tile-intel .sl-unrest-mark .um-n {
-    font-size: 11px;
-  }
-  .sl-tile-intel .sl-unrest-mark .um-wick {
-    height: 16px;
+  .sl-tile-intel .sl-unrest-mark .um-meter {
+    width: 6px;
+    height: 20px;
   }
   .sl-tile-intel .sl-raid-mark .pl-lab {
     font-size: 9px;

@@ -228,17 +228,18 @@
 #sl-legend .ico.wick {
   display: inline-flex;
   align-items: flex-end;
-  width: 5px;
-  height: 14px;
-  border-radius: 1px;
+  width: 6px;
+  height: 16px;
+  border-radius: 2px;
   background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
   vertical-align: middle;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 #sl-legend .ico.wick b {
   display: block;
   width: 100%;
-  height: 65%;
+  height: 70%;
   background: linear-gradient(180deg, #ffe9a0, #ff8a28);
 }
 

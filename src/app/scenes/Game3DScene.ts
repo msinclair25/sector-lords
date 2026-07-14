@@ -1831,7 +1831,7 @@ export class Game3DScene extends Phaser.Scene {
           </div>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico wick" aria-hidden="true"><b></b></i></span>
-            <span class="legend-v"><b>Heat wick + #</b> — unrest on block (amber→red fill). Cash + Heat on End Turn</span>
+            <span class="legend-v"><b>Unrest meter</b> — fill rises with unrest (amber→red). Cash + Heat on End Turn</span>
           </div>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico raid-chip">RAID</i></span>

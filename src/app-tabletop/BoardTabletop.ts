@@ -776,12 +776,11 @@ export class BoardTabletop {
       const intel = document.createElement('div');
       intel.className = 'sl-tile-intel';
       intel.setAttribute('aria-hidden', 'true');
-      // Owner = outline; sites = pips; unrest = heat wick; crackdown = RAID strip
+      // Owner = outline; sites = pips; unrest = fill meter only; crackdown = RAID
       intel.innerHTML = `
         <div class="sl-site-pips" title="Site influence"></div>
         <span class="sl-unrest-mark" hidden title="">
-          <span class="um-wick" aria-hidden="true"><i></i></span>
-          <span class="um-n"></span>
+          <span class="um-meter" aria-hidden="true"><i></i></span>
         </span>
         <span class="sl-raid-mark" hidden title="">
           <span class="pl-lab">RAID</span>
@@ -1047,22 +1046,32 @@ export class BoardTabletop {
     }
 
     const unrestMark = el.querySelector('.sl-unrest-mark') as HTMLElement | null;
-    const unrestN = el.querySelector('.sl-unrest-mark .um-n') as HTMLElement | null;
-    if (unrestMark && unrestN) {
-      // Crackdown police light owns the corner — hide fire while RAID is active
+    const unrestFill = el.querySelector('.sl-unrest-mark .um-meter i') as HTMLElement | null;
+    if (unrestMark) {
+      // RAID chip owns the corner during crackdown residual
       if (sector.unrest > 0 && raidT <= 0) {
         unrestMark.hidden = false;
-        unrestN.textContent = String(sector.unrest);
         unrestMark.title = `Unrest ${sector.unrest}/10 — feeds city Heat`;
         unrestMark.classList.remove('lv-1', 'lv-2', 'lv-3', 'lv-4', 'hot');
         const lv =
-          sector.unrest >= 9 ? 'lv-4' : sector.unrest >= 6 ? 'lv-3' : sector.unrest >= 3 ? 'lv-2' : 'lv-1';
+          sector.unrest >= 9
+            ? 'lv-4'
+            : sector.unrest >= 6
+              ? 'lv-3'
+              : sector.unrest >= 3
+                ? 'lv-2'
+                : 'lv-1';
         unrestMark.classList.add(lv);
         if (sector.unrest >= 5) unrestMark.classList.add('hot');
+        // Exact fill 10%–100% (unrest is 1–10)
+        const pct = Math.max(10, Math.min(100, sector.unrest * 10));
+        unrestMark.style.setProperty('--fill', `${pct}%`);
+        if (unrestFill) unrestFill.style.height = `${pct}%`;
       } else {
         unrestMark.hidden = true;
-        unrestN.textContent = '';
         unrestMark.classList.remove('lv-1', 'lv-2', 'lv-3', 'lv-4', 'hot');
+        unrestMark.style.removeProperty('--fill');
+        if (unrestFill) unrestFill.style.height = '';
       }
     }
 
