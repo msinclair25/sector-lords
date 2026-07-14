@@ -1805,17 +1805,16 @@
 /* Phone: full-width board — crew panel is a slide-over, not a permanent side column */
 @media (max-width: 720px) {
   #sl-table-viewport {
-    /* Room for top HUD + bottom actions + home indicator */
-    padding: max(100px, calc(88px + env(safe-area-inset-top, 0px))) 8px
-      max(160px, calc(140px + env(safe-area-inset-bottom, 0px))) 8px;
+    /* Room for compact top stats + bottom action scroller + Crew FAB */
+    padding: max(108px, calc(96px + env(safe-area-inset-top, 0px))) 10px
+      max(148px, calc(128px + env(safe-area-inset-bottom, 0px))) 10px;
   }
   #sl-table-host.is-flat #sl-table-viewport {
-    padding: max(100px, calc(88px + env(safe-area-inset-top, 0px))) 8px
-      max(160px, calc(140px + env(safe-area-inset-bottom, 0px))) 8px;
+    padding: max(108px, calc(96px + env(safe-area-inset-top, 0px))) 10px
+      max(148px, calc(128px + env(safe-area-inset-bottom, 0px))) 10px;
   }
   #sl-table-plane {
-    /* Slightly larger cells so portraits stay tappable */
-    --cell: 52px;
+    --cell: 54px;
   }
   .sl-axis-lab {
     font-size: 8px;

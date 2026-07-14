@@ -1133,6 +1133,11 @@ export class Game3DScene extends Phaser.Scene {
       </div>
       ${this.renderBoardLegend()}
       ${this.renderCoachHtml()}
+      ${
+        this.sideMobileOpen
+          ? `<button type="button" id="sl-side-scrim" class="pe" data-act="side-mobile-toggle" aria-label="Close crew panel"></button>`
+          : ''
+      }
       <button
         type="button"
         id="sl-side-fab"
@@ -1141,7 +1146,7 @@ export class Game3DScene extends Phaser.Scene {
         title="Crew panel"
         aria-expanded="${this.sideMobileOpen ? 'true' : 'false'}"
       >
-        <span class="fab-label">${this.sideMobileOpen ? 'Close' : 'Crew'}</span>
+        <span class="fab-label">Crew</span>
       </button>
       <div id="sl-side" class="pe${this.sideMobileOpen ? ' is-open' : ''}">
         <button type="button" class="sl-side-close" data-act="side-mobile-toggle" title="Close panel" aria-label="Close crew panel">✕</button>
@@ -1157,13 +1162,14 @@ export class Game3DScene extends Phaser.Scene {
               const sub = a.sub
                 ? `<span class="act-sub">${escapeHtml(a.sub)}</span>`
                 : '';
-              return `<button class="act ${a.cls ?? ''}" data-act="${a.id}" ${a.disabled ? 'disabled' : ''}>
+              const endCls = a.id === 'end' || a.id === 'end-confirm' ? ' is-end' : '';
+              return `<button class="act ${a.cls ?? ''}${endCls}" data-act="${a.id}" ${a.disabled ? 'disabled' : ''}>
                 <span class="act-label">${escapeHtml(a.label)}</span>${sub}
               </button>`;
             })
             .join('')}
         </div>
-        <div id="sl-hint">1 order/crew · green = go · NEXT switches stacked crews · list in Crew panel · End Turn resolves · Esc cancel</div>
+        <div id="sl-hint" class="desktop-only">1 order/crew · green = go · NEXT switches stacked crews · list in Crew panel · End Turn resolves · Esc cancel</div>
       </div>
     `;
 
@@ -1799,19 +1805,30 @@ export class Game3DScene extends Phaser.Scene {
     </div>`;
   }
 
-  /** Compact glossary — top-left of the board, collapsible. */
+  private isMobileUi(): boolean {
+    return (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 720px)').matches
+    );
+  }
+
+  /** Compact glossary — collapsible; phone gets a shorter no-scroll list. */
   private renderBoardLegend(): string {
     const open = this.legendOpen;
-    return `
-      <aside id="sl-legend" class="pe${open ? ' is-open' : ''}" aria-label="Board key">
-        <button type="button" class="legend-toggle" data-act="legend-toggle" aria-expanded="${open ? 'true' : 'false'}" title="Toggle board key">
-          <span class="legend-tag">KEY</span>
-          <span class="legend-title">${open ? 'Hide glossary' : 'What do stats mean?'}</span>
-          <span class="legend-chev" aria-hidden="true">${open ? '▾' : '▸'}</span>
-        </button>
-        ${
-          open
-            ? `<div class="legend-body">
+    const mobile = this.isMobileUi();
+    const body = !open
+      ? ''
+      : mobile
+        ? `<div class="legend-body legend-compact">
+          <div class="legend-row"><span class="legend-ico"><i class="ico ring mine"></i></span><span class="legend-v"><b>Gold rim</b> you · <b>red</b> rival</span></div>
+          <div class="legend-row"><span class="legend-ico"><i class="ico dest"></i></span><span class="legend-v"><b>Green</b> = move/claim/attack</span></div>
+          <div class="legend-row"><span class="legend-ico"><i class="ico wick" aria-hidden="true"><b></b></i></span><span class="legend-v"><b>Meter</b> = unrest (→ Heat)</span></div>
+          <div class="legend-row"><span class="legend-ico"><i class="ico raid-chip">RAID</i></span><span class="legend-v"><b>RAID</b> = cops hit here</span></div>
+          <div class="legend-row"><span class="legend-ico"><i class="ico stack">NEXT</i></span><span class="legend-v"><b>NEXT</b> / Crew list = stack</span></div>
+          <div class="legend-row"><span class="legend-k">Order</span><span class="legend-v">1 per crew · pays on <b>End Turn</b></span></div>
+          <div class="legend-row"><span class="legend-k">Heat</span><span class="legend-v">Crackdown at <b>70</b> · then cool-off</span></div>
+        </div>`
+        : `<div class="legend-body">
           <p class="legend-lead">On each block</p>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico ring mine"></i></span>
@@ -1839,7 +1856,7 @@ export class Game3DScene extends Phaser.Scene {
           </div>
           <div class="legend-row">
             <span class="legend-k">Heat</span>
-            <span class="legend-v">City meter: fire climbs with unrest · at <b>70</b> crackdown · then cool-off</span>
+            <span class="legend-v">City meter: climbs with unrest · at <b>70</b> crackdown · then cool-off</span>
           </div>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico stack">NEXT</i></span>
@@ -1879,9 +1896,15 @@ export class Game3DScene extends Phaser.Scene {
             <span class="legend-k">Goal</span>
             <span class="legend-v">How this scenario ends (menu before Jack In).</span>
           </div>
-        </div>`
-            : ''
-        }
+        </div>`;
+    return `
+      <aside id="sl-legend" class="pe${open ? ' is-open' : ''}${mobile ? ' is-mobile' : ''}" aria-label="Board key">
+        <button type="button" class="legend-toggle" data-act="legend-toggle" aria-expanded="${open ? 'true' : 'false'}" title="Toggle board key">
+          <span class="legend-tag">KEY</span>
+          <span class="legend-title">${open ? (mobile ? 'Close' : 'Hide glossary') : mobile ? 'Board key' : 'What do stats mean?'}</span>
+          <span class="legend-chev" aria-hidden="true">${open ? '▾' : '▸'}</span>
+        </button>
+        ${body}
       </aside>`;
   }
 
@@ -2261,14 +2284,12 @@ export class Game3DScene extends Phaser.Scene {
     });
 
     // Meta / empire — phone gets one combined Menu; desktop keeps separate drawers
-    const mobileUi =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(max-width: 720px)').matches;
+    const mobileUi = this.isMobileUi();
     if (mobileUi) {
       acts.push({
         id: 'empire-open',
-        label: 'Empire',
-        sub: 'Hire · Jobs · Tech · more',
+        label: 'Menu',
+        sub: 'Hire · Jobs · Tech',
         cls: 'ghost',
         disabled: this.resolving,
       });
@@ -2314,18 +2335,21 @@ export class Game3DScene extends Phaser.Scene {
       cls: 'end-turn',
       disabled: this.resolving || this.actionBusy,
     });
+    // Order guide: full on desktop; compact "Guide" on phone (saves bottom bar space)
     if (freeN > 0 && !this.orderGuide) {
       acts.push({
         id: 'guide-start',
-        label: 'Order guide',
-        sub: `${freeN} free crew${freeN === 1 ? '' : 's'}`,
+        label: mobileUi ? 'Guide' : 'Order guide',
+        sub: mobileUi
+          ? `${freeN} free`
+          : `${freeN} free crew${freeN === 1 ? '' : 's'}`,
         cls: 'primary',
         disabled: this.resolving || this.actionBusy,
       });
     } else if (this.orderGuide) {
       acts.push({
         id: 'guide-next',
-        label: 'Next free',
+        label: mobileUi ? 'Next' : 'Next free',
         sub: freeN ? `${freeN} left` : 'Done',
         cls: 'primary',
         disabled: this.resolving || this.actionBusy,

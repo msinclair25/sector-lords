@@ -2362,8 +2362,9 @@ button.crew-filter:disabled {
   text-shadow: 0 0 20px rgba(252, 238, 10, 0.4);
 }
 
-/* Mobile FAB — hidden on desktop */
-#sl-side-fab {
+/* Mobile FAB / scrim — hidden on desktop */
+#sl-side-fab,
+#sl-side-scrim {
   display: none;
 }
 
@@ -2371,133 +2372,218 @@ button.crew-filter:disabled {
   display: none;
 }
 
-/* ═══ Phone / narrow — board first, crew panel as slide-over ═══
-   Desktop rules above are unchanged outside this media query. */
+.desktop-only {
+  display: block;
+}
+
+/* ═══ Phone / narrow — board first, crew as sheet ═══ */
 @media (max-width: 720px) {
   #sl-hybrid-root {
-    /* iOS notch / home indicator */
     padding-top: env(safe-area-inset-top, 0px);
   }
 
+  .desktop-only {
+    display: none !important;
+  }
+
   #sl-hybrid-root button.act {
-    min-width: 72px;
-    min-height: 44px;
+    min-width: 64px;
+    min-height: 48px;
     font-size: 12px;
-    padding: 10px 10px;
+    padding: 8px 12px;
     touch-action: manipulation;
+    flex-shrink: 0;
   }
 
   #sl-hybrid-root button.act .act-sub {
     font-size: 9px;
+    max-width: 9em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
+  #sl-hybrid-root button.act.end-turn,
+  #sl-hybrid-root button.act.is-end {
+    min-width: 88px;
+    border-color: rgba(252, 238, 10, 0.65);
+    box-shadow: 0 0 14px rgba(252, 238, 10, 0.25);
+  }
+
+  /* Top: stats first, brand compact */
   #sl-top {
     left: 6px;
     right: 6px;
-    top: max(6px, env(safe-area-inset-top, 0px));
-    gap: 6px;
-  }
-
-  /* KEY panel sits above bottom bar — full content, no scroll box */
-  #sl-legend {
-    left: 6px;
-    top: auto;
-    bottom: max(148px, calc(130px + env(safe-area-inset-bottom, 0px)));
-    width: min(260px, calc(100vw - 52px));
-    max-height: none;
-  }
-
-  #sl-legend:not(.is-open) {
-    width: auto;
-    max-width: calc(100vw - 52px);
-  }
-
-  #sl-legend .legend-row {
-    grid-template-columns: 48px 1fr;
-  }
-
-  #sl-legend .legend-v {
-    font-size: 10px;
+    top: max(4px, env(safe-area-inset-top, 0px));
+    gap: 4px;
+    flex-direction: column-reverse;
+    align-items: stretch;
   }
 
   #sl-brand {
     min-width: 0;
-    flex: 1 1 auto;
-    padding: 8px 12px 8px 12px;
+    flex: 0 0 auto;
+    padding: 6px 10px 6px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
   }
 
   #sl-brand h1 {
-    font-size: 11px;
-    letter-spacing: 0.12em;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    margin: 0;
   }
 
   #sl-brand p {
-    font-size: 9px;
+    display: none;
   }
 
   #sl-brand .brand-audio {
-    margin-top: 4px;
+    margin: 0 0 0 auto;
     gap: 4px;
   }
 
   #sl-brand .brand-audio button {
     min-height: 36px;
-    min-width: 36px;
+    min-width: 40px;
     touch-action: manipulation;
   }
 
   #sl-brand .now-playing {
-    max-width: 100%;
-    margin-top: 4px;
+    display: none;
   }
 
   #sl-stats {
     width: 100%;
-    flex: 1 1 100%;
-    padding: 4px 6px;
-    gap: 4px;
+    flex: 0 0 auto;
+    padding: 3px 4px;
+    gap: 3px;
     overflow-x: auto;
     flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
+    scrollbar-width: none;
+  }
+
+  #sl-stats::-webkit-scrollbar {
+    display: none;
   }
 
   #sl-stats .stat {
-    min-width: 58px;
-    padding: 4px 8px 5px;
+    min-width: 52px;
+    padding: 3px 7px 6px;
     flex-shrink: 0;
+  }
+
+  #sl-stats .stat .lbl {
+    font-size: 8px;
   }
 
   #sl-stats .stat .val {
     font-size: 13px;
   }
 
-  /* Floating Crew button — opens slide-over */
+  #sl-stats .stat .val small {
+    font-size: 8px;
+  }
+
+  #sl-stats .stat.heat-stat {
+    min-width: 64px;
+    padding-bottom: 8px;
+  }
+
+  /* KEY under stats — compact body from JS */
+  #sl-legend {
+    left: 6px;
+    right: auto;
+    top: max(92px, calc(84px + env(safe-area-inset-top, 0px)));
+    bottom: auto;
+    width: auto;
+    max-width: min(280px, calc(100vw - 56px));
+    max-height: none;
+    z-index: 12;
+  }
+
+  #sl-legend.is-open {
+    width: min(280px, calc(100vw - 16px));
+  }
+
+  #sl-legend .legend-toggle {
+    padding: 8px 10px;
+    min-height: 40px;
+  }
+
+  #sl-legend .legend-title {
+    font-size: 11px;
+  }
+
+  #sl-legend .legend-body.legend-compact {
+    gap: 5px;
+    padding: 6px 10px 10px;
+  }
+
+  #sl-legend .legend-body.legend-compact .legend-row {
+    grid-template-columns: 40px 1fr;
+    gap: 6px;
+  }
+
+  #sl-legend .legend-body.legend-compact .legend-v {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  #sl-side-scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 17;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: rgba(4, 2, 12, 0.55);
+    cursor: pointer;
+    pointer-events: auto;
+    touch-action: manipulation;
+    animation: sl-scrim-in 0.18s ease-out;
+  }
+
+  @keyframes sl-scrim-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Crew FAB — bottom-right above action bar */
   #sl-side-fab {
     display: flex;
     align-items: center;
     justify-content: center;
     position: absolute;
-    right: max(8px, env(safe-area-inset-right, 0px));
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 17;
+    right: max(10px, env(safe-area-inset-right, 0px));
+    bottom: max(118px, calc(108px + env(safe-area-inset-bottom, 0px)));
+    top: auto;
+    transform: none;
+    z-index: 16;
     margin: 0;
-    padding: 14px 10px;
-    min-width: 40px;
-    min-height: 88px;
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
+    padding: 0 14px;
+    min-width: 52px;
+    min-height: 48px;
+    writing-mode: horizontal-tb;
     font-family: var(--font-display);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--gold);
-    background: linear-gradient(180deg, rgba(22, 14, 40, 0.96), rgba(8, 5, 18, 0.98));
-    border: 1px solid rgba(252, 238, 10, 0.5);
-    box-shadow: 0 0 18px rgba(252, 238, 10, 0.2), 0 8px 20px rgba(0, 0, 0, 0.5);
-    clip-path: polygon(0 8px, 8px 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    color: #041018;
+    background: linear-gradient(160deg, #fcee0a, #d4b800);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 18px rgba(252, 238, 10, 0.35), 0 6px 16px rgba(0, 0, 0, 0.45);
+    clip-path: polygon(0 6px, 6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
     cursor: pointer;
     pointer-events: auto;
     touch-action: manipulation;
@@ -2509,27 +2595,25 @@ button.crew-filter:disabled {
   }
 
   #sl-side-fab .fab-label {
-    transform: rotate(180deg);
+    transform: none;
   }
 
-  /* Slide-over drawer: off-canvas until opened */
   #sl-side {
     right: 0;
     left: auto;
     top: 0;
     bottom: 0;
-    width: min(100vw - 28px, 360px);
+    width: min(100vw - 24px, 380px);
     max-height: none;
     height: 100%;
-    padding: max(48px, calc(12px + env(safe-area-inset-top, 0px))) 12px
-      max(120px, calc(100px + env(safe-area-inset-bottom, 0px)));
+    padding: max(52px, calc(14px + env(safe-area-inset-top, 0px))) 12px
+      max(100px, calc(88px + env(safe-area-inset-bottom, 0px)));
     font-size: 13px;
     z-index: 18;
     transform: translateX(105%);
     transition: transform 0.22s cubic-bezier(0.2, 0.85, 0.25, 1);
     box-shadow: -12px 0 40px rgba(0, 0, 0, 0.55);
     border-left: 1px solid rgba(255, 43, 214, 0.4);
-    border-color: rgba(255, 43, 214, 0.4);
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
@@ -2565,57 +2649,111 @@ button.crew-filter:disabled {
   }
 
   #sl-crew-dock .dock-hero {
-    max-height: 140px;
-    min-height: 100px;
+    max-height: 120px;
+    min-height: 88px;
   }
 
-  #sl-side button.gang-pick {
-    min-height: 48px;
+  #sl-side button.gang-pick,
+  #sl-hybrid-root button.stack-pick {
+    min-height: 52px;
+    touch-action: manipulation;
+  }
+
+  #sl-side .crew-filters {
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  #sl-side button.crew-filter {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 11px;
     touch-action: manipulation;
   }
 
   #sl-bottom {
-    padding: 8px 6px max(10px, env(safe-area-inset-bottom, 0px));
+    padding: 6px 0 max(8px, env(safe-area-inset-bottom, 0px));
     gap: 6px;
+    background: linear-gradient(
+      transparent,
+      rgba(4, 2, 10, 0.72) 12%,
+      rgba(4, 2, 10, 0.98) 42%
+    );
   }
 
   #sl-status {
     font-size: 12px;
-    padding: 8px 12px;
-    max-width: 96vw;
-    line-height: 1.35;
+    padding: 7px 12px;
+    max-width: calc(100vw - 16px);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  #sl-end-warn {
+    max-width: calc(100vw - 12px);
+    padding: 10px;
+    gap: 10px;
+  }
+
+  #sl-end-warn .end-warn-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  #sl-end-warn .end-warn-actions .act {
+    flex: 1;
   }
 
   #sl-actions {
-    gap: 6px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
     max-width: 100%;
-    flex-wrap: wrap;
-    justify-content: center;
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 12px 4px;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scrollbar-width: none;
+  }
+
+  #sl-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  #sl-actions .act .act-sub {
+    display: none;
   }
 
   #sl-hint {
-    font-size: 9px;
-    letter-spacing: 0.08em;
-    padding: 0 8px;
-    text-align: center;
+    display: none;
   }
 
-  /* Hire / tech drawers: full-bleed sheets on phone */
   #sl-drawer {
-    left: 6px;
-    right: 6px;
+    left: 0;
+    right: 0;
     width: auto;
-    bottom: max(120px, calc(108px + env(safe-area-inset-bottom, 0px)));
-    max-height: min(50vh, calc(100dvh - 200px));
+    bottom: 0;
+    max-height: min(62dvh, calc(100dvh - 100px));
+    border-radius: 12px 12px 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   #sl-drawer.hire-wide {
-    left: 4px;
-    right: 4px;
-    top: max(56px, calc(48px + env(safe-area-inset-top, 0px)));
+    left: 0;
+    right: 0;
+    top: max(48px, calc(40px + env(safe-area-inset-top, 0px)));
+    bottom: 0;
     transform: none;
     width: auto;
-    max-height: calc(100dvh - 56px - 130px - env(safe-area-inset-bottom, 0px));
+    max-height: none;
+    height: auto;
+    border-radius: 12px 12px 0 0;
   }
 
   #sl-drawer.hire-wide.open {
@@ -2628,7 +2766,6 @@ button.crew-filter:disabled {
     touch-action: manipulation;
   }
 
-  /* Hire cards: taller tap targets, readable meta */
   #sl-hybrid-root button.hire-card {
     touch-action: manipulation;
   }
@@ -2655,7 +2792,7 @@ button.crew-filter:disabled {
 
   #sl-coach {
     top: auto;
-    bottom: max(130px, calc(118px + env(safe-area-inset-bottom, 0px)));
+    bottom: max(124px, calc(112px + env(safe-area-inset-bottom, 0px)));
     left: 8px;
     right: 8px;
     transform: none;
@@ -2663,11 +2800,10 @@ button.crew-filter:disabled {
   }
 
   #sl-coach button {
-    min-height: 40px;
+    min-height: 44px;
     touch-action: manipulation;
   }
 
-  /* Combined Menu (Hire · Jobs · Tech) hub */
   #sl-drawer .empire-hub {
     display: flex;
     flex-direction: column;
@@ -2707,18 +2843,10 @@ button.crew-filter:disabled {
     border-top: 1px solid rgba(43, 240, 255, 0.15);
   }
 
-  /* Fewer bottom chips — primary path is green tiles + Menu + End turn */
-  #sl-actions {
-    gap: 8px;
-  }
-
-  #sl-actions .act .act-sub {
-    display: none;
-  }
-
-  #sl-actions .act {
-    min-width: 70px;
-    padding: 10px 12px;
+  #sl-side .dest-quick-list .act,
+  #sl-order-guide .dest-quick-list .act {
+    min-height: 48px;
+    flex: 1 1 auto;
   }
 }
 
