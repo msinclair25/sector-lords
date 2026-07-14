@@ -4,7 +4,8 @@ A browser-based cyberpunk crime-war strategy game **inspired by** classic 1990s 
 
 **Play:** https://sectorlords.com  
 **Also:** https://sector-lords.pages.dev  
-**Author:** Morgan Sinclair ([@morganinc](https://x.com/morganinc))
+**Author:** Morgan Sinclair ([@morganinc](https://x.com/morganinc))  
+**Support:** If you enjoy Sector Lords, [buy me a coffee](https://buymeacoffee.com/morganinc) ☕
 
 Also used as a **Grok Build (Grok 4.5) evaluation**: ship a multi-system game under human direction. Notes live in the Obsidian vault under [`docs/`](docs/00%20Home.md).
 
