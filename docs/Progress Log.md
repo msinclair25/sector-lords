@@ -4,6 +4,18 @@ Reverse-chronological ship log. Add new entries at the top.
 
 ---
 
+## 2026-07-13 — Orders UI cleanup + live polish
+
+- **Tech gated on selection:** desktop bottom bar and empire hub hide Tech until a free human crew is selected; `tech-open` refuses otherwise (research uses that crew’s Tech rating)
+- **Turn card simplified:** local work only (influence sites, unrest, tech) — move/claim/attack stay on green map neighbors (no redundant dest “send them” list)
+- **Dropped side Order Guide card** — redundant with turn card + map + bottom-bar Guide / Next free; guide queue behavior kept on bottom bar + idle End Turn banner
+- **Unrest / crackdown feedback:** heat bands, crackdown cooldown, sector crackdown turns, police art; unrest meter on tiles (no fire blob)
+- **Crew stack UX:** stable roster sort (no reshuffle on select), side scroll preserve, stack Prev/Next, free-first cycle
+- **Mobile:** 720px pass (crew FAB/scrim, compact chrome, action scroller); KEY glossary expands instead of scrolling
+- **Live recovery:** `_headers` / `_redirects` so JS chunks aren’t SPA-fallback’d as `text/html`; BUILD_ID cache-bust
+- Deployed Cloudflare Pages `sector-lords` → sectorlords.com (hard-refresh after chunk changes)
+- **Perf traces** re-captured under `chrome dev tools saves/` (`Trace.json.gz`, `Trace2.json.gz`) — still compositor/layer heavy; see [[Decisions]]
+
 ## 2026-07-12 — Repo hygiene
 
 - Added **AGENTS.md**, **CONTRIBUTING.md**, **.editorconfig**, **.gitattributes**, **.npmrc**
