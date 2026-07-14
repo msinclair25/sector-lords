@@ -44,13 +44,151 @@
 #sl-side,
 #sl-drawer,
 #sl-status,
-#sl-coach {
+#sl-coach,
+#sl-legend {
   background: var(--panel);
   border: 1px solid var(--stroke);
   /* Solid panel only — backdrop-filter was a major compositor cost in traces */
   box-shadow: var(--shadow), 0 0 24px rgba(43, 240, 255, 0.08);
   clip-path: var(--clip-panel);
   position: relative;
+}
+
+/* ── Board glossary (top-left over the map) ── */
+#sl-legend {
+  position: absolute;
+  left: 12px;
+  top: 108px;
+  z-index: 7;
+  width: min(280px, calc(100vw - 24px));
+  max-height: min(48vh, 360px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-color: rgba(252, 238, 10, 0.35);
+  box-shadow: var(--shadow), 0 0 20px rgba(252, 238, 10, 0.12);
+}
+
+#sl-legend .legend-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px 8px 12px;
+  border: none;
+  background: linear-gradient(90deg, rgba(252, 238, 10, 0.12), rgba(43, 240, 255, 0.05));
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  text-align: left;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+#sl-legend .legend-toggle:hover,
+#sl-legend .legend-toggle:focus-visible {
+  background: linear-gradient(90deg, rgba(252, 238, 10, 0.18), rgba(43, 240, 255, 0.08));
+  outline: none;
+}
+
+#sl-legend .legend-tag {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+#sl-legend .legend-title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+#sl-legend .legend-chev {
+  font-size: 11px;
+  color: var(--cyan);
+  flex-shrink: 0;
+}
+
+#sl-legend .legend-body {
+  padding: 4px 10px 10px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-top: 1px solid rgba(43, 240, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+#sl-legend .legend-row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 6px 8px;
+  align-items: start;
+}
+
+#sl-legend .legend-k {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  padding-top: 1px;
+}
+
+#sl-legend .legend-v {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+#sl-legend .legend-v .swatch,
+#sl-legend .legend-v .dot {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+
+#sl-legend .legend-v .swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+#sl-legend .legend-v .swatch.mine {
+  background: #fcee0a;
+  box-shadow: 0 0 6px rgba(252, 238, 10, 0.5);
+}
+
+#sl-legend .legend-v .swatch.foe {
+  background: #ff3d5a;
+  box-shadow: 0 0 6px rgba(255, 61, 90, 0.45);
+}
+
+#sl-legend .legend-v .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+#sl-legend .legend-v .dot.you {
+  background: #fcee0a;
+}
+
+#sl-legend .legend-v .dot.foe {
+  background: #ff3d5a;
+}
+
+#sl-legend .legend-v .dot.open {
+  background: rgba(80, 90, 110, 0.85);
 }
 
 #sl-brand::after,

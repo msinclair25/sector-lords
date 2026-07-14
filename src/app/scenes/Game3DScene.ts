@@ -47,8 +47,20 @@ import endingCss from '../ui/endingCard.css?inline';
 
 const COACH_KEY = 'sector-lords-hybrid-coach';
 const SIDE_COLLAPSE_KEY = 'sector-lords-side-collapse';
+const LEGEND_KEY = 'sector-lords-board-legend';
 const ORDER_FX_MS = 420;
 const REEL_STEP_MS = 480;
+
+function loadLegendOpen(): boolean {
+  try {
+    const raw = localStorage.getItem(LEGEND_KEY);
+    // Default open so Support/etc. are explained on first run
+    if (raw === null) return true;
+    return raw === '1';
+  } catch {
+    return true;
+  }
+}
 
 function loadSideCollapsed(): Record<string, boolean> {
   try {
@@ -144,6 +156,8 @@ export class Game3DScene extends Phaser.Scene {
    * before actually resolving.
    */
   private endTurnConfirm = false;
+  /** Board key / glossary panel (top-left of play area) */
+  private legendOpen = loadLegendOpen();
   /** When true, remaining fights are batched into one skip-all summary. */
   private combatSkipRemaining = false;
   /** Fights deferred by Skip All (current + remaining). */
@@ -1000,11 +1014,12 @@ export class Game3DScene extends Phaser.Scene {
               : `${state.turn}/${'turns' in state.victory ? state.victory.turns : '—'}`
           }</span></div>
           <div class="stat" title="Territory $${incomeBr.territory} · Sites $${incomeBr.sites} · Unrest $${incomeBr.unrest} · Landmarks $${incomeBr.landmarks}"><span class="lbl">Cash</span><span class="val">$${me.cash}<small>→$${nextCash}</small></span></div>
-          <div class="stat"><span class="lbl">Support</span><span class="val">${me.support}</span></div>
-          <div class="stat"><span class="lbl">Heat</span><span class="val">${state.cityHeat}<small>${escapeHtml(fc.policeRisk)}</small></span></div>
+          <div class="stat" title="Empire loyalty score. Gained from owned blocks, influenced sites, and landmarks. Empty owned blocks bleed support. Counts toward Combined victory."><span class="lbl">Support</span><span class="val">${me.support}</span></div>
+          <div class="stat" title="Citywide police attention. High heat risks crackdowns. Raised by unrest jobs and some events."><span class="lbl">Heat</span><span class="val">${state.cityHeat}<small>${escapeHtml(fc.policeRisk)}</small></span></div>
           <div class="stat goal-stat" title="${escapeHtml(paths.label)}"><span class="lbl">Goal</span><span class="val">${myScore?.value ?? 0}<small>${escapeHtml(paths.label)}</small></span></div>
         </div>
       </div>
+      ${this.renderBoardLegend()}
       ${this.renderCoachHtml()}
       <button
         type="button"
@@ -1594,6 +1609,53 @@ export class Game3DScene extends Phaser.Scene {
     </div>`;
   }
 
+  /** Compact glossary — top-left of the board, collapsible. */
+  private renderBoardLegend(): string {
+    const open = this.legendOpen;
+    return `
+      <aside id="sl-legend" class="pe${open ? ' is-open' : ''}" aria-label="Board key">
+        <button type="button" class="legend-toggle" data-act="legend-toggle" aria-expanded="${open ? 'true' : 'false'}" title="Toggle board key">
+          <span class="legend-tag">KEY</span>
+          <span class="legend-title">${open ? 'Hide glossary' : 'What do stats mean?'}</span>
+          <span class="legend-chev" aria-hidden="true">${open ? '▾' : '▸'}</span>
+        </button>
+        ${
+          open
+            ? `<div class="legend-body">
+          <div class="legend-row">
+            <span class="legend-k">Support</span>
+            <span class="legend-v">Empire loyalty. Grows from turf, influenced sites, landmarks. Empty owned blocks drain it. Used in Combined score wins.</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-k">Heat</span>
+            <span class="legend-v">City police heat (top bar). High risk = crackdowns. Unrest jobs and events push it up.</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-k">Unrest</span>
+            <span class="legend-v">Per-block chaos (red badge on tiles). Raise Unrest for cash now; feeds city Heat later.</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-k">Ownership</span>
+            <span class="legend-v"><i class="swatch mine"></i> You · <i class="swatch foe"></i> Rival · dim = unclaimed</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-k">Site pips</span>
+            <span class="legend-v"><i class="dot you"></i> You influence · <i class="dot foe"></i> Rival · <i class="dot open"></i> Open (3 sites / block)</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-k">Cash</span>
+            <span class="legend-v">Hire, gear, upkeep. Arrow shows projected after next income.</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-k">Goal</span>
+            <span class="legend-v">How this scenario ends — also on the menu before you Jack In.</span>
+          </div>
+        </div>`
+            : ''
+        }
+      </aside>`;
+  }
+
   /** Shared chrome for Hire / Jobs / Tech popups — always has a clear X. */
   private drawerChrome(title: string, sub: string, body: string): string {
     return `<div class="drawer-head">
@@ -2096,6 +2158,17 @@ export class Game3DScene extends Phaser.Scene {
     if (act === 'drawer-close') {
       this.drawer = 'none';
       this.render();
+      return;
+    }
+    if (act === 'legend-toggle') {
+      this.legendOpen = !this.legendOpen;
+      try {
+        localStorage.setItem(LEGEND_KEY, this.legendOpen ? '1' : '0');
+      } catch {
+        /* ignore */
+      }
+      this.render();
+      SFX.play('ui');
       return;
     }
     if (act === 'empire-open') {
