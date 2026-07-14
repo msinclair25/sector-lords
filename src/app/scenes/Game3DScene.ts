@@ -732,7 +732,7 @@ export class Game3DScene extends Phaser.Scene {
     const free = this.freeCrewIds().filter((id) => id !== justOrdered);
 
     if (free.length === 0) {
-      this.orderGuide = true; // keep card in "done" state
+      this.orderGuide = false;
       if (justOrdered) this.selectedGang = justOrdered;
       this.statusMsg =
         'Order guide complete — all free crews have orders. End turn when ready.';
@@ -767,6 +767,7 @@ export class Game3DScene extends Phaser.Scene {
     if (!this.orderGuide) return;
     const freeLeft = this.freeCrewIds().filter((id) => id !== orderedGangId);
     if (freeLeft.length === 0) {
+      this.orderGuide = false;
       this.selectedGang = orderedGangId;
       const g = this.controller.state.gangs[orderedGangId];
       if (g) this.selected = g.sectorId;
@@ -788,7 +789,7 @@ export class Game3DScene extends Phaser.Scene {
 
   private stopOrderGuide(): void {
     this.orderGuide = false;
-    this.statusMsg = 'Order guide closed. Use Your crews list or Guide again anytime.';
+    this.statusMsg = 'Order guide closed. Pick crews from the list, or Guide again anytime.';
     this.render(true);
     SFX.play('ui');
   }
@@ -1207,8 +1208,8 @@ export class Game3DScene extends Phaser.Scene {
     // ── Sticky selected-crew dock (always top of panel) ──
     const crewDock = this.renderCrewDock(gang, def, pending, me);
     const stackPicker = this.renderTileCrewPicker();
-    const orderGuideCard = this.renderOrderGuideCard();
     // Primary: what can THIS crew do right now (move / influence / unrest)
+    // Order guide lives on the bottom bar only (no duplicate side card)
     const turnCard = this.renderCrewTurnCard(gang, def, pending, human);
 
     // ── Filtered / sorted roster ──
@@ -1322,9 +1323,6 @@ export class Game3DScene extends Phaser.Scene {
         ${siteBlock}`;
     }
 
-    const guideSec = orderGuideCard
-      ? this.sideSection('guide', 'Order guide', orderGuideCard)
-      : '';
     const turnSec = this.sideSection('turn', 'This crew · order', turnCard);
     const rosterSec = this.sideSection(
       'crews',
@@ -1346,7 +1344,6 @@ export class Game3DScene extends Phaser.Scene {
     return `
       ${crewDock}
       ${stackSec}
-      ${guideSec}
       ${turnSec}
       ${rosterSec}
       ${racketSec}
@@ -1531,133 +1528,6 @@ export class Game3DScene extends Phaser.Scene {
         </div>`;
       })
       .join('');
-  }
-
-  /**
-   * Guided walkthrough card — steps free crews so multi-gang turns
-   * don't require hunting the roster.
-   */
-  private renderOrderGuideCard(): string {
-    const free = this.freeCrewIds();
-    const totalMine = Object.values(this.controller.state.gangs).filter(
-      (g) => g.ownerId === this.controller.humanId && g.hp > 0,
-    ).length;
-
-    if (!this.orderGuide) {
-      if (free.length === 0 || totalMine < 2) return '';
-      return `<div id="sl-order-guide" class="idle">
-        <div class="og-head">
-          <span class="og-tag">ORDER GUIDE</span>
-          <span class="og-count">${free.length} free</span>
-        </div>
-        <p class="og-copy">Walk through each free crew instead of hunting the list.</p>
-        <button type="button" class="act primary" data-act="guide-start" style="width:100%">
-          <span class="act-label">Start guide</span>
-          <span class="act-sub">${free.length} crew${free.length === 1 ? '' : 's'} need orders</span>
-        </button>
-      </div>`;
-    }
-
-    if (free.length === 0) {
-      return `<div id="sl-order-guide" class="done">
-        <div class="og-head">
-          <span class="og-tag">ORDER GUIDE</span>
-          <span class="og-count">Done</span>
-        </div>
-        <p class="og-copy">Every free crew has an order. End turn when ready.</p>
-        <div class="og-actions">
-          <button type="button" class="act primary" data-act="end" style="flex:1">
-            <span class="act-label">End turn</span>
-          </button>
-          <button type="button" class="act ghost" data-act="guide-stop" style="flex:1">
-            <span class="act-label">Close</span>
-          </button>
-        </div>
-      </div>`;
-    }
-
-    const curId =
-      this.selectedGang && free.includes(this.selectedGang)
-        ? this.selectedGang
-        : free[0]!;
-    const g = this.controller.state.gangs[curId]!;
-    const d = gangDefById(g.defId);
-    const img = `/${(d.art.portrait ?? 'assets/portraits/neon_jackals.jpg').replace(/^\//, '')}`;
-    const pos = free.indexOf(curId) + 1;
-    const dests = this.validDestinations();
-    const human = this.controller.humanId;
-    const destBtns = dests
-      .map((did) => {
-        const t = this.controller.state.sectors[did]!;
-        const kind = !t.owner
-          ? 'CLAIM'
-          : t.owner === human
-            ? 'MOVE'
-            : 'ATTACK';
-        const cls =
-          kind === 'ATTACK' ? 'danger' : kind === 'CLAIM' ? 'primary' : '';
-        return `<button type="button" class="act dest-quick ${cls}" data-act="dest-${did}">
-          <span class="act-label">${kind} ${did}</span>
-        </button>`;
-      })
-      .join('');
-
-    const onOwn =
-      this.controller.state.sectors[g.sectorId]?.owner === human;
-    const unrestPrev = onOwn ? previewUnrestOrder(this.controller.state, curId) : null;
-    const openSites = onOwn
-      ? (this.controller.state.sectors[g.sectorId]?.sites.filter(
-          (s) => s.influencer !== human,
-        ).length ?? 0)
-      : 0;
-    const localActs = [
-      unrestPrev && unrestPrev.unrestGain > 0
-        ? `<button type="button" class="act" data-act="unrest">
-            <span class="act-label">Unrest</span>
-            <span class="act-sub">+$${unrestPrev.cash} · End Turn</span>
-          </button>`
-        : '',
-      openSites > 0
-        ? `<button type="button" class="act primary" data-act="influence-hint">
-            <span class="act-label">Influence</span>
-            <span class="act-sub">${openSites} open site${openSites === 1 ? '' : 's'}</span>
-          </button>`
-        : '',
-    ]
-      .filter(Boolean)
-      .join('');
-
-    return `<div id="sl-order-guide" class="active">
-      <div class="og-head">
-        <span class="og-tag">ORDER GUIDE</span>
-        <span class="og-count">${pos} / ${free.length} free</span>
-      </div>
-      <div class="og-crew">
-        <img src="${img}" alt="" />
-        <div>
-          <div class="og-name">${escapeHtml(d.name)}</div>
-          <div class="og-meta">At ${g.sectorId} · HP ${g.hp} · green tile, Unrest, or Influence</div>
-        </div>
-      </div>
-      <div class="og-progress" aria-hidden="true">
-        <i style="width:${Math.round((pos / free.length) * 100)}%"></i>
-      </div>
-      ${
-        destBtns
-          ? `<div class="dest-quick-list">${destBtns}</div>`
-          : `<p class="og-copy">No legal neighbors from here.</p>`
-      }
-      ${localActs ? `<div class="dest-quick-list og-local">${localActs}</div>` : ''}
-      <div class="og-actions">
-        <button type="button" class="act" data-act="guide-next" style="flex:1">
-          <span class="act-label">Skip →</span>
-          <span class="act-sub">Next free crew</span>
-        </button>
-        <button type="button" class="act ghost" data-act="guide-stop" style="flex:1">
-          <span class="act-label">Exit guide</span>
-        </button>
-      </div>
-    </div>`;
   }
 
   /** Sticky focus card for the active crew + gear / stash. */
