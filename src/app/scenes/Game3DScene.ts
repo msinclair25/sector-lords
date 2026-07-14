@@ -526,14 +526,19 @@ export class Game3DScene extends Phaser.Scene {
     // ── No legal order: select / cycle YOUR crews on this tile ──
     if (mine.length > 0) {
       this.selected = id;
-      if (this.selectedGang && mine.includes(this.selectedGang)) {
-        // Same tile again → cycle through stacked crews
-        const idx = mine.indexOf(this.selectedGang);
-        this.selectedGang = mine[(idx + 1) % mine.length]!;
+      // Free crews first so re-clicking a stack hands you someone who can still move
+      const free = mine.filter(
+        (gid) => !state.orders.some((o) => o.gangId === gid),
+      );
+      const ring = free.length > 0 ? free : mine;
+      if (this.selectedGang && ring.includes(this.selectedGang)) {
+        const idx = ring.indexOf(this.selectedGang);
+        this.selectedGang = ring[(idx + 1) % ring.length]!;
+      } else if (this.selectedGang && mine.includes(this.selectedGang) && free.length > 0) {
+        // Selected is busy but free exist → jump to first free
+        this.selectedGang = free[0]!;
       } else {
-        // Prefer a crew that still needs an order
-        const free = mine.find((gid) => !state.orders.some((o) => o.gangId === gid));
-        this.selectedGang = free ?? mine[0]!;
+        this.selectedGang = free[0] ?? mine[0]!;
       }
       this.statusMsg = this.describeSelection();
       if (this.selectedGang && this.coachStep === 0) this.advanceCoach();
@@ -855,11 +860,26 @@ export class Game3DScene extends Phaser.Scene {
 
     const name = gangDefById(gang.defId).name;
     const pending = this.controller.state.orders.find((o) => o.gangId === gang.id);
+    const stackHere = Object.values(state.gangs).filter(
+      (g) =>
+        g.sectorId === gang.sectorId &&
+        g.ownerId === this.controller.humanId &&
+        g.hp > 0,
+    );
+    const freeHere = stackHere.filter(
+      (g) => !state.orders.some((o) => o.gangId === g.id),
+    );
+    const stackHint =
+      stackHere.length > 1
+        ? ` · stack ${stackHere.indexOf(gang) + 1}/${stackHere.length}${
+            freeHere.length > 0 ? ` (${freeHere.length} free)` : ''
+          } — re-click block or 1/N chip to cycle`
+        : '';
     if (pending?.targetSectorId) {
-      return `${name}: ${pending.type.toUpperCase()} → ${pending.targetSectorId} queued. END TURN · or Cancel / Esc / re-click destination.`;
+      return `${name}: ${pending.type.toUpperCase()} → ${pending.targetSectorId} queued. END TURN · or Cancel / Esc / re-click destination.${stackHint}`;
     }
     if (!target || this.selected === gang.sectorId) {
-      return `${name} selected — click a GREEN neighbor to move/claim (one click).`;
+      return `${name} selected${stackHint} — click a GREEN neighbor to move/claim.`;
     }
     if (!areAdjacent(gang.sectorId, this.selected!)) {
       return `${name} can only go to green neighbors of ${gang.sectorId}.`;

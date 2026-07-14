@@ -272,16 +272,19 @@ export class BoardTabletop {
     this.onSelectGang = fn;
   }
 
-  /** Portrait under cursor (your crews are pointer-interactive). */
+  /** Portrait / stack-cycle chip under cursor (your crews are pointer-interactive). */
   private pickGangAt(clientX: number, clientY: number): string | null {
     const stack = document.elementsFromPoint(clientX, clientY);
     for (const node of stack) {
       const el = node as HTMLElement;
+      // Cycle chip or portrait with data-gang-id.mine
       if (el.dataset?.gangId && el.classList.contains('mine')) {
         return el.dataset.gangId;
       }
-      const img = el.closest?.('img[data-gang-id].mine') as HTMLElement | null;
-      if (img?.dataset.gangId) return img.dataset.gangId;
+      const hit = el.closest?.(
+        'img[data-gang-id].mine, button.sl-stack-cycle[data-gang-id].mine, [data-gang-id].mine',
+      ) as HTMLElement | null;
+      if (hit?.dataset.gangId) return hit.dataset.gangId;
     }
     return null;
   }
@@ -878,37 +881,103 @@ export class BoardTabletop {
       return !!g && g.hp > 0 && (!tileId || g.sectorId === tileId);
     });
     const unique = [...new Set(living)];
-    // Selected / newest-hire first so stacked tiles always show the focused crew
-    unique.sort((a, b) => {
-      if (a === selectedCrewId) return -1;
-      if (b === selectedCrewId) return 1;
-      return 0;
-    });
-    const maxShow = 4;
-    const shown = unique.slice(0, maxShow);
-    for (const gid of shown) {
+    const mine = unique.filter(
+      (gid) => state.gangs[gid]?.ownerId === this.humanId,
+    );
+    const foes = unique.filter(
+      (gid) => state.gangs[gid]?.ownerId !== this.humanId,
+    );
+
+    // Free crews first in stack ring, then ordered — selected always painted on top
+    const freeMine = mine.filter(
+      (gid) => !state.orders.some((o) => o.gangId === gid),
+    );
+    const busyMine = mine.filter((gid) => !freeMine.includes(gid));
+    const mineRing = [...freeMine, ...busyMine];
+    if (selectedCrewId && mineRing.includes(selectedCrewId)) {
+      mineRing.sort((a, b) => {
+        if (a === selectedCrewId) return -1;
+        if (b === selectedCrewId) return 1;
+        return 0;
+      });
+    }
+
+    const isStack = mineRing.length > 1;
+    host.classList.toggle('is-stack', isStack);
+    host.classList.toggle('has-foes', foes.length > 0);
+
+    // Overlapping stack: selected + up to 2 peeks (not a row of 4 tiny faces)
+    const maxPeek = isStack ? 3 : 4;
+    const shownMine = mineRing.slice(0, maxPeek);
+    // Paint back-to-front so selected (first) ends on top in DOM after reverse draw
+    const paintOrder = [...shownMine].reverse();
+    for (const gid of paintOrder) {
       const g = state.gangs[gid]!;
       const def = gangDefById(g.defId);
       const img = document.createElement('img');
       const src = def.art.portrait ?? 'assets/portraits/neon_jackals.jpg';
       img.src = src.startsWith('/') ? src : `/${src}`;
       img.alt = def.name;
-      img.title =
-        g.ownerId === this.humanId
-          ? `Select ${def.name}`
-          : def.name;
+      const busy = state.orders.some((o) => o.gangId === gid);
+      img.title = busy
+        ? `${def.name} (order queued) — click to select`
+        : `Select ${def.name}`;
       img.loading = 'lazy';
       img.decoding = 'async';
       img.dataset.gangId = gid;
-      img.className = g.ownerId === this.humanId ? 'mine' : 'enemy';
+      img.className = 'mine';
+      if (busy) img.classList.add('is-busy');
       if (gid === selectedCrewId) img.classList.add('selected-crew');
       host.appendChild(img);
     }
-    if (unique.length > maxShow) {
+
+    // Enemy peeks (small, non-interactive) — keep intel without stealing clicks
+    for (const gid of foes.slice(0, 2)) {
+      const g = state.gangs[gid]!;
+      const def = gangDefById(g.defId);
+      const img = document.createElement('img');
+      const src = def.art.portrait ?? 'assets/portraits/scrap_angels.jpg';
+      img.src = src.startsWith('/') ? src : `/${src}`;
+      img.alt = def.name;
+      img.title = def.name;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.dataset.gangId = gid;
+      img.className = 'enemy';
+      host.appendChild(img);
+    }
+
+    // Cycle chip: click selects next crew in the free-first ring
+    if (isStack) {
+      const cur =
+        selectedCrewId && mineRing.includes(selectedCrewId)
+          ? selectedCrewId
+          : mineRing[0]!;
+      // Prefer next free crew when cycling from chip
+      const freeOnly = freeMine.length > 0 ? freeMine : mineRing;
+      const ring = freeOnly.includes(cur) ? freeOnly : mineRing;
+      const idx = Math.max(0, ring.indexOf(cur));
+      const next = ring[(idx + 1) % ring.length]!;
+      const freeN = freeMine.length;
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'sl-stack-cycle mine';
+      chip.dataset.gangId = next;
+      chip.setAttribute('aria-label', `Cycle stack — ${mineRing.length} crews`);
+      chip.title = `Stack ${mineRing.length} · ${freeN} free — click to next crew`;
+      chip.innerHTML = `<span class="sc-n">${idx + 1}/${mineRing.length}</span>${
+        freeN > 0 && freeN < mineRing.length
+          ? `<span class="sc-free">${freeN} free</span>`
+          : freeN === 0
+            ? `<span class="sc-free busy">all set</span>`
+            : ''
+      }`;
+      host.appendChild(chip);
+    } else if (mineRing.length === 0 && foes.length > 2) {
       const more = document.createElement('span');
       more.className = 'sl-portrait-more';
-      more.textContent = `+${unique.length - maxShow}`;
-      more.title = `${unique.length - maxShow} more crew on this block`;
+      more.textContent = `+${foes.length - 2}`;
+      more.title = `${foes.length} rival crews here`;
       host.appendChild(more);
     }
   }
@@ -1039,31 +1108,16 @@ export class BoardTabletop {
           const g = state.gangs[id];
           return g && g.hp > 0 && g.sectorId === sector.id;
         });
-        // Unique ids only; selected first so hire/focus always paints
         const unique = [...new Set(living)];
-        unique.sort((a, b) => {
-          if (a === selectedCrewId) return -1;
-          if (b === selectedCrewId) return 1;
-          return 0;
-        });
-        const maxShow = 4;
-        const shown = unique.slice(0, maxShow);
-        const need =
-          shown.length + (unique.length > maxShow ? 1 : 0); // +1 for +N chip
-        const sig = `${shown.join(',')}|${unique.length}|${selectedCrewId ?? ''}`;
-        if (
-          portraits.childElementCount !== need ||
-          portraits.dataset.gangSig !== sig
-        ) {
+        const orderSig = unique
+          .map((id) => (state.orders.some((o) => o.gangId === id) ? '1' : '0'))
+          .join('');
+        // Full rebuild when roster, selection, or busy flags change
+        const sig = `${unique.join(',')}|${selectedCrewId ?? ''}|${orderSig}`;
+        if (portraits.dataset.gangSig !== sig) {
           portraits.dataset.gangSig = sig;
           this.fillPortraits(portraits, state, unique, selectedCrewId);
-          // Mine-flag on cache may change when gangs move
           this.rectCache = null;
-        } else {
-          portraits.querySelectorAll('img').forEach((img, i) => {
-            const gid = shown[i];
-            img.classList.toggle('selected-crew', !!gid && gid === selectedCrewId);
-          });
         }
       }
     }
