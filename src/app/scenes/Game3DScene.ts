@@ -1636,11 +1636,11 @@ export class Game3DScene extends Phaser.Scene {
           </div>
           <div class="legend-row">
             <span class="legend-k">Ownership</span>
-            <span class="legend-v"><i class="swatch mine"></i> You · <i class="swatch foe"></i> Rival · dim = unclaimed</span>
+            <span class="legend-v"><i class="swatch mine"></i> <b>YOU</b> tag + gold edge · <i class="swatch foe"></i> rival tag + red edge · no tag = unclaimed</span>
           </div>
           <div class="legend-row">
             <span class="legend-k">Site pips</span>
-            <span class="legend-v"><i class="dot you"></i> You influence · <i class="dot foe"></i> Rival · <i class="dot open"></i> Open (3 sites / block)</span>
+            <span class="legend-v">Top of tile (3): <i class="dot you"></i> you influence · <i class="dot foe"></i> rival · <i class="dot open"></i> open</span>
           </div>
           <div class="legend-row">
             <span class="legend-k">Cash</span>

@@ -794,88 +794,137 @@
   mix-blend-mode: screen;
 }
 
-/* Ownership / influence / unrest chrome on each block */
-.sl-tile-top .sl-tile-chrome {
+/*
+ * Tile intel layer — ABOVE portraits (z 12 > 8) so ownership / influence
+ * stay visible. Portraits stay for crew; intel is the map language.
+ */
+.sl-tile-intel {
   position: absolute;
-  inset: 0;
+  /* Match painted face inset so icons sit on the chip, not the gap */
+  inset: calc(var(--gap, 3px) * 0.5);
   pointer-events: none;
-  z-index: 6;
+  z-index: 12;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-/* Strong owner ring — your color vs rival color vs dim neutral */
-.sl-tile.is-mine .sl-tile-top {
-  box-shadow:
-    3px 4px 0 color-mix(in srgb, var(--owner) 45%, #0a0814),
-    6px 10px 18px rgba(0, 0, 0, 0.55),
-    inset 0 0 0 2px color-mix(in srgb, var(--owner) 80%, #fcee0a),
-    0 0 14px color-mix(in srgb, var(--owner) 40%, transparent);
+/* Left ownership bar */
+.sl-tile-intel .sl-owner-bar {
+  position: absolute;
+  left: 0;
+  top: 14%;
+  bottom: 14%;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: transparent;
+  opacity: 0;
 }
 
-.sl-tile.is-foe .sl-tile-top {
-  box-shadow:
-    3px 4px 0 color-mix(in srgb, var(--owner) 45%, #0a0814),
-    6px 10px 18px rgba(0, 0, 0, 0.55),
-    inset 0 0 0 2px color-mix(in srgb, var(--owner) 75%, #ff3d5a),
-    0 0 12px color-mix(in srgb, var(--owner) 35%, transparent);
+.sl-tile.is-mine .sl-tile-intel .sl-owner-bar {
+  opacity: 1;
+  background: #fcee0a;
+  box-shadow: 0 0 8px rgba(252, 238, 10, 0.75);
+}
+
+.sl-tile.is-foe .sl-tile-intel .sl-owner-bar {
+  opacity: 1;
+  background: #ff3d5a;
+  box-shadow: 0 0 8px rgba(255, 61, 90, 0.7);
+}
+
+/* Corner ownership tag */
+.sl-tile-intel .sl-owner-tag {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-family: "Orbitron", "Segoe UI", system-ui, sans-serif;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 2px;
+  background: rgba(4, 2, 12, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.sl-tile.is-mine .sl-tile-intel .sl-owner-tag {
+  color: #041018;
+  background: #fcee0a;
+  border-color: rgba(252, 238, 10, 0.95);
+  box-shadow: 0 0 8px rgba(252, 238, 10, 0.45);
+}
+
+.sl-tile.is-foe .sl-tile-intel .sl-owner-tag {
+  color: #fff;
+  background: #c41838;
+  border-color: #ff3d5a;
+  box-shadow: 0 0 8px rgba(255, 61, 90, 0.4);
 }
 
 .sl-tile.is-mine .sl-tile-top .sl-tint {
-  opacity: 0.34;
+  opacity: 0.38;
+  mix-blend-mode: color;
 }
 
 .sl-tile.is-foe .sl-tile-top .sl-tint {
-  opacity: 0.32;
+  opacity: 0.36;
+  mix-blend-mode: color;
 }
 
 .sl-tile.is-neutral .sl-tile-top .sl-tint {
-  opacity: 0.12;
+  opacity: 0.1;
 }
 
-/* Three site pips: open / you / rival */
-.sl-site-pips {
+/* Three site pips at TOP so portraits (bottom) never cover them */
+.sl-tile-intel .sl-site-pips {
   position: absolute;
   left: 50%;
-  bottom: 4px;
+  top: 3px;
+  bottom: auto;
   transform: translateX(-50%);
   display: flex;
   gap: 3px;
-  z-index: 2;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: rgba(4, 2, 12, 0.55);
 }
 
-.sl-site-pips .pip {
+.sl-tile-intel .sl-site-pips .pip {
   display: block;
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.55);
-  background: rgba(160, 170, 190, 0.45);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.65);
+  background: rgba(100, 110, 130, 0.85);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
-.sl-site-pips .pip.you {
+.sl-tile-intel .sl-site-pips .pip.you {
   background: #fcee0a;
-  border-color: rgba(252, 238, 10, 0.9);
-  box-shadow: 0 0 6px rgba(252, 238, 10, 0.65);
+  border-color: #fff3a0;
+  box-shadow: 0 0 6px rgba(252, 238, 10, 0.8);
 }
 
-.sl-site-pips .pip.foe {
+.sl-tile-intel .sl-site-pips .pip.foe {
   background: #ff3d5a;
-  border-color: rgba(255, 61, 90, 0.9);
-  box-shadow: 0 0 6px rgba(255, 61, 90, 0.55);
+  border-color: #ffb0bc;
+  box-shadow: 0 0 6px rgba(255, 61, 90, 0.75);
 }
 
-.sl-site-pips .pip.open {
-  background: rgba(40, 48, 64, 0.75);
-  border-color: rgba(143, 168, 184, 0.5);
+.sl-tile-intel .sl-site-pips .pip.open {
+  background: rgba(30, 36, 48, 0.95);
+  border-color: rgba(160, 175, 195, 0.65);
 }
 
-/* Unrest number badge (tile heat) */
-.sl-unrest-pip {
+/* Unrest number badge */
+.sl-tile-intel .sl-unrest-pip {
   position: absolute;
   top: 3px;
   right: 3px;
-  min-width: 12px;
-  height: 12px;
+  min-width: 13px;
+  height: 13px;
   padding: 0 3px;
   display: grid;
   place-items: center;
@@ -884,18 +933,17 @@
   font-weight: 800;
   letter-spacing: 0;
   color: #ffd0d8;
-  background: rgba(80, 8, 24, 0.88);
-  border: 1px solid rgba(255, 61, 90, 0.75);
+  background: rgba(80, 8, 24, 0.92);
+  border: 1px solid rgba(255, 61, 90, 0.85);
   border-radius: 3px;
-  box-shadow: 0 0 8px rgba(255, 61, 90, 0.35);
-  z-index: 3;
+  box-shadow: 0 0 8px rgba(255, 61, 90, 0.4);
 }
 
-.sl-tile.has-high-unrest .sl-unrest-pip {
+.sl-tile.has-high-unrest .sl-tile-intel .sl-unrest-pip {
   color: #fff;
-  background: rgba(120, 10, 30, 0.95);
+  background: rgba(120, 10, 30, 0.96);
   border-color: #ff3d5a;
-  box-shadow: 0 0 10px rgba(255, 61, 90, 0.55);
+  box-shadow: 0 0 10px rgba(255, 61, 90, 0.6);
 }
 
 .sl-tile.has-high-unrest .sl-tile-top .sl-unrest {
@@ -1028,6 +1076,7 @@
   }
 }
 
+/* Base owned edge — mine/foe override below with higher specificity */
 .sl-tile.is-owned .sl-tile-top {
   box-shadow:
     3px 4px 0 color-mix(in srgb, var(--owner) 40%, #0a0814),
@@ -1035,6 +1084,25 @@
     inset 0 0 0 1.5px color-mix(in srgb, var(--owner) 55%, #fff),
     0 0 12px color-mix(in srgb, var(--owner) 28%, transparent),
     inset 0 -14px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Must win over .is-owned so YOU vs RIVAL rings are distinct */
+.sl-tile.is-mine .sl-tile-top {
+  box-shadow:
+    3px 4px 0 #0a0814,
+    6px 10px 16px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2.5px #fcee0a,
+    0 0 16px rgba(252, 238, 10, 0.45),
+    inset 0 -14px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+.sl-tile.is-foe .sl-tile-top {
+  box-shadow:
+    3px 4px 0 #0a0814,
+    6px 10px 16px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2.5px #ff3d5a,
+    0 0 14px rgba(255, 61, 90, 0.4),
+    inset 0 -14px 20px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* Move destinations — pure glow, no lift, no text badges */
@@ -1593,14 +1661,18 @@
     width: 28px;
     height: 28px;
   }
-  .sl-site-pips .pip {
-    width: 7px;
-    height: 7px;
+  .sl-tile-intel .sl-site-pips .pip {
+    width: 8px;
+    height: 8px;
   }
-  .sl-unrest-pip {
+  .sl-tile-intel .sl-unrest-pip {
     min-width: 14px;
     height: 14px;
     font-size: 9px;
+  }
+  .sl-tile-intel .sl-owner-tag {
+    font-size: 8px;
+    padding: 2px 5px;
   }
   .sl-tile-portraits img.mine {
     /* Easier finger select for friendly crews */

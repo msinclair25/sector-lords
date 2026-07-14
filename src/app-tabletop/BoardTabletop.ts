@@ -765,15 +765,22 @@ export class BoardTabletop {
         <div class="sl-unrest"></div>
         <div class="sl-gloss"></div>
         <div class="sl-dest-ring"></div>
-        <div class="sl-tile-chrome" aria-hidden="true">
-          <div class="sl-site-pips"></div>
-          <span class="sl-unrest-pip" hidden></span>
-        </div>
       `;
 
       const holo = document.createElement('div');
       holo.className = 'sl-holo';
       holo.innerHTML = `<span class="sl-holo-tr"></span><span class="sl-holo-bl"></span>`;
+
+      // Intel layer sits ABOVE portraits so pips/flags stay readable
+      const intel = document.createElement('div');
+      intel.className = 'sl-tile-intel';
+      intel.setAttribute('aria-hidden', 'true');
+      intel.innerHTML = `
+        <span class="sl-owner-bar"></span>
+        <span class="sl-owner-tag"></span>
+        <div class="sl-site-pips"></div>
+        <span class="sl-unrest-pip" hidden></span>
+      `;
 
       const portraits = document.createElement('div');
       portraits.className = 'sl-tile-portraits';
@@ -786,6 +793,7 @@ export class BoardTabletop {
       el.appendChild(top);
       el.appendChild(holo);
       el.appendChild(portraits);
+      el.appendChild(intel);
       el.appendChild(orderMark);
       this.applyTileIntel(el, state, sector);
 
@@ -908,22 +916,37 @@ export class BoardTabletop {
   }
 
   /**
-   * Ownership ring, site-influence pips, unrest badge — readable at a glance.
+   * Ownership bar/tag, site-influence pips, unrest badge — readable at a glance.
    */
   private applyTileIntel(
     el: HTMLElement,
     state: GameState,
     sector: GameState['sectors'][string],
   ): void {
+    const mine = sector.owner === this.humanId;
+    const foe = !!sector.owner && sector.owner !== this.humanId;
     el.classList.toggle('is-owned', !!sector.owner);
-    el.classList.toggle('is-mine', sector.owner === this.humanId);
-    el.classList.toggle(
-      'is-foe',
-      !!sector.owner && sector.owner !== this.humanId,
-    );
+    el.classList.toggle('is-mine', mine);
+    el.classList.toggle('is-foe', foe);
     el.classList.toggle('is-neutral', !sector.owner);
     el.classList.toggle('has-unrest', sector.unrest > 0);
     el.classList.toggle('has-high-unrest', sector.unrest >= 5);
+
+    const tag = el.querySelector('.sl-owner-tag') as HTMLElement | null;
+    if (tag) {
+      if (mine) {
+        tag.textContent = 'YOU';
+        tag.hidden = false;
+      } else if (foe) {
+        const name = state.players[sector.owner!]?.name ?? 'RIVAL';
+        // Short monogram so it fits the chip
+        tag.textContent = name.slice(0, 3).toUpperCase();
+        tag.hidden = false;
+      } else {
+        tag.textContent = '';
+        tag.hidden = true;
+      }
+    }
 
     const pips = el.querySelector('.sl-site-pips') as HTMLElement | null;
     if (pips) {
@@ -943,7 +966,7 @@ export class BoardTabletop {
               ? 'You influence this site'
               : kind === 'foe'
                 ? 'Rival influences this site'
-                : 'Open site';
+                : 'Open site (not influenced)';
           pips.appendChild(i);
         }
       }
