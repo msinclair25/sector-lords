@@ -801,13 +801,13 @@
 }
 
 .sl-tile.is-mine .sl-tile-top .sl-tint {
-  opacity: 0.14;
-  mix-blend-mode: color;
+  opacity: 0.1;
+  mix-blend-mode: soft-light;
 }
 
 .sl-tile.is-foe .sl-tile-top .sl-tint {
-  opacity: 0.12;
-  mix-blend-mode: color;
+  opacity: 0.09;
+  mix-blend-mode: soft-light;
 }
 
 .sl-tile.is-neutral .sl-tile-top .sl-tint {
@@ -1031,24 +1031,28 @@
     inset 0 -14px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Yours — soft gold glow outline (primary claim cue) */
+/* Yours — hairline warm rim + soft bloom (subtle claim cue) */
 .sl-tile.is-mine .sl-tile-top {
   box-shadow:
     3px 4px 0 #0a0814,
-    6px 10px 16px rgba(0, 0, 0, 0.5),
-    0 0 0 2px rgba(252, 238, 10, 0.95),
-    0 0 12px rgba(252, 238, 10, 0.7),
-    0 0 26px rgba(252, 238, 10, 0.4),
+    6px 10px 14px rgba(0, 0, 0, 0.48),
+    /* inner edge catch */
+    inset 0 0 0 1px rgba(255, 236, 150, 0.55),
+    /* thin outer rim */
+    0 0 0 1px rgba(230, 195, 70, 0.45),
+    /* quiet ambient halo */
+    0 0 10px rgba(252, 210, 80, 0.2),
     inset 0 -14px 20px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Rival — quiet thin red ring (secondary) */
+/* Rival — quieter thin red ring */
 .sl-tile.is-foe .sl-tile-top {
   box-shadow:
     3px 4px 0 #0a0814,
-    6px 10px 16px rgba(0, 0, 0, 0.5),
-    0 0 0 1.5px rgba(255, 61, 90, 0.7),
-    0 0 8px rgba(255, 61, 90, 0.22),
+    6px 10px 14px rgba(0, 0, 0, 0.48),
+    inset 0 0 0 1px rgba(255, 120, 140, 0.28),
+    0 0 0 1px rgba(255, 70, 100, 0.4),
+    0 0 8px rgba(255, 61, 90, 0.12),
     inset 0 -14px 20px rgba(0, 0, 0, 0.4) !important;
 }
 

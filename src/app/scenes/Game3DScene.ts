@@ -1625,7 +1625,7 @@ export class Game3DScene extends Phaser.Scene {
           <p class="legend-lead">On each block</p>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico ring mine"></i></span>
-            <span class="legend-v"><b>Gold glow</b> — your turf</span>
+            <span class="legend-v"><b>Soft gold rim</b> — your turf</span>
           </div>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico ring foe"></i></span>

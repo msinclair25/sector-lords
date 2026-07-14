@@ -187,15 +187,15 @@
 }
 
 #sl-legend .ico.ring.mine {
-  border: 2px solid #fcee0a;
+  border: 1px solid rgba(230, 195, 70, 0.75);
   box-shadow:
-    0 0 6px rgba(252, 238, 10, 0.75),
-    0 0 12px rgba(252, 238, 10, 0.4);
+    inset 0 0 0 1px rgba(255, 236, 150, 0.35),
+    0 0 6px rgba(252, 210, 80, 0.25);
 }
 
 #sl-legend .ico.ring.foe {
-  border: 1.5px solid rgba(255, 61, 90, 0.85);
-  box-shadow: 0 0 5px rgba(255, 61, 90, 0.25);
+  border: 1px solid rgba(255, 70, 100, 0.55);
+  box-shadow: 0 0 4px rgba(255, 61, 90, 0.15);
 }
 
 #sl-legend .ico.ring.empty {
