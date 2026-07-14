@@ -31,6 +31,7 @@ Do **not** force-push or rewrite history on a shared remote without saying so.
 - itch.io page
 - Custom domain if traction
 - Further HUD incremental render (perf) only if lag appears
+- **Player feedback parked** → see [[Player Feedback]] (act when themes repeat, not from one comment)
 
 ## 3. Docs habit
 
