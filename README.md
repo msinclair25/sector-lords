@@ -53,13 +53,16 @@ Timed modes end on the clock; elimination modes only when one empire remains.
 ## How to play (hybrid — primary)
 
 1. **Menu** → Jack In / Continue (scenario + difficulty + SFX/music). Read the **GOAL** line.
-2. **Pick a crew** (board portrait, roster, or Order Guide).
-3. **One order per crew:** green neighbors = Move / Claim / Attack; or Influence / Unrest / Research on your turf.
-4. **Hire / Jobs / Tech** drawers; **End Turn** resolves AI, combat cards, economy, events.
-5. Idle crews trigger an **End Turn warning**.
-6. **Mobile:** full-width board, **Crew** slide-over, pinch-zoom.
+2. **Pick a crew** (board portrait, stack **NEXT**, or side roster). Soft **gold rim** = your turf.
+3. **One order per crew:**
+   - **Map:** green neighbors = Move / Claim / Attack
+   - **Side card:** Influence sites (permanent rackets), Unrest (one-shot cash + heat), Tech
+4. **Hire / Jobs / Tech** — Tech needs a free selected crew. Phone: **Menu** hub + hire snaps to nearest owned block.
+5. **End Turn** resolves AI, combat cards, economy, events. Idle crews get a warning.
+6. Bottom **Guide / Next free** walks free crews (optional).
+7. **Mobile:** full-width board, **Crew** slide-over, pinch + double-tap zoom.
 
-Blocks are **X,Y** (edge labels on the board). Balance: `docs/BALANCE.md`.
+Blocks are **X,Y** (edge labels on the board). Balance: `docs/BALANCE.md`. Player notes: `docs/Player Feedback.md`.
 
 ### Tech loop
 

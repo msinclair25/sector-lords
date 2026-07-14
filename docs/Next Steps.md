@@ -9,18 +9,21 @@ Repo hygiene is ready:
 - [x] `AGENTS.md` + `CONTRIBUTING.md`
 - [x] README hybrid-first + live URL + docs pointer
 
-Done (2026-07-13):
+Done (2026-07-13 → 2026-07-14):
 
 - [x] `git init` + remote `origin` → https://github.com/msinclair25/sector-lords.git
-- [x] Initial commit pushed to `main` (private repo)
+- [x] Commits pushed to `main` (private repo; keep current)
 - [x] Assets included in repo (no LFS for now)
-- [x] Catch-up push of local main (orders UI, mobile pinch, docs)
+- [x] Catch-up pushes (orders UI, mobile, hire snap, feedback docs)
+- [x] GitHub **description** + **homepage** → https://sectorlords.com
+- [x] **LICENSE** MIT in repo
+- [x] README screenshots + live URLs
 
 Optional later:
 
 - [ ] Flip to public when ready for portfolio
-- [ ] LICENSE if public
-- [ ] GitHub description + homepage URL → sector-lords.pages.dev  
+- [ ] GitHub topics / social preview polish
+- [ ] Fresh screenshots if board chrome changed a lot
 
 Do **not** force-push or rewrite history on a shared remote without saying so.
 

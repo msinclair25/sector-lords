@@ -1,7 +1,7 @@
 # Public GitHub launch checklist
 
 Repo: https://github.com/msinclair25/sector-lords  
-Live: https://sector-lords.pages.dev  
+Live: https://sectorlords.com (also https://sector-lords.pages.dev)  
 
 Use this before flipping **private → public**.
 
@@ -37,20 +37,20 @@ Optional: a **social preview** image under Settings → General → Social previ
 | # | Item | Status |
 |---|------|--------|
 | 1 | **LICENSE** (e.g. MIT) | ⬜ Add before public |
-| 2 | **README** polished: live link, what it is, IP disclaimer, screenshots | ⬜ Needs screenshot files |
-| 3 | **Screenshots** in `docs/screenshots/` (2–3 strong shots) | ⬜ You capture |
+| 2 | **README** polished: live link, what it is, IP disclaimer, screenshots | ✅ |
+| 3 | **Screenshots** in `docs/screenshots/` (2–3 strong shots) | ✅ (refresh later if UI drifts) |
 | 4 | **No secrets** in git (`.env`, tokens, wrangler secrets) | ✅ None found |
 | 5 | **Ignore junk** (`node_modules`, `dist`, traces) | ✅ |
 | 6 | **IP wording** — inspired by / not official remake | ✅ in README |
 | 7 | **Homepage + description** on GitHub | ✅ set |
-| 8 | **Build + tests pass** | ⬜ Run `npm test && npm run build` before flip |
-| 9 | Flip visibility **public** | ⬜ After 1–3 |
+| 8 | **Build + tests pass** | ✅ re-check before flip |
+| 9 | Flip visibility **public** | ⬜ When ready |
 
 ### Should do
 
 | # | Item | Status |
 |---|------|--------|
-| 10 | Topics / tags on repo | ⬜ |
+| 10 | Topics / tags on repo | ✅ |
 | 11 | Social preview image (repo Settings) | ⬜ optional |
 | 12 | Decide: keep `AGENTS.md` + `docs/` (fine for public — shows process) | ✅ keep |
 | 13 | LinkedIn / X use **same** live URL + GitHub URL | after public |

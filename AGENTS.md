@@ -69,6 +69,7 @@ npm run deploy       # build + pages deploy sector-lords
 | `docs/Architecture.md` | Structure |
 | `docs/Decisions.md` | Why we chose X |
 | `docs/Next Steps.md` | Backlog / GitHub |
+| `docs/Player Feedback.md` | External playtest notes (park until themes repeat) |
 | `docs/BALANCE.md` | Economy / combat balance |
 | `art/STYLE.md` | Art direction |
 

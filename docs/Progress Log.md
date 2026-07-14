@@ -4,6 +4,14 @@ Reverse-chronological ship log. Add new entries at the top.
 
 ---
 
+## 2026-07-14 — Feedback park + repo polish
+
+- **[[Player Feedback]]** vault note: first r/playmygame comment stored; themes tallied; act when repeats land
+- **Mobile hire:** snap deploy to nearest owned tile (no hard fail on miss-taps)
+- **Mobile KEY:** lower so it clears stats/brand
+- **Rival stacks:** one face + card peeks + red `×N` (no tile spill / gold sticker)
+- README how-to-play synced to current order flow; GitHub topics + docs catch-up
+
 ## 2026-07-13 (late) — Mobile pinch pass + repo sync
 
 - **Pinch/zoom dialed in:** no early pointer-capture on touch (2nd finger works), pinch deadzone, wider coarse-pointer scale range, smoother wheel/trackpad, **double-tap zoom** toward finger, gestureend blocked for iOS
