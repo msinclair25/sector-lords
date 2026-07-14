@@ -1906,10 +1906,19 @@ export class Game3DScene extends Phaser.Scene {
             <span class="act-label">Jobs</span>
             <span class="act-sub">${jobN} on the board · city contracts</span>
           </button>
-          <button type="button" class="act empire-hub-btn" data-act="tech-open">
+          ${
+            this.selectedGang &&
+            this.controller.state.gangs[this.selectedGang]?.ownerId ===
+              this.controller.humanId
+              ? `<button type="button" class="act empire-hub-btn" data-act="tech-open">
             <span class="act-label">Tech</span>
             <span class="act-sub">Research · fabricate · equip</span>
-          </button>
+          </button>`
+              : `<button type="button" class="act empire-hub-btn" disabled>
+            <span class="act-label">Tech</span>
+            <span class="act-sub">Select a crew first</span>
+          </button>`
+          }
           <div class="empire-hub-sep">// SYSTEM</div>
           <button type="button" class="act empire-hub-btn ghost" data-act="board-view">
             <span class="act-label">${flat ? 'War table view' : 'Flat map view'}</span>
@@ -2271,13 +2280,16 @@ export class Game3DScene extends Phaser.Scene {
         cls: 'ghost',
         disabled: this.resolving,
       });
-      acts.push({
-        id: 'tech-open',
-        label: 'Tech',
-        sub: 'Research & gear',
-        cls: 'ghost',
-        disabled: this.resolving,
-      });
+      // Research uses the selected crew's Tech rating — hide until a crew is picked
+      if (mine && gang && !pending) {
+        acts.push({
+          id: 'tech-open',
+          label: 'Tech',
+          sub: 'Research & gear',
+          cls: 'ghost',
+          disabled: this.resolving,
+        });
+      }
     }
     const freeN = this.freeCrewIds().length;
     // If idle warning is up but everyone now has orders, drop it
@@ -2421,6 +2433,19 @@ export class Game3DScene extends Phaser.Scene {
       return;
     }
     if (act === 'tech-open') {
+      const g = this.selectedGang
+        ? this.controller.state.gangs[this.selectedGang]
+        : null;
+      if (
+        !g ||
+        g.ownerId !== this.controller.humanId ||
+        g.hp <= 0
+      ) {
+        this.statusMsg = 'Select a crew first — research uses their Tech rating.';
+        SFX.play('error');
+        this.render();
+        return;
+      }
       this.drawer = this.drawer === 'tech' ? 'none' : 'tech';
       this.render();
       SFX.play('ui');
