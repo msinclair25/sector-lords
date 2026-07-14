@@ -1036,23 +1036,37 @@ export class BoardTabletop {
       host.appendChild(btn);
     }
 
-    // Rivals: ONE face + count badge (never a horizontal +N spill into neighbor tiles)
+    // Rivals: one card stack (peeks + face) — count on the card, never spills tiles
     if (foes.length > 0) {
       const leadId = foes[0]!;
       const g = state.gangs[leadId]!;
       const def = gangDefById(g.defId);
+      const n = foes.length;
       const wrap = document.createElement('div');
-      wrap.className = 'sl-foe-stack';
+      wrap.className =
+        'sl-foe-stack' + (n > 1 ? ' is-multi' : '') + (n > 2 ? ' is-deep' : '');
       wrap.title =
-        foes.length === 1
+        n === 1
           ? def.name
-          : `${foes.length} rival crews — e.g. ${def.name}`;
+          : `${n} rival crews on this block (lead: ${def.name})`;
       wrap.setAttribute(
         'aria-label',
-        foes.length === 1
-          ? def.name
-          : `${foes.length} rival crews on this block`,
+        n === 1 ? def.name : `${n} rival crews on this block`,
       );
+
+      // Depth peeks (pure chrome — not extra portraits)
+      if (n > 1) {
+        const p1 = document.createElement('i');
+        p1.className = 'sl-foe-peek';
+        p1.setAttribute('aria-hidden', 'true');
+        wrap.appendChild(p1);
+      }
+      if (n > 2) {
+        const p2 = document.createElement('i');
+        p2.className = 'sl-foe-peek deep';
+        p2.setAttribute('aria-hidden', 'true');
+        wrap.appendChild(p2);
+      }
 
       const img = document.createElement('img');
       const src = def.art.portrait ?? 'assets/portraits/scrap_angels.jpg';
@@ -1064,12 +1078,12 @@ export class BoardTabletop {
       img.className = 'enemy';
       wrap.appendChild(img);
 
-      if (foes.length > 1) {
-        const n = document.createElement('span');
-        n.className = 'sl-foe-n';
-        n.textContent = String(foes.length);
-        n.setAttribute('aria-hidden', 'true');
-        wrap.appendChild(n);
+      if (n > 1) {
+        const badge = document.createElement('span');
+        badge.className = 'sl-foe-n';
+        badge.textContent = `×${n}`;
+        badge.setAttribute('aria-hidden', 'true');
+        wrap.appendChild(badge);
       }
       host.appendChild(wrap);
     }
