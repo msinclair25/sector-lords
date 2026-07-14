@@ -336,6 +336,31 @@
   margin: 0 0 8px;
 }
 
+#sl-menu-root .sl-scenario .sc-goal {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #f0e8ff;
+  border: 1px solid rgba(252, 238, 10, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(252, 238, 10, 0.1) 0%,
+    rgba(8, 6, 18, 0.75) 60%
+  );
+}
+
+#sl-menu-root .sl-scenario .sc-goal-tag {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  margin-right: 6px;
+}
+
 #sl-menu-root .sl-scenario .sc-stats {
   display: flex;
   flex-wrap: wrap;

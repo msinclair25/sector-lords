@@ -15,11 +15,13 @@ import { eventArtUrl } from '../../content/eventArt';
 import {
   areAdjacent,
   computeIncomeBreakdown,
+  describeVictoryGoal,
   formatOdds,
   pathsToVictory,
   previewAttackWithIntel,
   researchableItems,
   type CityEventFlash,
+  type DebriefReport,
   type Difficulty,
   type GameState,
   type GangInstance,
@@ -38,7 +40,6 @@ import {
   type TurnActionFx,
 } from '../turnActionFx';
 import { pickEndingCard } from '../../content/endings';
-import type { DebriefReport } from '../../engine';
 import hudCss from '../ui/hybridHud.css?inline';
 import battleCss from '../ui/battleClash.css?inline';
 import eventCss from '../ui/eventCard.css?inline';
@@ -254,6 +255,10 @@ export class Game3DScene extends Phaser.Scene {
       this.refreshBoard();
       // Frame the map after HUD + board layout settle (iso projected bounds)
       this.board.scheduleCenter(true);
+
+      // Lead with the win condition so players know why the game might end
+      const goal = describeVictoryGoal(this.controller.state.victory);
+      this.statusMsg = `GOAL · ${goal}`;
 
       this.unsub = this.controller.subscribe(() => {
         if (this.suppressSync) {
@@ -989,11 +994,15 @@ export class Game3DScene extends Phaser.Scene {
           </div>
         </div>
         <div id="sl-stats">
-          <div class="stat"><span class="lbl">Turn</span><span class="val">${state.turn}</span></div>
+          <div class="stat" title="${escapeHtml(paths.label)}"><span class="lbl">Turn</span><span class="val">${
+            state.victory.type === 'elimination'
+              ? state.turn
+              : `${state.turn}/${'turns' in state.victory ? state.victory.turns : '—'}`
+          }</span></div>
           <div class="stat" title="Territory $${incomeBr.territory} · Sites $${incomeBr.sites} · Unrest $${incomeBr.unrest} · Landmarks $${incomeBr.landmarks}"><span class="lbl">Cash</span><span class="val">$${me.cash}<small>→$${nextCash}</small></span></div>
           <div class="stat"><span class="lbl">Support</span><span class="val">${me.support}</span></div>
           <div class="stat"><span class="lbl">Heat</span><span class="val">${state.cityHeat}<small>${escapeHtml(fc.policeRisk)}</small></span></div>
-          <div class="stat"><span class="lbl">Goal</span><span class="val">${myScore?.value ?? 0}<small>${escapeHtml(paths.label)}</small></span></div>
+          <div class="stat goal-stat" title="${escapeHtml(paths.label)}"><span class="lbl">Goal</span><span class="val">${myScore?.value ?? 0}<small>${escapeHtml(paths.label)}</small></span></div>
         </div>
       </div>
       ${this.renderCoachHtml()}

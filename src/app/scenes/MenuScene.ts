@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { SCENARIOS, scenarioById } from '../../content';
+import { describeVictoryGoal } from '../../engine';
 import type { Difficulty } from '../../engine';
 import { GameController } from '../GameController';
 import {
@@ -101,10 +102,16 @@ export class MenuScene extends Phaser.Scene {
             <div class="sc-lbl">// SCENARIO</div>
             <div class="sc-name">${escapeHtml(scen.name)}</div>
             <p class="sc-desc">${escapeHtml(scen.description)}</p>
+            <p class="sc-goal"><span class="sc-goal-tag">GOAL</span> ${escapeHtml(describeVictoryGoal(scen.victory))}</p>
             <div class="sc-stats">
               <span class="sl-chip">${scen.aiCount} AI</span>
               <span class="sl-chip gold">START $${scen.startingCash}</span>
               <span class="sl-chip">${scen.mapWidth}×${scen.mapHeight}</span>
+              <span class="sl-chip">${
+                scen.victory.type === 'elimination'
+                  ? 'NO CLOCK'
+                  : `${'turns' in scen.victory ? scen.victory.turns : '?'} TURNS`
+              }</span>
             </div>
           </div>
 

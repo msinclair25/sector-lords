@@ -36,9 +36,23 @@ npm run build
 npm run deploy   # build + wrangler pages deploy
 ```
 
+## Goal (how you win)
+
+Depends on the **scenario** you pick on the menu (shown as **GOAL** there and in-HUD):
+
+| Scenario | Win condition |
+|----------|----------------|
+| **Kill 'Em All** (default) | Eliminate every rival — **no turn limit** |
+| **War Zone** | Same, three rivals |
+| **Sector Rush** | Most sectors at **turn 40** (or sole survivor earlier) |
+| **Cash Kings** | Most cash at **turn 36** |
+| **Triple Threat** | Best score at **turn 45** (two rivals) |
+
+Timed modes end on the clock; elimination modes only when one empire remains.
+
 ## How to play (hybrid — primary)
 
-1. **Menu** → Jack In / Continue (scenario + difficulty + SFX/music).
+1. **Menu** → Jack In / Continue (scenario + difficulty + SFX/music). Read the **GOAL** line.
 2. **Pick a crew** (board portrait, roster, or Order Guide).
 3. **One order per crew:** green neighbors = Move / Claim / Attack; or Influence / Unrest / Research on your turf.
 4. **Hire / Jobs / Tech** drawers; **End Turn** resolves AI, combat cards, economy, events.

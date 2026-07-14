@@ -89,14 +89,30 @@ export function pathsToVictory(state: GameState): {
     return { playerId: pid, name: p.name, value: sectors, unit: 'sectors' };
   });
 
-  const label =
-    state.victory.type === 'elimination'
-      ? 'Eliminate all rivals'
-      : state.victory.type === 'most_sectors'
-        ? `Most sectors by turn ${state.victory.turns}`
-        : state.victory.type === 'most_cash'
-          ? `Most cash by turn ${state.victory.turns}`
-          : `Highest combined score by turn ${state.victory.turns}`;
+  let label: string;
+  if (state.victory.type === 'elimination') {
+    label = 'Eliminate every rival · no turn limit';
+  } else if (state.victory.type === 'most_sectors') {
+    label = `Most sectors · turn ${state.turn}/${state.victory.turns}`;
+  } else if (state.victory.type === 'most_cash') {
+    label = `Most cash · turn ${state.turn}/${state.victory.turns}`;
+  } else {
+    label = `Best score · turn ${state.turn}/${state.victory.turns}`;
+  }
 
   return { label, scores };
+}
+
+/** Plain-language goal for menus / coach (scenario-level, not live turn). */
+export function describeVictoryGoal(victory: GameState['victory']): string {
+  if (victory.type === 'elimination') {
+    return 'Eliminate every rival. No turn limit — last empire standing wins.';
+  }
+  if (victory.type === 'most_sectors') {
+    return `Control the most sectors when turn ${victory.turns} ends (sole survivor also wins early).`;
+  }
+  if (victory.type === 'most_cash') {
+    return `Have the most cash when turn ${victory.turns} ends (sole survivor also wins early).`;
+  }
+  return `Highest score (sectors×50 + cash + support×10) when turn ${victory.turns} ends.`;
 }

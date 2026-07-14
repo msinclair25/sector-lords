@@ -283,6 +283,28 @@
   letter-spacing: 0.02em;
 }
 
+/* Goal chip — win condition should be obvious at a glance */
+#sl-stats .stat.goal-stat {
+  min-width: 120px;
+  max-width: 220px;
+  border-left-color: var(--gold);
+  background: linear-gradient(180deg, rgba(252, 238, 10, 0.12), rgba(43, 240, 255, 0.05));
+}
+
+#sl-stats .stat.goal-stat .val {
+  font-size: 14px;
+}
+
+#sl-stats .stat.goal-stat .val small {
+  display: block;
+  margin-left: 0;
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.25;
+  white-space: normal;
+  color: var(--cyan);
+}
+
 /* ── Coach / tutorial ── */
 #sl-coach {
   position: absolute;
