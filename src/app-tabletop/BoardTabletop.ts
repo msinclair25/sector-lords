@@ -776,10 +776,10 @@ export class BoardTabletop {
       intel.className = 'sl-tile-intel';
       intel.setAttribute('aria-hidden', 'true');
       intel.innerHTML = `
-        <span class="sl-owner-bar"></span>
-        <span class="sl-owner-tag"></span>
-        <div class="sl-site-pips"></div>
-        <span class="sl-unrest-pip" hidden></span>
+        <span class="sl-owner-bar" aria-hidden="true"></span>
+        <span class="sl-owner-tag" hidden><span class="ot-dot"></span><span class="ot-txt"></span></span>
+        <div class="sl-site-pips" title="Site influence"></div>
+        <span class="sl-unrest-pip" hidden><span class="up-ico" aria-hidden="true"></span><span class="up-n"></span></span>
       `;
 
       const portraits = document.createElement('div');
@@ -933,18 +933,23 @@ export class BoardTabletop {
     el.classList.toggle('has-high-unrest', sector.unrest >= 5);
 
     const tag = el.querySelector('.sl-owner-tag') as HTMLElement | null;
-    if (tag) {
+    const tagTxt = el.querySelector('.sl-owner-tag .ot-txt') as HTMLElement | null;
+    if (tag && tagTxt) {
       if (mine) {
-        tag.textContent = 'YOU';
+        tagTxt.textContent = 'YOU';
         tag.hidden = false;
+        tag.classList.add('mine');
+        tag.classList.remove('foe');
       } else if (foe) {
         const name = state.players[sector.owner!]?.name ?? 'RIVAL';
-        // Short monogram so it fits the chip
-        tag.textContent = name.slice(0, 3).toUpperCase();
+        tagTxt.textContent = name.slice(0, 3).toUpperCase();
         tag.hidden = false;
+        tag.classList.add('foe');
+        tag.classList.remove('mine');
       } else {
-        tag.textContent = '';
+        tagTxt.textContent = '';
         tag.hidden = true;
+        tag.classList.remove('mine', 'foe');
       }
     }
 
@@ -954,6 +959,10 @@ export class BoardTabletop {
         if (!site.influencer) return 'open';
         return site.influencer === this.humanId ? 'you' : 'foe';
       });
+      const youN = bits.filter((b) => b === 'you').length;
+      const foeN = bits.filter((b) => b === 'foe').length;
+      const openN = bits.filter((b) => b === 'open').length;
+      pips.title = `Sites: ${youN} yours · ${foeN} rival · ${openN} open`;
       const sig = bits.join(',');
       if (pips.dataset.sig !== sig) {
         pips.dataset.sig = sig;
@@ -961,6 +970,9 @@ export class BoardTabletop {
         for (const kind of bits) {
           const i = document.createElement('i');
           i.className = `pip ${kind}`;
+          const gem = document.createElement('span');
+          gem.className = 'gem';
+          i.appendChild(gem);
           i.title =
             kind === 'you'
               ? 'You influence this site'
@@ -973,14 +985,17 @@ export class BoardTabletop {
     }
 
     const unrestPip = el.querySelector('.sl-unrest-pip') as HTMLElement | null;
-    if (unrestPip) {
+    const unrestN = el.querySelector('.sl-unrest-pip .up-n') as HTMLElement | null;
+    if (unrestPip && unrestN) {
       if (sector.unrest > 0) {
         unrestPip.hidden = false;
-        unrestPip.textContent = String(sector.unrest);
+        unrestN.textContent = String(sector.unrest);
         unrestPip.title = `Unrest ${sector.unrest}/10 on this block`;
+        unrestPip.classList.toggle('hot', sector.unrest >= 5);
       } else {
         unrestPip.hidden = true;
-        unrestPip.textContent = '';
+        unrestN.textContent = '';
+        unrestPip.classList.remove('hot');
       }
     }
 
