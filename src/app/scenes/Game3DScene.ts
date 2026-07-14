@@ -349,12 +349,10 @@ export class Game3DScene extends Phaser.Scene {
           ? gang.sectorId
           : home;
       this.board.setTutorialHighlights(id ? [id] : [], 'home');
-      if (id && this.coachStep === 0) this.board.focusSector(id);
+      // Don't pan — selection/tutorial never resets the camera
     } else if (step.board === 'dest') {
       const dests = this.validDestinations();
       this.board.setTutorialHighlights(dests, 'dest');
-      // Keep normal green glow too
-      if (dests[0]) this.board.focusSector(dests[0]);
     } else {
       this.board.setTutorialHighlights([]);
     }
@@ -479,7 +477,6 @@ export class Game3DScene extends Phaser.Scene {
         ? `Hire deploys to block ${id}. Pick a crew card to hire.`
         : `Block ${id} is not yours — click an owned block, then hire.`;
       this.refreshBoard();
-      this.board?.focusSector(id);
       this.render();
       SFX.play(owned ? 'ui' : 'error');
       return;
@@ -547,8 +544,7 @@ export class Game3DScene extends Phaser.Scene {
         this.selectedGang = free[0] ?? mine[0]!;
       }
 
-      // Multi-crew blocks: show only crews here + open crew panel on phone
-      // (only when first landing — not every cycle, or the panel jumps)
+      // Multi-crew: filter list to this block; open phone Crew only on first land
       if (mine.length > 1) {
         this.crewFilter = 'here';
         if (
@@ -563,19 +559,16 @@ export class Game3DScene extends Phaser.Scene {
       this.statusMsg = this.describeSelection();
       if (this.selectedGang && this.coachStep === 0) this.advanceCoach();
       this.refreshBoard();
-      if (!wasOnTile) this.board?.focusSector(id);
       this.render();
       SFX.play('ui');
       return;
     }
 
-    // Just focus the sector (no crew here) — clear crew pick so hire/deploy matches the tile
-    const wasSelected = this.selected === id;
+    // Inspect sector only — clear crew pick so hire/deploy matches the tile
     this.selected = id;
     this.selectedGang = null;
     this.statusMsg = this.describeSelection();
     this.refreshBoard();
-    if (!wasSelected) this.board?.focusSector(id);
     this.render();
     SFX.play('ui');
   }
@@ -600,7 +593,6 @@ export class Game3DScene extends Phaser.Scene {
     if (this.actionBusy || this.resolving) return;
     const g = this.controller.state.gangs[gid];
     if (!g || g.ownerId !== this.controller.humanId || g.hp <= 0) return;
-    const sameTile = this.selected === g.sectorId;
     const sameGang = this.selectedGang === gid;
     this.selectedGang = gid;
     this.selected = g.sectorId;
@@ -614,10 +606,7 @@ export class Game3DScene extends Phaser.Scene {
     if (stackN > 1) this.crewFilter = 'here';
     this.statusMsg = this.describeSelection();
     this.refreshBoard();
-    // Stay put when cycling stacked crews on the same block (NEXT / Prev / list)
-    if (!sameTile) {
-      this.board?.focusSector(g.sectorId);
-    }
+    // Never pan on select — camera only moves via pan/zoom or Find on map
     this.render();
     if (!sameGang) SFX.play('ui');
     if (this.coachStep === 0) this.advanceCoach();
@@ -683,7 +672,6 @@ export class Game3DScene extends Phaser.Scene {
     this.selected = g.sectorId;
     this.statusMsg = status;
     this.refreshBoard();
-    this.board?.focusSector(g.sectorId);
     this.render(true);
     if (playUi) SFX.play('ui');
     if (this.coachStep === 0) this.advanceCoach();
@@ -789,7 +777,6 @@ export class Game3DScene extends Phaser.Scene {
     this.selected = this.controller.state.gangs[next]!.sectorId;
     this.statusMsg = `${brief} · Guide → ${name} (${pos}/${freeLeft.length} free)`;
     this.refreshBoard();
-    this.board?.focusSector(this.selected);
     this.render(true);
   }
 
@@ -2718,7 +2705,6 @@ export class Game3DScene extends Phaser.Scene {
       this.selected = g.sectorId;
       this.statusMsg = `Pick a business in the side panel — ${openSlots.length} open. Each Influence uses this crew's only order.`;
       this.refreshBoard();
-      this.board?.focusSector(g.sectorId);
       this.render();
       SFX.play('ui');
       requestAnimationFrame(() => {
@@ -3027,14 +3013,13 @@ export class Game3DScene extends Phaser.Scene {
       Object.keys(this.controller.state.gangs).find((id) => !beforeGangs.has(id)) ??
       null;
 
-    // Land selection on the hire tile so the portrait is obvious
+    // Select hire tile without re-centering the camera
     this.selected = deploy.sid;
     if (newId) this.selectedGang = newId;
     this.drawer = 'none';
     this.statusMsg = `Hired ${def.name} on block ${deploy.sid} (${deploy.reason}).`;
     SFX.play('hire');
     this.refreshBoard();
-    this.board?.focusSector(deploy.sid);
     this.board?.pulseTile(deploy.sid, 'claim', false);
     this.render();
   }
