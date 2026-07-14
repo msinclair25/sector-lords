@@ -1036,27 +1036,42 @@ export class BoardTabletop {
       host.appendChild(btn);
     }
 
-    // Rival faces — small, never steal clicks
-    for (const gid of foes.slice(0, 2)) {
-      const g = state.gangs[gid]!;
+    // Rivals: ONE face + count badge (never a horizontal +N spill into neighbor tiles)
+    if (foes.length > 0) {
+      const leadId = foes[0]!;
+      const g = state.gangs[leadId]!;
       const def = gangDefById(g.defId);
+      const wrap = document.createElement('div');
+      wrap.className = 'sl-foe-stack';
+      wrap.title =
+        foes.length === 1
+          ? def.name
+          : `${foes.length} rival crews — e.g. ${def.name}`;
+      wrap.setAttribute(
+        'aria-label',
+        foes.length === 1
+          ? def.name
+          : `${foes.length} rival crews on this block`,
+      );
+
       const img = document.createElement('img');
       const src = def.art.portrait ?? 'assets/portraits/scrap_angels.jpg';
       img.src = src.startsWith('/') ? src : `/${src}`;
       img.alt = def.name;
-      img.title = def.name;
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.dataset.gangId = gid;
+      img.dataset.gangId = leadId;
       img.className = 'enemy';
-      host.appendChild(img);
-    }
-    if (foes.length > 2) {
-      const more = document.createElement('span');
-      more.className = 'sl-portrait-more';
-      more.textContent = `+${foes.length - 2}`;
-      more.title = `${foes.length} rival crews here`;
-      host.appendChild(more);
+      wrap.appendChild(img);
+
+      if (foes.length > 1) {
+        const n = document.createElement('span');
+        n.className = 'sl-foe-n';
+        n.textContent = String(foes.length);
+        n.setAttribute('aria-hidden', 'true');
+        wrap.appendChild(n);
+      }
+      host.appendChild(wrap);
     }
   }
 

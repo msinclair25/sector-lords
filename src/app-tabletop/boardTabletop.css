@@ -724,6 +724,8 @@
   cursor: pointer;
   transform: none;
   transition: filter 0.15s ease;
+  /* Clip crew chrome so stacks never paint into neighbor cells (iso z-fight) */
+  overflow: hidden;
   /* Improve hit reliability under CSS 3D transforms */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -1370,15 +1372,19 @@
 .sl-tile-portraits {
   position: absolute;
   left: 50%;
-  bottom: 4px;
+  bottom: 3px;
   transform: translateX(-50%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   z-index: 8;
   pointer-events: auto;
-  max-width: calc(100% - 4px);
+  width: calc(100% - 6px);
+  max-width: calc(100% - 6px);
+  box-sizing: border-box;
+  /* Second line of defense vs tile overflow (iso neighbors) */
+  overflow: hidden;
 }
 
 .sl-tile-portraits img {
@@ -1412,11 +1418,47 @@
   filter: saturate(0.75) brightness(0.9);
 }
 
+/* One rival face; stack count is .sl-foe-n on the corner */
+.sl-tile-portraits .sl-foe-stack {
+  position: relative;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  pointer-events: none;
+}
+
+.sl-tile-portraits .sl-foe-stack img.enemy,
 .sl-tile-portraits img.enemy {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
   border-color: #ff6b4a;
-  width: 24px;
-  height: 24px;
-  opacity: 0.9;
+  opacity: 0.95;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.sl-tile-portraits .sl-foe-n {
+  position: absolute;
+  right: -3px;
+  top: -5px;
+  z-index: 2;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  font-family: "Orbitron", "Segoe UI", system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
+  color: #1a1000;
+  background: linear-gradient(160deg, #ffe566, #f0c400);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 8px rgba(252, 238, 10, 0.45), 0 1px 3px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
 }
 
 .sl-tile-portraits img.selected-crew {
@@ -1479,23 +1521,9 @@
   display: none;
 }
 
+/* legacy +N chip (replaced by .sl-foe-n on stack) */
 .sl-tile-portraits .sl-portrait-more {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 6px;
-  border-radius: 8px;
-  font-family: "Orbitron", "Segoe UI", system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: #fcee0a;
-  background: rgba(8, 6, 18, 0.92);
-  border: 1px solid rgba(252, 238, 10, 0.55);
-  box-shadow: 0 0 10px rgba(252, 238, 10, 0.25);
-  pointer-events: none;
+  display: none;
 }
 
 /* ── Order routes (multi-crew pathing) ── */
@@ -1831,23 +1859,39 @@
     letter-spacing: 0.12em;
   }
   .sl-tile-portraits {
-    gap: 4px;
-    bottom: 3px;
+    gap: 3px;
+    bottom: 2px;
   }
   .sl-tile-portraits img.mine {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     border-width: 2px;
   }
   .sl-tile-portraits .sl-stack-next {
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 36px;
+    min-height: 36px;
   }
   .sl-tile-portraits .sl-stack-next .sn-lab {
     font-size: 9px;
   }
   .sl-tile-portraits .sl-stack-next .sn-n {
     font-size: 12px;
+  }
+  .sl-tile-portraits .sl-foe-stack {
+    width: 24px;
+    height: 24px;
+  }
+  .sl-tile-portraits .sl-foe-stack img.enemy,
+  .sl-tile-portraits img.enemy {
+    width: 24px;
+    height: 24px;
+  }
+  .sl-tile-portraits .sl-foe-n {
+    min-width: 14px;
+    height: 14px;
+    font-size: 8px;
+    right: -2px;
+    top: -4px;
   }
   .sl-tile-intel .sl-site-pips {
     gap: 3px;
@@ -1862,11 +1906,6 @@
     height: 20px;
   }
   .sl-tile-intel .sl-raid-mark .pl-lab {
-    font-size: 9px;
-  }
-  .sl-tile-portraits .sl-portrait-more {
-    min-width: 26px;
-    height: 26px;
     font-size: 9px;
   }
   .sl-route-badge {
