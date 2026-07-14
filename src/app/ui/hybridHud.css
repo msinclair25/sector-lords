@@ -2371,11 +2371,11 @@ button.crew-filter:disabled {
     padding-bottom: 8px;
   }
 
-  /* KEY under stats — compact body from JS */
+  /* KEY sits under full top stack (stats + brand) — was overlapping titles at ~92px */
   #sl-legend {
     left: 6px;
     right: auto;
-    top: max(92px, calc(84px + env(safe-area-inset-top, 0px)));
+    top: max(128px, calc(116px + env(safe-area-inset-top, 0px)));
     bottom: auto;
     width: auto;
     max-width: min(280px, calc(100vw - 56px));
