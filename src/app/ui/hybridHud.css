@@ -243,16 +243,153 @@
 #sl-legend .ico.stack {
   display: inline-grid;
   place-items: center;
-  min-width: 22px;
+  min-width: 28px;
   height: 16px;
   padding: 0 4px;
   border-radius: 4px;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
   font-style: normal;
+  letter-spacing: 0.04em;
   color: #fcee0a;
   background: rgba(6, 4, 16, 0.9);
-  border: 1px solid rgba(43, 240, 255, 0.45);
+  border: 1px solid rgba(252, 238, 10, 0.55);
+}
+
+/* Stacked crews on a block — explicit pick list (side panel) */
+.stack-picker {
+  padding: 2px 0 4px;
+}
+
+.stack-picker-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.stack-picker-title {
+  font-family: var(--font-display, "Segoe UI", system-ui, sans-serif);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold, #fcee0a);
+}
+
+.stack-picker-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(200, 220, 255, 0.75);
+}
+
+.stack-picker-help {
+  margin: 0 0 8px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: rgba(180, 195, 220, 0.8);
+}
+
+.stack-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#sl-hybrid-root button.stack-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  min-height: 52px;
+  text-align: left;
+  border-radius: 8px;
+  border: 1px solid rgba(43, 240, 255, 0.28);
+  background: rgba(8, 6, 18, 0.75);
+  color: #e8f0ff;
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+#sl-hybrid-root button.stack-pick:hover,
+#sl-hybrid-root button.stack-pick:focus-visible {
+  border-color: rgba(252, 238, 10, 0.65);
+  box-shadow: 0 0 12px rgba(252, 238, 10, 0.2);
+  outline: none;
+}
+
+#sl-hybrid-root button.stack-pick.selected {
+  border-color: #fcee0a;
+  box-shadow: 0 0 14px rgba(252, 238, 10, 0.3);
+  background: rgba(40, 32, 8, 0.55);
+}
+
+#sl-hybrid-root button.stack-pick.has-order {
+  opacity: 0.88;
+}
+
+#sl-hybrid-root button.stack-pick img {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1.5px solid rgba(43, 240, 255, 0.55);
+  flex-shrink: 0;
+}
+
+#sl-hybrid-root button.stack-pick.selected img {
+  border-color: #fcee0a;
+}
+
+#sl-hybrid-root button.stack-pick .sp-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#sl-hybrid-root button.stack-pick .sp-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#sl-hybrid-root button.stack-pick .sp-meta {
+  font-size: 10px;
+  color: rgba(180, 195, 220, 0.85);
+}
+
+#sl-hybrid-root button.stack-pick .sp-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: rgba(43, 240, 255, 0.15);
+  color: #2bf0ff;
+}
+
+#sl-hybrid-root button.stack-pick .sp-badge.free {
+  background: rgba(125, 255, 107, 0.15);
+  color: #7dff6b;
+}
+
+#sl-hybrid-root button.stack-pick .sp-badge.busy {
+  background: rgba(160, 175, 195, 0.15);
+  color: rgba(180, 195, 210, 0.9);
+}
+
+#sl-hybrid-root button.stack-pick.selected .sp-badge {
+  background: rgba(252, 238, 10, 0.2);
+  color: #fcee0a;
 }
 
 #sl-legend .ico.dest {
@@ -1509,8 +1646,34 @@
   filter: brightness(0.75) saturate(1.1);
 }
 
-#sl-crew-dock.is-collapsed .dock-lower {
+#sl-crew-dock.is-collapsed .dock-lower,
+#sl-crew-dock.is-collapsed .dock-stack-nav {
   display: none;
+}
+
+#sl-crew-dock .dock-stack-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(43, 240, 255, 0.12);
+  background: rgba(4, 2, 12, 0.55);
+}
+
+#sl-crew-dock .dock-stack-nav .act {
+  flex: 1;
+  min-height: 36px;
+  min-width: 0;
+  padding: 6px 8px;
+}
+
+#sl-crew-dock .dock-stack-pos {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: rgba(252, 238, 10, 0.9);
+  white-space: nowrap;
 }
 
 #sl-crew-dock.is-collapsed .dock-kicker {

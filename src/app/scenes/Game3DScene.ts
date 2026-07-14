@@ -523,23 +523,40 @@ export class Game3DScene extends Phaser.Scene {
       }
     }
 
-    // ── No legal order: select / cycle YOUR crews on this tile ──
+    // ── Select YOUR crews on this tile (list in panel; NEXT on board cycles) ──
     if (mine.length > 0) {
       this.selected = id;
-      // Free crews first so re-clicking a stack hands you someone who can still move
       const free = mine.filter(
         (gid) => !state.orders.some((o) => o.gangId === gid),
       );
       const ring = free.length > 0 ? free : mine;
-      if (this.selectedGang && ring.includes(this.selectedGang)) {
-        const idx = ring.indexOf(this.selectedGang);
-        this.selectedGang = ring[(idx + 1) % ring.length]!;
-      } else if (this.selectedGang && mine.includes(this.selectedGang) && free.length > 0) {
-        // Selected is busy but free exist → jump to first free
-        this.selectedGang = free[0]!;
+      const alreadyHere =
+        !!this.selectedGang && mine.includes(this.selectedGang);
+
+      if (alreadyHere && mine.length > 1) {
+        // Re-click same stack → cycle free-first ring
+        const idx = ring.indexOf(this.selectedGang!);
+        if (idx >= 0) {
+          this.selectedGang = ring[(idx + 1) % ring.length]!;
+        } else {
+          this.selectedGang = free[0] ?? mine[0]!;
+        }
       } else {
+        // Landing on a new stack: pick first free, don't cycle past them
         this.selectedGang = free[0] ?? mine[0]!;
       }
+
+      // Multi-crew blocks: show only crews here + open crew panel on phone
+      if (mine.length > 1) {
+        this.crewFilter = 'here';
+        if (
+          typeof window !== 'undefined' &&
+          window.matchMedia('(max-width: 720px)').matches
+        ) {
+          this.sideMobileOpen = true;
+        }
+      }
+
       this.statusMsg = this.describeSelection();
       if (this.selectedGang && this.coachStep === 0) this.advanceCoach();
       this.refreshBoard();
@@ -574,19 +591,79 @@ export class Game3DScene extends Phaser.Scene {
       .map((g) => g.id);
   }
 
-  /** Direct crew pick from board portrait or side panel. */
+  /** Direct crew pick from board portrait, NEXT, or side panel. */
   private selectGangById(gid: string): void {
     if (this.actionBusy || this.resolving) return;
     const g = this.controller.state.gangs[gid];
     if (!g || g.ownerId !== this.controller.humanId || g.hp <= 0) return;
     this.selectedGang = gid;
     this.selected = g.sectorId;
+    // Keep "Here" filter when picking among a stack so the list stays useful
+    const stackN = Object.values(this.controller.state.gangs).filter(
+      (x) =>
+        x.sectorId === g.sectorId &&
+        x.ownerId === this.controller.humanId &&
+        x.hp > 0,
+    ).length;
+    if (stackN > 1) this.crewFilter = 'here';
     this.statusMsg = this.describeSelection();
     this.refreshBoard();
     this.board?.focusSector(g.sectorId);
     this.render();
     SFX.play('ui');
     if (this.coachStep === 0) this.advanceCoach();
+  }
+
+  /** Crews on the focused block — big pick list when stacked. */
+  private renderTileCrewPicker(): string {
+    const state = this.controller.state;
+    const human = this.controller.humanId;
+    if (!this.selected) return '';
+    const here = Object.values(state.gangs)
+      .filter(
+        (g) => g.sectorId === this.selected && g.ownerId === human && g.hp > 0,
+      )
+      .sort((a, b) => {
+        const ao = state.orders.some((o) => o.gangId === a.id) ? 1 : 0;
+        const bo = state.orders.some((o) => o.gangId === b.id) ? 1 : 0;
+        if (ao !== bo) return ao - bo;
+        if (a.id === this.selectedGang) return -1;
+        if (b.id === this.selectedGang) return 1;
+        return gangDefById(a.defId).name.localeCompare(gangDefById(b.defId).name);
+      });
+    if (here.length < 2) return '';
+
+    const freeN = here.filter(
+      (g) => !state.orders.some((o) => o.gangId === g.id),
+    ).length;
+    const rows = here
+      .map((g) => {
+        const d = gangDefById(g.defId);
+        const img = `/${(d.art.portrait ?? 'assets/portraits/neon_jackals.jpg').replace(/^\//, '')}`;
+        const ord = state.orders.find((o) => o.gangId === g.id);
+        const sel = g.id === this.selectedGang ? ' selected' : '';
+        const status = ord
+          ? escapeHtml(this.orderPlainLabel(ord))
+          : `Ready · HP ${g.hp}`;
+        return `<button type="button" class="stack-pick${sel}${ord ? ' has-order' : ''}" data-act="pick-gang-${g.id}">
+          <img src="${img}" alt="" />
+          <span class="sp-text">
+            <span class="sp-name">${escapeHtml(d.name)}</span>
+            <span class="sp-meta">${status}</span>
+          </span>
+          ${g.id === this.selectedGang ? '<span class="sp-badge">ACTIVE</span>' : ord ? '<span class="sp-badge busy">ORDERED</span>' : '<span class="sp-badge free">FREE</span>'}
+        </button>`;
+      })
+      .join('');
+
+    return `<div id="sl-stack-picker" class="stack-picker">
+      <div class="stack-picker-head">
+        <span class="stack-picker-title">Crews on ${this.selected}</span>
+        <span class="stack-picker-count">${here.length} · ${freeN} free</span>
+      </div>
+      <p class="stack-picker-help">Tap a name to select · board <b>NEXT</b> also cycles free crews</p>
+      <div class="stack-picker-list">${rows}</div>
+    </div>`;
   }
 
   /** Focus a free crew without clobbering guide status. */
@@ -871,9 +948,7 @@ export class Game3DScene extends Phaser.Scene {
     );
     const stackHint =
       stackHere.length > 1
-        ? ` · stack ${stackHere.indexOf(gang) + 1}/${stackHere.length}${
-            freeHere.length > 0 ? ` (${freeHere.length} free)` : ''
-          } — re-click block or 1/N chip to cycle`
+        ? ` · ${stackHere.length} crews here (${freeHere.length} free) — NEXT on map or list in Crew panel`
         : '';
     if (pending?.targetSectorId) {
       return `${name}: ${pending.type.toUpperCase()} → ${pending.targetSectorId} queued. END TURN · or Cancel / Esc / re-click destination.${stackHint}`;
@@ -1072,7 +1147,7 @@ export class Game3DScene extends Phaser.Scene {
             })
             .join('')}
         </div>
-        <div id="sl-hint">1 order/crew · green = go · stack chip cycles free · Unrest/Influence need your turf · End Turn resolves · Esc cancel</div>
+        <div id="sl-hint">1 order/crew · green = go · NEXT switches stacked crews · list in Crew panel · End Turn resolves · Esc cancel</div>
       </div>
     `;
 
@@ -1114,6 +1189,7 @@ export class Game3DScene extends Phaser.Scene {
 
     // ── Sticky selected-crew dock (always top of panel) ──
     const crewDock = this.renderCrewDock(gang, def, pending, me);
+    const stackPicker = this.renderTileCrewPicker();
     const orderGuideCard = this.renderOrderGuideCard();
     // Primary: what can THIS crew do right now (move / influence / unrest)
     const turnCard = this.renderCrewTurnCard(gang, def, pending, human);
@@ -1247,8 +1323,13 @@ export class Game3DScene extends Phaser.Scene {
       ? this.sideSection('inspect', `Inspect · ${this.selected}`, blockBody)
       : '';
 
+    const stackSec = stackPicker
+      ? this.sideSection('stack', 'Pick crew on block', stackPicker)
+      : '';
+
     return `
       ${crewDock}
+      ${stackSec}
       ${guideSec}
       ${turnSec}
       ${rosterSec}
@@ -1637,6 +1718,34 @@ export class Game3DScene extends Phaser.Scene {
       ? `<span class="dock-order">${escapeHtml(this.orderPlainLabel(pending))}</span>`
       : `<span class="dock-free">Ready · one order</span>`;
 
+    // Prev / Next when multiple crews share this block
+    const state = this.controller.state;
+    const stackHere = Object.values(state.gangs)
+      .filter(
+        (g) =>
+          g.sectorId === gang.sectorId &&
+          g.ownerId === this.controller.humanId &&
+          g.hp > 0,
+      )
+      .sort((a, b) => {
+        const ao = state.orders.some((o) => o.gangId === a.id) ? 1 : 0;
+        const bo = state.orders.some((o) => o.gangId === b.id) ? 1 : 0;
+        if (ao !== bo) return ao - bo;
+        return 0;
+      });
+    let stackNav = '';
+    if (stackHere.length > 1) {
+      const ids = stackHere.map((g) => g.id);
+      const idx = Math.max(0, ids.indexOf(gang.id));
+      const prevId = ids[(idx - 1 + ids.length) % ids.length]!;
+      const nextId = ids[(idx + 1) % ids.length]!;
+      stackNav = `<div class="dock-stack-nav">
+        <button type="button" class="act ghost" data-act="pick-gang-${prevId}"><span class="act-label">‹ Prev</span></button>
+        <span class="dock-stack-pos">${idx + 1} / ${ids.length} on block</span>
+        <button type="button" class="act" data-act="pick-gang-${nextId}"><span class="act-label">Next ›</span></button>
+      </div>`;
+    }
+
     const dockCollapsed = !!this.sideCollapsed['crew'];
     const gearBody = `<div class="dock-gear">
         <div class="dock-gear-lbl">Equipped</div>
@@ -1667,6 +1776,7 @@ export class Game3DScene extends Phaser.Scene {
           <span aria-hidden="true">${dockCollapsed ? '+' : '−'}</span>
         </button>
       </div>
+      ${stackNav}
       <div class="dock-lower">${gearBody}</div>
     </div>`;
   }
@@ -1706,8 +1816,8 @@ export class Game3DScene extends Phaser.Scene {
             <span class="legend-v"><b>Red #</b> — unrest only when &gt; 0 (cash + heat on End Turn)</span>
           </div>
           <div class="legend-row">
-            <span class="legend-ico"><i class="ico stack">2/3</i></span>
-            <span class="legend-v"><b>Stack</b> — overlapping faces. Tap face or <b>1/N</b> chip to cycle free crews</span>
+            <span class="legend-ico"><i class="ico stack">NEXT</i></span>
+            <span class="legend-v"><b>NEXT</b> — multiple crews on a block. Or open Crew panel list</span>
           </div>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico dest"></i></span>

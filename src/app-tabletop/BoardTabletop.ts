@@ -272,17 +272,16 @@ export class BoardTabletop {
     this.onSelectGang = fn;
   }
 
-  /** Portrait / stack-cycle chip under cursor (your crews are pointer-interactive). */
+  /** Portrait / NEXT button under cursor (your crews are pointer-interactive). */
   private pickGangAt(clientX: number, clientY: number): string | null {
     const stack = document.elementsFromPoint(clientX, clientY);
     for (const node of stack) {
       const el = node as HTMLElement;
-      // Cycle chip or portrait with data-gang-id.mine
       if (el.dataset?.gangId && el.classList.contains('mine')) {
         return el.dataset.gangId;
       }
       const hit = el.closest?.(
-        'img[data-gang-id].mine, button.sl-stack-cycle[data-gang-id].mine, [data-gang-id].mine',
+        'img[data-gang-id].mine, button.sl-stack-next[data-gang-id].mine, button.sl-stack-cycle[data-gang-id].mine, [data-gang-id].mine',
       ) as HTMLElement | null;
       if (hit?.dataset.gangId) return hit.dataset.gangId;
     }
@@ -888,50 +887,67 @@ export class BoardTabletop {
       (gid) => state.gangs[gid]?.ownerId !== this.humanId,
     );
 
-    // Free crews first in stack ring, then ordered — selected always painted on top
+    // Free first, then busy — simple stable ring for Next
     const freeMine = mine.filter(
       (gid) => !state.orders.some((o) => o.gangId === gid),
     );
     const busyMine = mine.filter((gid) => !freeMine.includes(gid));
     const mineRing = [...freeMine, ...busyMine];
-    if (selectedCrewId && mineRing.includes(selectedCrewId)) {
-      mineRing.sort((a, b) => {
-        if (a === selectedCrewId) return -1;
-        if (b === selectedCrewId) return 1;
-        return 0;
-      });
-    }
+
+    const faceId =
+      (selectedCrewId && mineRing.includes(selectedCrewId)
+        ? selectedCrewId
+        : null) ??
+      freeMine[0] ??
+      mineRing[0] ??
+      null;
 
     const isStack = mineRing.length > 1;
     host.classList.toggle('is-stack', isStack);
     host.classList.toggle('has-foes', foes.length > 0);
+    host.classList.toggle('is-empty-mine', mineRing.length === 0);
 
-    // Overlapping stack: selected + up to 2 peeks (not a row of 4 tiny faces)
-    const maxPeek = isStack ? 3 : 4;
-    const shownMine = mineRing.slice(0, maxPeek);
-    // Paint back-to-front so selected (first) ends on top in DOM after reverse draw
-    const paintOrder = [...shownMine].reverse();
-    for (const gid of paintOrder) {
-      const g = state.gangs[gid]!;
+    // One clear face for YOUR active crew on this block (no overlapping pile)
+    if (faceId) {
+      const g = state.gangs[faceId]!;
       const def = gangDefById(g.defId);
       const img = document.createElement('img');
       const src = def.art.portrait ?? 'assets/portraits/neon_jackals.jpg';
       img.src = src.startsWith('/') ? src : `/${src}`;
       img.alt = def.name;
-      const busy = state.orders.some((o) => o.gangId === gid);
-      img.title = busy
-        ? `${def.name} (order queued) — click to select`
+      const busy = state.orders.some((o) => o.gangId === faceId);
+      img.title = isStack
+        ? `${def.name}${busy ? ' (ordered)' : ''} — ${mineRing.length} crews here. Use NEXT or the crew list.`
         : `Select ${def.name}`;
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.dataset.gangId = gid;
-      img.className = 'mine';
-      if (busy) img.classList.add('is-busy');
-      if (gid === selectedCrewId) img.classList.add('selected-crew');
+      img.dataset.gangId = faceId;
+      img.className = 'mine' + (busy ? ' is-busy' : '');
+      if (faceId === selectedCrewId) img.classList.add('selected-crew');
       host.appendChild(img);
     }
 
-    // Enemy peeks (small, non-interactive) — keep intel without stealing clicks
+    // Big NEXT control when multiple of your crews share the tile
+    if (isStack && faceId) {
+      const ring = freeMine.length > 0 ? freeMine : mineRing;
+      const inRing = ring.includes(faceId) ? faceId : ring[0]!;
+      const idx = Math.max(0, ring.indexOf(inRing));
+      const next = ring[(idx + 1) % ring.length]!;
+      const posAll = mineRing.indexOf(faceId) + 1;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sl-stack-next mine';
+      btn.dataset.gangId = next;
+      btn.setAttribute(
+        'aria-label',
+        `Next crew on this block (${posAll} of ${mineRing.length})`,
+      );
+      btn.title = `Next free crew (${freeMine.length} free of ${mineRing.length})`;
+      btn.innerHTML = `<span class="sn-lab">NEXT</span><span class="sn-n">${posAll}/${mineRing.length}</span>`;
+      host.appendChild(btn);
+    }
+
+    // Rival faces — small, never steal clicks
     for (const gid of foes.slice(0, 2)) {
       const g = state.gangs[gid]!;
       const def = gangDefById(g.defId);
@@ -946,34 +962,7 @@ export class BoardTabletop {
       img.className = 'enemy';
       host.appendChild(img);
     }
-
-    // Cycle chip: click selects next crew in the free-first ring
-    if (isStack) {
-      const cur =
-        selectedCrewId && mineRing.includes(selectedCrewId)
-          ? selectedCrewId
-          : mineRing[0]!;
-      // Prefer next free crew when cycling from chip
-      const freeOnly = freeMine.length > 0 ? freeMine : mineRing;
-      const ring = freeOnly.includes(cur) ? freeOnly : mineRing;
-      const idx = Math.max(0, ring.indexOf(cur));
-      const next = ring[(idx + 1) % ring.length]!;
-      const freeN = freeMine.length;
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'sl-stack-cycle mine';
-      chip.dataset.gangId = next;
-      chip.setAttribute('aria-label', `Cycle stack — ${mineRing.length} crews`);
-      chip.title = `Stack ${mineRing.length} · ${freeN} free — click to next crew`;
-      chip.innerHTML = `<span class="sc-n">${idx + 1}/${mineRing.length}</span>${
-        freeN > 0 && freeN < mineRing.length
-          ? `<span class="sc-free">${freeN} free</span>`
-          : freeN === 0
-            ? `<span class="sc-free busy">all set</span>`
-            : ''
-      }`;
-      host.appendChild(chip);
-    } else if (mineRing.length === 0 && foes.length > 2) {
+    if (foes.length > 2) {
       const more = document.createElement('span');
       more.className = 'sl-portrait-more';
       more.textContent = `+${foes.length - 2}`;

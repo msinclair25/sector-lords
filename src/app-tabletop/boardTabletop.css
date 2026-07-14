@@ -929,6 +929,7 @@
 }
 
 .sl-tile .sl-tile-portraits img.mine,
+.sl-tile .sl-tile-portraits .sl-stack-next,
 .sl-tile .sl-tile-portraits .sl-stack-cycle {
   pointer-events: auto;
   cursor: pointer;
@@ -1215,7 +1216,7 @@
   }
 }
 
-/* Crew faces — single row, or overlapping stack when many on one block */
+/* Crew faces — ONE active face + big NEXT (no overlapping pile) */
 .sl-tile-portraits {
   position: absolute;
   left: 50%;
@@ -1224,15 +1225,15 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   z-index: 8;
   pointer-events: auto;
-  max-width: calc(100% - 6px);
+  max-width: calc(100% - 4px);
 }
 
 .sl-tile-portraits img {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
   object-fit: cover;
   border: 1.5px solid rgba(43, 240, 255, 0.8);
@@ -1242,45 +1243,16 @@
   flex-shrink: 0;
 }
 
-/* Overlapping stack: peeks behind selected face */
-.sl-tile-portraits.is-stack {
-  gap: 0;
-  padding-right: 2px;
-}
-
-.sl-tile-portraits.is-stack img.mine {
-  width: 30px;
-  height: 30px;
-  margin-left: -14px;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(0, 0, 0, 0.35);
-}
-
-.sl-tile-portraits.is-stack img.mine:first-of-type,
-.sl-tile-portraits.is-stack img.mine.selected-crew {
-  margin-left: 0;
-}
-
-.sl-tile-portraits.is-stack img.mine.selected-crew {
-  width: 36px;
-  height: 36px;
-  z-index: 6;
-  position: relative;
-}
-
 .sl-tile-portraits img.mine {
   border-color: #2bf0ff;
   box-shadow: 0 0 12px rgba(43, 240, 255, 0.5);
   pointer-events: auto;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, margin 0.12s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .sl-tile-portraits img.mine:hover {
-  transform: scale(1.1);
-  z-index: 7;
-  position: relative;
+  transform: scale(1.08);
   box-shadow: 0 0 16px rgba(252, 238, 10, 0.55);
   border-color: #fcee0a;
 }
@@ -1292,10 +1264,9 @@
 
 .sl-tile-portraits img.enemy {
   border-color: #ff6b4a;
-  width: 26px;
-  height: 26px;
-  opacity: 0.92;
-  margin-left: 2px;
+  width: 24px;
+  height: 24px;
+  opacity: 0.9;
 }
 
 .sl-tile-portraits img.selected-crew {
@@ -1304,55 +1275,58 @@
   border-color: #ffc14a;
 }
 
-/* Cycle chip — always shows position in stack; click = next free crew */
-.sl-tile-portraits .sl-stack-cycle {
+/* Large NEXT — primary way to switch stacked crews on the board */
+.sl-tile-portraits .sl-stack-next {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
-  min-width: 28px;
-  height: 30px;
-  margin-left: 3px;
-  padding: 2px 5px;
-  border-radius: 7px;
-  border: 1px solid rgba(43, 240, 255, 0.45);
-  background: rgba(6, 4, 16, 0.88);
-  color: #e8f7ff;
+  gap: 1px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 3px 6px;
+  margin: 0;
+  border-radius: 8px;
+  border: 1.5px solid rgba(252, 238, 10, 0.65);
+  background: linear-gradient(160deg, rgba(40, 28, 8, 0.95), rgba(8, 6, 18, 0.96));
+  color: #fcee0a;
   cursor: pointer;
   pointer-events: auto;
-  z-index: 8;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  z-index: 9;
+  box-shadow:
+    0 0 12px rgba(252, 238, 10, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.55);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
 }
 
-.sl-tile-portraits .sl-stack-cycle:hover,
-.sl-tile-portraits .sl-stack-cycle:focus-visible {
-  border-color: #fcee0a;
-  box-shadow: 0 0 12px rgba(252, 238, 10, 0.4);
+.sl-tile-portraits .sl-stack-next:hover,
+.sl-tile-portraits .sl-stack-next:focus-visible {
+  border-color: #fff3a0;
+  box-shadow: 0 0 16px rgba(252, 238, 10, 0.45);
+  transform: scale(1.06);
   outline: none;
 }
 
-.sl-tile-portraits .sl-stack-cycle .sc-n {
+.sl-tile-portraits .sl-stack-next .sn-lab {
   font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+  line-height: 1;
   color: #fcee0a;
 }
 
-.sl-tile-portraits .sl-stack-cycle .sc-free {
-  font-size: 7px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(125, 255, 107, 0.95);
-  line-height: 1;
+.sl-tile-portraits .sl-stack-next .sn-n {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #fff;
 }
 
-.sl-tile-portraits .sl-stack-cycle .sc-free.busy {
-  color: rgba(160, 175, 195, 0.85);
+/* legacy class kept for old cached markup */
+.sl-tile-portraits .sl-stack-cycle {
+  display: none;
 }
 
 .sl-tile-portraits .sl-portrait-more {
@@ -1701,21 +1675,23 @@
     letter-spacing: 0.12em;
   }
   .sl-tile-portraits {
-    gap: 2px;
+    gap: 4px;
     bottom: 3px;
   }
-  .sl-tile-portraits img {
-    width: 30px;
-    height: 30px;
-  }
-  .sl-tile-portraits.is-stack img.mine {
-    width: 28px;
-    height: 28px;
-    margin-left: -12px;
-  }
-  .sl-tile-portraits.is-stack img.mine.selected-crew {
+  .sl-tile-portraits img.mine {
     width: 34px;
     height: 34px;
+    border-width: 2px;
+  }
+  .sl-tile-portraits .sl-stack-next {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .sl-tile-portraits .sl-stack-next .sn-lab {
+    font-size: 9px;
+  }
+  .sl-tile-portraits .sl-stack-next .sn-n {
+    font-size: 12px;
   }
   .sl-tile-intel .sl-site-pips {
     gap: 3px;
@@ -1729,13 +1705,6 @@
     min-width: 14px;
     height: 14px;
     font-size: 9px;
-  }
-  .sl-tile-portraits img.mine {
-    border-width: 2px;
-  }
-  .sl-tile-portraits .sl-stack-cycle {
-    min-width: 30px;
-    height: 32px;
   }
   .sl-tile-portraits .sl-portrait-more {
     min-width: 26px;
