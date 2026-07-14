@@ -1,9 +1,13 @@
-# Cache static assets aggressively; keep HTML fresh
+# Fingerprinted assets — long cache is fine because Vite changes the hash on change.
+# Avoid "immutable" so a bad edge cache (SPA shell stored as JS) can be replaced.
 /assets/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, must-revalidate
+  X-Content-Type-Options: nosniff
 
+# HTML always revalidate
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
+  X-Content-Type-Options: nosniff
 
 /*
   X-Content-Type-Options: nosniff

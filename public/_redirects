@@ -1,2 +1,6 @@
-# SPA fallback — all routes serve the app shell
-/*    /index.html   200
+# SPA fallback — Cloudflare Pages still serves real static files first when they
+# exist. Do not rewrite /assets/* (a self-rewrite can mis-handle missing files
+# and return this shell as text/html for JS modules).
+/*
+  /index.html
+  200
