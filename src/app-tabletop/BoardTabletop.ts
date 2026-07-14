@@ -776,15 +776,14 @@ export class BoardTabletop {
       const intel = document.createElement('div');
       intel.className = 'sl-tile-intel';
       intel.setAttribute('aria-hidden', 'true');
-      // Owner = outline; sites = pips; pixel fire = unrest; pixel siren = crackdown
+      // Owner = outline; sites = pips; unrest = heat wick; crackdown = RAID strip
       intel.innerHTML = `
         <div class="sl-site-pips" title="Site influence"></div>
         <span class="sl-unrest-mark" hidden title="">
-          <span class="px-fire" aria-hidden="true"></span>
+          <span class="um-wick" aria-hidden="true"><i></i></span>
           <span class="um-n"></span>
         </span>
         <span class="sl-raid-mark" hidden title="">
-          <span class="px-siren" aria-hidden="true"></span>
           <span class="pl-lab">RAID</span>
         </span>
       `;
