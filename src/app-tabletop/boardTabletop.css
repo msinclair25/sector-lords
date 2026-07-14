@@ -860,64 +860,223 @@
   border-color: rgba(160, 175, 195, 0.45);
 }
 
-/* Unrest badge — must honor [hidden]; display:grid alone overrides UA hidden */
+/*
+ * Unrest — color-coded fire (not a red blob)
+ * lv-1 amber · lv-2 orange · lv-3 red-orange · lv-4 white-hot
+ */
 .sl-tile-intel .sl-unrest-mark {
+  --flame: #ffb020;
+  --flame-core: #ffe08a;
+  --flame-glow: rgba(255, 160, 40, 0.55);
   position: absolute;
-  top: 3px;
-  right: 3px;
-  min-width: 13px;
-  height: 13px;
-  padding: 0 3px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: 8px;
-  font-weight: 800;
-  line-height: 1;
-  color: #fff;
-  background: #c41838;
-  border: 1px solid rgba(255, 200, 210, 0.4);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  top: 2px;
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  min-width: 16px;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  z-index: 4;
+  filter: drop-shadow(0 0 4px var(--flame-glow));
 }
 
 .sl-tile-intel .sl-unrest-mark[hidden] {
   display: none !important;
 }
 
+.sl-tile-intel .sl-unrest-mark.lv-1 {
+  --flame: #ffc14a;
+  --flame-core: #fff0b0;
+  --flame-glow: rgba(255, 190, 60, 0.45);
+}
+.sl-tile-intel .sl-unrest-mark.lv-2 {
+  --flame: #ff8a20;
+  --flame-core: #ffd060;
+  --flame-glow: rgba(255, 120, 30, 0.55);
+}
+.sl-tile-intel .sl-unrest-mark.lv-3 {
+  --flame: #ff4a28;
+  --flame-core: #ffb040;
+  --flame-glow: rgba(255, 60, 30, 0.65);
+}
+.sl-tile-intel .sl-unrest-mark.lv-4 {
+  --flame: #ff2a40;
+  --flame-core: #fff6e0;
+  --flame-glow: rgba(255, 40, 60, 0.75);
+}
+
+.sl-tile-intel .sl-unrest-mark .flame {
+  position: relative;
+  width: 12px;
+  height: 14px;
+  display: block;
+}
+
+.sl-tile-intel .sl-unrest-mark .flame i {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 7px;
+  height: 11px;
+  margin-left: -3.5px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: radial-gradient(ellipse at 50% 70%, var(--flame-core) 0%, var(--flame) 55%, transparent 75%);
+  animation: sl-flame-flicker 0.55s ease-in-out infinite alternate;
+  transform-origin: 50% 100%;
+}
+
+.sl-tile-intel .sl-unrest-mark .flame i:nth-child(1) {
+  width: 9px;
+  height: 13px;
+  margin-left: -4.5px;
+  animation-duration: 0.48s;
+  opacity: 0.95;
+}
+.sl-tile-intel .sl-unrest-mark .flame i:nth-child(2) {
+  width: 6px;
+  height: 10px;
+  margin-left: -6px;
+  animation-duration: 0.62s;
+  animation-delay: 0.1s;
+  opacity: 0.75;
+}
+.sl-tile-intel .sl-unrest-mark .flame i:nth-child(3) {
+  width: 6px;
+  height: 9px;
+  margin-left: 0;
+  animation-duration: 0.5s;
+  animation-delay: 0.18s;
+  opacity: 0.7;
+}
+
+.sl-tile-intel .sl-unrest-mark.lv-3 .flame,
+.sl-tile-intel .sl-unrest-mark.lv-4 .flame {
+  width: 14px;
+  height: 16px;
+}
+.sl-tile-intel .sl-unrest-mark.lv-4 .flame i:nth-child(1) {
+  height: 15px;
+  animation-duration: 0.35s;
+}
+
 .sl-tile-intel .sl-unrest-mark .um-n {
+  margin-top: -2px;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 8px;
+  font-weight: 800;
   line-height: 1;
+  color: #fff8e8;
+  text-shadow:
+    0 0 4px var(--flame),
+    0 1px 1px rgba(0, 0, 0, 0.85);
 }
 
-.sl-tile-intel .sl-unrest-mark.hot,
-.sl-tile.has-high-unrest .sl-tile-intel .sl-unrest-mark {
-  background: #ff3d5a;
-  border-color: rgba(255, 255, 255, 0.45);
+@keyframes sl-flame-flicker {
+  0% {
+    transform: scaleY(0.88) scaleX(1.05) rotate(-4deg);
+    filter: brightness(0.95);
+  }
+  100% {
+    transform: scaleY(1.08) scaleX(0.92) rotate(5deg);
+    filter: brightness(1.2);
+  }
 }
 
-/* Police crackdown residual — left badge after a raid */
+/* Police light — crackdown residual (replaces fire in the corner) */
 .sl-tile-intel .sl-raid-mark {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: 7px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  color: #041018;
-  background: linear-gradient(135deg, #5ad0ff, #2b8cff);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow:
-    0 0 10px rgba(43, 180, 255, 0.55),
-    0 1px 2px rgba(0, 0, 0, 0.45);
-  z-index: 3;
+  top: 2px;
+  right: 2px;
+  left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  z-index: 5;
 }
 
 .sl-tile-intel .sl-raid-mark[hidden] {
   display: none !important;
+}
+
+.sl-tile-intel .sl-raid-mark .pl-body {
+  position: relative;
+  width: 18px;
+  height: 12px;
+  border-radius: 6px 6px 4px 4px;
+  background: #12101c;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  display: flex;
+}
+
+.sl-tile-intel .sl-raid-mark .pl-lens {
+  flex: 1;
+  height: 100%;
+  opacity: 0.45;
+}
+
+.sl-tile-intel .sl-raid-mark .pl-lens.pl-red {
+  background: radial-gradient(circle at 50% 45%, #ff6a7a, #e01030 70%);
+  animation: sl-cop-red 0.55s steps(2, end) infinite;
+}
+
+.sl-tile-intel .sl-raid-mark .pl-lens.pl-blue {
+  background: radial-gradient(circle at 50% 45%, #7ad0ff, #1060e0 70%);
+  animation: sl-cop-blue 0.55s steps(2, end) infinite;
+}
+
+.sl-tile-intel .sl-raid-mark .pl-lab {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: #e8f4ff;
+  text-shadow:
+    0 0 6px rgba(90, 180, 255, 0.9),
+    0 0 6px rgba(255, 40, 60, 0.5);
+}
+
+.sl-tile-intel .sl-raid-mark.pl-hot .pl-body {
+  box-shadow:
+    0 0 10px rgba(255, 40, 60, 0.55),
+    0 0 10px rgba(40, 140, 255, 0.55);
+}
+
+@keyframes sl-cop-red {
+  0%,
+  49% {
+    opacity: 1;
+    filter: brightness(1.35);
+  }
+  50%,
+  100% {
+    opacity: 0.25;
+    filter: brightness(0.7);
+  }
+}
+
+@keyframes sl-cop-blue {
+  0%,
+  49% {
+    opacity: 0.25;
+    filter: brightness(0.7);
+  }
+  50%,
+  100% {
+    opacity: 1;
+    filter: brightness(1.35);
+  }
 }
 
 .sl-tile.has-crackdown .sl-tile-top {
@@ -950,17 +1109,54 @@
     inset 0 -14px 20px rgba(0, 0, 0, 0.4) !important;
 }
 
-.sl-tile.has-crackdown-hot .sl-tile-top::after {
+/* Alternating police wash over the whole tile while RAID residual is hot */
+.sl-tile.has-crackdown .sl-tile-top::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    -18deg,
-    transparent 0 5px,
-    rgba(90, 200, 255, 0.07) 5px 6px
+  background: radial-gradient(
+    ellipse 80% 70% at 50% 0%,
+    rgba(255, 40, 70, 0.18),
+    transparent 60%
   );
+  animation: sl-cop-tile-wash 0.7s steps(2, end) infinite;
   mix-blend-mode: screen;
+}
+
+.sl-tile.has-crackdown-hot .sl-tile-top::after {
+  animation-duration: 0.5s;
+}
+
+@keyframes sl-cop-tile-wash {
+  0%,
+  49% {
+    background: radial-gradient(
+      ellipse 85% 75% at 20% 10%,
+      rgba(255, 40, 70, 0.22),
+      transparent 65%
+    );
+  }
+  50%,
+  100% {
+    background: radial-gradient(
+      ellipse 85% 75% at 80% 10%,
+      rgba(40, 140, 255, 0.22),
+      transparent 65%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-tile-intel .sl-unrest-mark .flame i,
+  .sl-tile-intel .sl-raid-mark .pl-lens,
+  .sl-tile.has-crackdown .sl-tile-top::after {
+    animation: none !important;
+  }
+  .sl-tile-intel .sl-raid-mark .pl-lens.pl-red,
+  .sl-tile-intel .sl-raid-mark .pl-lens.pl-blue {
+    opacity: 0.85;
+  }
 }
 
 .sl-tile-top .sl-gloss {

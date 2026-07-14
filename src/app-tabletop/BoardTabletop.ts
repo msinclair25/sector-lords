@@ -776,11 +776,20 @@ export class BoardTabletop {
       const intel = document.createElement('div');
       intel.className = 'sl-tile-intel';
       intel.setAttribute('aria-hidden', 'true');
-      // Owner = outline; sites = pips; unrest #; raid residual
+      // Owner = outline; sites = pips; fire = unrest; police light = crackdown residual
       intel.innerHTML = `
         <div class="sl-site-pips" title="Site influence"></div>
-        <span class="sl-unrest-mark" hidden title=""><span class="um-n"></span></span>
-        <span class="sl-raid-mark" hidden title="">RAID</span>
+        <span class="sl-unrest-mark" hidden title="">
+          <span class="flame" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="um-n"></span>
+        </span>
+        <span class="sl-raid-mark" hidden title="">
+          <span class="pl-body" aria-hidden="true">
+            <span class="pl-lens pl-red"></span>
+            <span class="pl-lens pl-blue"></span>
+          </span>
+          <span class="pl-lab">RAID</span>
+        </span>
       `;
 
       const portraits = document.createElement('div');
@@ -992,19 +1001,16 @@ export class BoardTabletop {
     el.classList.toggle('has-crackdown', raidT > 0);
     el.classList.toggle('has-crackdown-hot', raidT >= 2);
 
-    let raidMark = el.querySelector('.sl-raid-mark') as HTMLElement | null;
-    if (raidT > 0) {
-      if (!raidMark) {
-        raidMark = document.createElement('span');
-        raidMark.className = 'sl-raid-mark';
-        el.querySelector('.sl-tile-intel')?.appendChild(raidMark);
+    const raidMark = el.querySelector('.sl-raid-mark') as HTMLElement | null;
+    if (raidMark) {
+      if (raidT > 0) {
+        raidMark.hidden = false;
+        raidMark.title = `Police crackdown residual — ${raidT} turn${raidT === 1 ? '' : 's'} left`;
+        raidMark.classList.toggle('pl-hot', raidT >= 2);
+      } else {
+        raidMark.hidden = true;
+        raidMark.classList.remove('pl-hot');
       }
-      raidMark.hidden = false;
-      raidMark.textContent = 'RAID';
-      raidMark.title = `Police crackdown residual — ${raidT} turn${raidT === 1 ? '' : 's'} left`;
-    } else if (raidMark) {
-      raidMark.hidden = true;
-      raidMark.textContent = '';
     }
 
     const pips = el.querySelector('.sl-site-pips') as HTMLElement | null;
@@ -1047,15 +1053,20 @@ export class BoardTabletop {
     const unrestMark = el.querySelector('.sl-unrest-mark') as HTMLElement | null;
     const unrestN = el.querySelector('.sl-unrest-mark .um-n') as HTMLElement | null;
     if (unrestMark && unrestN) {
-      if (sector.unrest > 0) {
+      // Crackdown police light owns the corner — hide fire while RAID is active
+      if (sector.unrest > 0 && raidT <= 0) {
         unrestMark.hidden = false;
         unrestN.textContent = String(sector.unrest);
-        unrestMark.title = `Unrest ${sector.unrest}/10`;
-        unrestMark.classList.toggle('hot', sector.unrest >= 5);
+        unrestMark.title = `Unrest ${sector.unrest}/10 — feeds city Heat`;
+        unrestMark.classList.remove('lv-1', 'lv-2', 'lv-3', 'lv-4', 'hot');
+        const lv =
+          sector.unrest >= 9 ? 'lv-4' : sector.unrest >= 6 ? 'lv-3' : sector.unrest >= 3 ? 'lv-2' : 'lv-1';
+        unrestMark.classList.add(lv);
+        if (sector.unrest >= 5) unrestMark.classList.add('hot');
       } else {
         unrestMark.hidden = true;
         unrestN.textContent = '';
-        unrestMark.classList.remove('hot');
+        unrestMark.classList.remove('lv-1', 'lv-2', 'lv-3', 'lv-4', 'hot');
       }
     }
 

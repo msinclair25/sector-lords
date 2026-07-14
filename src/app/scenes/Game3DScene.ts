@@ -1113,12 +1113,26 @@ export class Game3DScene extends Phaser.Scene {
           }</span></div>
           <div class="stat" title="Territory $${incomeBr.territory} · Sites $${incomeBr.sites} · Unrest $${incomeBr.unrest} · Landmarks $${incomeBr.landmarks}"><span class="lbl">Cash</span><span class="val">$${me.cash}<small>→$${nextCash}</small></span></div>
           <div class="stat" title="Empire loyalty score. Gained from owned blocks, influenced sites, and landmarks. Empty owned blocks bleed support. Counts toward Combined victory."><span class="lbl">Support</span><span class="val">${me.support}</span></div>
-          <div class="stat heat-stat heat-${heatBand(state.cityHeat)}${(state.crackdownCooldown ?? 0) > 0 ? ' cooloff' : ''}" title="${escapeHtml(
+          <div class="stat heat-stat heat-${heatBand(state.cityHeat)}${(state.crackdownCooldown ?? 0) > 0 ? ' cooloff' : ''}${
+            state.cityHeat >= HEAT_BANDS.crackdownAt && (state.crackdownCooldown ?? 0) === 0
+              ? ' heat-raid'
+              : ''
+          }" title="${escapeHtml(
             `Heat 0–${HEAT_BANDS.calmMax} calm · ${HEAT_BANDS.calmMax + 1}–${HEAT_BANDS.watchMax} watch · ${HEAT_BANDS.watchMax + 1}–${HEAT_BANDS.elevatedMax} elevated · ${HEAT_BANDS.crackdownAt}+ crackdown. Raise Unrest spikes Heat. Cool-off after a raid prevents a second hit.`,
-          )}"><span class="lbl">Heat</span><span class="val">${state.cityHeat}<small>${escapeHtml(
+          )}"><span class="lbl">Heat</span><span class="val"><span class="heat-ico" aria-hidden="true">${
+            state.cityHeat >= HEAT_BANDS.crackdownAt && (state.crackdownCooldown ?? 0) === 0
+              ? `<span class="heat-cop"><i class="hc-r"></i><i class="hc-b"></i></span>`
+              : (state.crackdownCooldown ?? 0) > 0
+                ? `<span class="heat-cop cool"><i class="hc-r"></i><i class="hc-b"></i></span>`
+                : `<span class="heat-fire lv-${
+                    state.cityHeat >= 55 ? '3' : state.cityHeat >= 35 ? '2' : '1'
+                  }"><i></i><i></i></span>`
+          }</span>${state.cityHeat}<small>${escapeHtml(
             (state.crackdownCooldown ?? 0) > 0
               ? `cool ${state.crackdownCooldown}t`
-              : `${heatBandLabel(heatBand(state.cityHeat))} · crack@${HEAT_BANDS.crackdownAt}`,
+              : state.cityHeat >= HEAT_BANDS.crackdownAt
+                ? 'CRACKDOWN'
+                : `${heatBandLabel(heatBand(state.cityHeat))} · crack@${HEAT_BANDS.crackdownAt}`,
           )}</small></span>
             <div class="heat-meter" aria-hidden="true"><i style="width:${Math.min(100, state.cityHeat)}%"></i><b class="hm-mark" style="left:${HEAT_BANDS.crackdownAt}%"></b></div>
           </div>
@@ -1824,16 +1838,16 @@ export class Game3DScene extends Phaser.Scene {
             <span class="legend-v"><b>Tiny dots</b> — sites only if someone influences them. Gold you · red rival · hollow open</span>
           </div>
           <div class="legend-row">
-            <span class="legend-ico"><i class="ico unrest">3</i></span>
-            <span class="legend-v"><b>Red #</b> — unrest only when &gt; 0 (cash + Heat on End Turn)</span>
+            <span class="legend-ico"><i class="ico fire" aria-hidden="true"><span></span></i></span>
+            <span class="legend-v"><b>Fire</b> — unrest on block (amber→red as it climbs). Cash + city Heat on End Turn</span>
           </div>
           <div class="legend-row">
-            <span class="legend-ico"><i class="ico raid">⚔</i></span>
-            <span class="legend-v"><b>Blue RAID badge</b> — cops hit this block (fades over a few turns)</span>
+            <span class="legend-ico"><i class="ico cop-light" aria-hidden="true"><b></b><b></b></i></span>
+            <span class="legend-v"><b>Police light</b> — crackdown residual on that block (red/blue strobe)</span>
           </div>
           <div class="legend-row">
             <span class="legend-k">Heat</span>
-            <span class="legend-v">0–24 calm · 25–49 watch · 50–69 elevated · <b>70+</b> crackdown. Then cool-off (no re-raid).</span>
+            <span class="legend-v">City meter: fire climbs with unrest · at <b>70</b> crackdown · then cool-off</span>
           </div>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico stack">NEXT</i></span>
