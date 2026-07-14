@@ -775,11 +775,11 @@ export class BoardTabletop {
       const intel = document.createElement('div');
       intel.className = 'sl-tile-intel';
       intel.setAttribute('aria-hidden', 'true');
+      // Minimal map language: owner disc · 3 site dots · unrest # 
       intel.innerHTML = `
-        <span class="sl-owner-bar" aria-hidden="true"></span>
-        <span class="sl-owner-tag" hidden><span class="ot-dot"></span><span class="ot-txt"></span></span>
+        <span class="sl-owner-mark" hidden title=""></span>
         <div class="sl-site-pips" title="Site influence"></div>
-        <span class="sl-unrest-pip" hidden><span class="up-ico" aria-hidden="true"></span><span class="up-n"></span></span>
+        <span class="sl-unrest-mark" hidden title=""><span class="um-n"></span></span>
       `;
 
       const portraits = document.createElement('div');
@@ -932,24 +932,22 @@ export class BoardTabletop {
     el.classList.toggle('has-unrest', sector.unrest > 0);
     el.classList.toggle('has-high-unrest', sector.unrest >= 5);
 
-    const tag = el.querySelector('.sl-owner-tag') as HTMLElement | null;
-    const tagTxt = el.querySelector('.sl-owner-tag .ot-txt') as HTMLElement | null;
-    if (tag && tagTxt) {
+    const ownerMark = el.querySelector('.sl-owner-mark') as HTMLElement | null;
+    if (ownerMark) {
       if (mine) {
-        tagTxt.textContent = 'YOU';
-        tag.hidden = false;
-        tag.classList.add('mine');
-        tag.classList.remove('foe');
+        ownerMark.hidden = false;
+        ownerMark.className = 'sl-owner-mark mine';
+        ownerMark.title = 'You own this block';
+        ownerMark.textContent = '';
       } else if (foe) {
-        const name = state.players[sector.owner!]?.name ?? 'RIVAL';
-        tagTxt.textContent = name.slice(0, 3).toUpperCase();
-        tag.hidden = false;
-        tag.classList.add('foe');
-        tag.classList.remove('mine');
+        ownerMark.hidden = false;
+        ownerMark.className = 'sl-owner-mark foe';
+        ownerMark.title = `${state.players[sector.owner!]?.name ?? 'Rival'} owns this block`;
+        ownerMark.textContent = '';
       } else {
-        tagTxt.textContent = '';
-        tag.hidden = true;
-        tag.classList.remove('mine', 'foe');
+        ownerMark.hidden = true;
+        ownerMark.className = 'sl-owner-mark';
+        ownerMark.title = '';
       }
     }
 
@@ -970,32 +968,29 @@ export class BoardTabletop {
         for (const kind of bits) {
           const i = document.createElement('i');
           i.className = `pip ${kind}`;
-          const gem = document.createElement('span');
-          gem.className = 'gem';
-          i.appendChild(gem);
           i.title =
             kind === 'you'
               ? 'You influence this site'
               : kind === 'foe'
                 ? 'Rival influences this site'
-                : 'Open site (not influenced)';
+                : 'Open site';
           pips.appendChild(i);
         }
       }
     }
 
-    const unrestPip = el.querySelector('.sl-unrest-pip') as HTMLElement | null;
-    const unrestN = el.querySelector('.sl-unrest-pip .up-n') as HTMLElement | null;
-    if (unrestPip && unrestN) {
+    const unrestMark = el.querySelector('.sl-unrest-mark') as HTMLElement | null;
+    const unrestN = el.querySelector('.sl-unrest-mark .um-n') as HTMLElement | null;
+    if (unrestMark && unrestN) {
       if (sector.unrest > 0) {
-        unrestPip.hidden = false;
+        unrestMark.hidden = false;
         unrestN.textContent = String(sector.unrest);
-        unrestPip.title = `Unrest ${sector.unrest}/10 on this block`;
-        unrestPip.classList.toggle('hot', sector.unrest >= 5);
+        unrestMark.title = `Unrest ${sector.unrest}/10`;
+        unrestMark.classList.toggle('hot', sector.unrest >= 5);
       } else {
-        unrestPip.hidden = true;
+        unrestMark.hidden = true;
         unrestN.textContent = '';
-        unrestPip.classList.remove('hot');
+        unrestMark.classList.remove('hot');
       }
     }
 

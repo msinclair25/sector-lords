@@ -1622,33 +1622,43 @@ export class Game3DScene extends Phaser.Scene {
         ${
           open
             ? `<div class="legend-body">
+          <p class="legend-lead">On each block</p>
+          <div class="legend-row">
+            <span class="legend-ico"><i class="ico disc mine"></i></span>
+            <span class="legend-v"><b>Gold disc</b> — you own this block</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-ico"><i class="ico disc foe"></i></span>
+            <span class="legend-v"><b>Red disc</b> — rival owns this block</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-ico"><i class="ico disc empty"></i></span>
+            <span class="legend-v"><b>No disc</b> — unclaimed</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-ico legend-pips"><i class="ico pip you"></i><i class="ico pip foe"></i><i class="ico pip open"></i></span>
+            <span class="legend-v"><b>3 dots</b> — sites: gold = you influence, red = rival, hollow = open</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-ico"><i class="ico unrest">3</i></span>
+            <span class="legend-v"><b>Red #</b> — unrest on this block (cash now, city Heat later)</span>
+          </div>
+          <p class="legend-lead">Top bar</p>
           <div class="legend-row">
             <span class="legend-k">Support</span>
-            <span class="legend-v">Empire loyalty. Grows from turf, influenced sites, landmarks. Empty owned blocks drain it. Used in Combined score wins.</span>
+            <span class="legend-v">Empire loyalty from turf + influenced sites. Empty owned blocks drain it. Scores Combined wins.</span>
           </div>
           <div class="legend-row">
             <span class="legend-k">Heat</span>
-            <span class="legend-v">City police heat (top bar). High risk = crackdowns. Unrest jobs and events push it up.</span>
-          </div>
-          <div class="legend-row">
-            <span class="legend-k">Unrest</span>
-            <span class="legend-v">Per-block chaos (red badge on tiles). Raise Unrest for cash now; feeds city Heat later.</span>
-          </div>
-          <div class="legend-row">
-            <span class="legend-k">Ownership</span>
-            <span class="legend-v"><i class="swatch mine"></i> <b>YOU</b> tag + gold edge · <i class="swatch foe"></i> rival tag + red edge · no tag = unclaimed</span>
-          </div>
-          <div class="legend-row">
-            <span class="legend-k">Site gems</span>
-            <span class="legend-v">Bottom rack (3 diamonds): <i class="dot you"></i> you · <i class="dot foe"></i> rival · <i class="dot open"></i> open</span>
+            <span class="legend-v">City police heat. High = crackdowns.</span>
           </div>
           <div class="legend-row">
             <span class="legend-k">Cash</span>
-            <span class="legend-v">Hire, gear, upkeep. Arrow shows projected after next income.</span>
+            <span class="legend-v">Hire, gear, upkeep. → is next income.</span>
           </div>
           <div class="legend-row">
             <span class="legend-k">Goal</span>
-            <span class="legend-v">How this scenario ends — also on the menu before you Jack In.</span>
+            <span class="legend-v">How this scenario ends (see menu before Jack In).</span>
           </div>
         </div>`
             : ''

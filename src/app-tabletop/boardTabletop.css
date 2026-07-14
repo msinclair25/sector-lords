@@ -795,8 +795,10 @@
 }
 
 /*
- * Tile intel — polished cyberpunk chips above portraits.
- * Ownership: rail + monogram plate · Sites: diamond rack · Unrest: heat chip
+ * Tile intel — minimal, high-contrast map language
+ * · Owner: solid disc (gold you / red rival)
+ * · Sites: 3 dots bottom (gold / red / empty)
+ * · Unrest: small red number top-right
  */
 .sl-tile-intel {
   position: absolute;
@@ -807,268 +809,124 @@
   overflow: hidden;
 }
 
-/* Vertical ownership rail with soft fade */
-.sl-tile-intel .sl-owner-bar {
+/* Ownership disc — top-left */
+.sl-tile-intel .sl-owner-mark {
   position: absolute;
-  left: 0;
-  top: 18%;
-  bottom: 18%;
-  width: 2px;
-  border-radius: 0 2px 2px 0;
-  opacity: 0;
-  background: transparent;
-  transition: opacity 0.15s ease;
-}
-
-.sl-tile.is-mine .sl-tile-intel .sl-owner-bar {
-  opacity: 1;
-  width: 3px;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    #fcee0a 18%,
-    #fcee0a 82%,
-    transparent 100%
-  );
-  box-shadow: 0 0 10px rgba(252, 238, 10, 0.85);
-}
-
-.sl-tile.is-foe .sl-tile-intel .sl-owner-bar {
-  opacity: 1;
-  width: 3px;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    #ff3d5a 18%,
-    #ff3d5a 82%,
-    transparent 100%
-  );
-  box-shadow: 0 0 10px rgba(255, 61, 90, 0.75);
-}
-
-/* Ownership monogram plate */
-.sl-tile-intel .sl-owner-tag {
-  position: absolute;
-  top: 4px;
+  top: 5px;
   left: 5px;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  max-width: calc(100% - 28px);
-  padding: 3px 6px 3px 5px;
-  font-family: "Orbitron", "Segoe UI", system-ui, sans-serif;
-  font-size: 7.5px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  line-height: 1;
-  color: #e8e4f4;
-  background: linear-gradient(145deg, rgba(18, 12, 32, 0.94), rgba(6, 4, 14, 0.92));
-  border: 1px solid rgba(120, 130, 160, 0.45);
-  /* Angular cyber clip */
-  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(2px);
-}
-
-.sl-tile-intel .sl-owner-tag .ot-dot {
-  width: 5px;
-  height: 5px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  flex-shrink: 0;
-  background: rgba(160, 170, 190, 0.7);
-  box-shadow: 0 0 4px rgba(160, 170, 190, 0.4);
+  border: 1.5px solid rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
-.sl-tile-intel .sl-owner-tag .ot-txt {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sl-tile-intel .sl-owner-tag.mine {
-  color: #0a0810;
-  background: linear-gradient(145deg, #fff06a 0%, #fcee0a 45%, #d4c008 100%);
-  border-color: rgba(255, 250, 180, 0.95);
+.sl-tile-intel .sl-owner-mark.mine {
+  background: #fcee0a;
+  border-color: rgba(10, 8, 16, 0.65);
   box-shadow:
-    0 0 12px rgba(252, 238, 10, 0.55),
-    0 2px 6px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    0 0 0 1px rgba(252, 238, 10, 0.35),
+    0 0 8px rgba(252, 238, 10, 0.55);
 }
 
-.sl-tile-intel .sl-owner-tag.mine .ot-dot {
-  background: #0a0810;
-  box-shadow: none;
-}
-
-.sl-tile-intel .sl-owner-tag.foe {
-  color: #fff;
-  background: linear-gradient(145deg, #ff5a72 0%, #e02045 50%, #9a1028 100%);
-  border-color: rgba(255, 160, 175, 0.85);
+.sl-tile-intel .sl-owner-mark.foe {
+  background: #ff3d5a;
+  border-color: rgba(10, 8, 16, 0.55);
   box-shadow:
-    0 0 12px rgba(255, 61, 90, 0.5),
-    0 2px 6px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.sl-tile-intel .sl-owner-tag.foe .ot-dot {
-  background: #fff;
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+    0 0 0 1px rgba(255, 61, 90, 0.35),
+    0 0 8px rgba(255, 61, 90, 0.45);
 }
 
 .sl-tile.is-mine .sl-tile-top .sl-tint {
-  opacity: 0.34;
+  opacity: 0.3;
   mix-blend-mode: color;
 }
 
 .sl-tile.is-foe .sl-tile-top .sl-tint {
-  opacity: 0.32;
+  opacity: 0.28;
   mix-blend-mode: color;
 }
 
 .sl-tile.is-neutral .sl-tile-top .sl-tint {
-  opacity: 0.1;
+  opacity: 0.08;
 }
 
-/* Site influence rack — diamonds on a glass strip */
+/* Site influence — 3 plain dots, bottom center */
 .sl-tile-intel .sl-site-pips {
   position: absolute;
   left: 50%;
   bottom: 5px;
-  top: auto;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 6px;
-  background: linear-gradient(
-    180deg,
-    rgba(12, 8, 24, 0.55) 0%,
-    rgba(4, 2, 12, 0.78) 100%
-  );
-  border: 1px solid rgba(43, 240, 255, 0.28);
-  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 50%, calc(100% - 4px) 100%, 4px 100%, 0 50%);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(43, 240, 255, 0.12);
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(4, 2, 12, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .sl-tile-intel .sl-site-pips .pip {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 9px;
-  height: 9px;
-  flex-shrink: 0;
-}
-
-.sl-tile-intel .sl-site-pips .pip .gem {
   display: block;
-  width: 6px;
-  height: 6px;
-  transform: rotate(45deg);
-  border: 1px solid rgba(0, 0, 0, 0.55);
-  background: rgba(70, 80, 100, 0.9);
-  box-shadow:
-    inset 0 0 2px rgba(255, 255, 255, 0.15),
-    0 0 3px rgba(0, 0, 0, 0.4);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1.5px solid rgba(160, 175, 195, 0.75);
+  box-sizing: border-box;
 }
 
-.sl-tile-intel .sl-site-pips .pip.you .gem {
-  background: linear-gradient(145deg, #fff6a8, #fcee0a 50%, #c9b400);
-  border-color: rgba(255, 255, 200, 0.9);
-  box-shadow:
-    0 0 7px rgba(252, 238, 10, 0.85),
-    inset 0 0 2px rgba(255, 255, 255, 0.5);
+.sl-tile-intel .sl-site-pips .pip.you {
+  background: #fcee0a;
+  border-color: #fcee0a;
+  box-shadow: 0 0 5px rgba(252, 238, 10, 0.55);
 }
 
-.sl-tile-intel .sl-site-pips .pip.foe .gem {
-  background: linear-gradient(145deg, #ff8a9a, #ff3d5a 50%, #b01030);
-  border-color: rgba(255, 200, 210, 0.85);
-  box-shadow:
-    0 0 7px rgba(255, 61, 90, 0.8),
-    inset 0 0 2px rgba(255, 255, 255, 0.35);
+.sl-tile-intel .sl-site-pips .pip.foe {
+  background: #ff3d5a;
+  border-color: #ff3d5a;
+  box-shadow: 0 0 5px rgba(255, 61, 90, 0.5);
 }
 
-.sl-tile-intel .sl-site-pips .pip.open .gem {
-  background: linear-gradient(145deg, rgba(50, 58, 74, 0.95), rgba(22, 26, 36, 0.98));
-  border-color: rgba(140, 155, 175, 0.55);
-  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.5);
+.sl-tile-intel .sl-site-pips .pip.open {
+  background: transparent;
+  border-color: rgba(160, 175, 195, 0.7);
 }
 
-/* Unrest heat chip */
-.sl-tile-intel .sl-unrest-pip {
+/* Unrest — top-right number only */
+.sl-tile-intel .sl-unrest-mark {
   position: absolute;
   top: 4px;
   right: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  min-height: 14px;
-  padding: 2px 5px 2px 4px;
-  font-family: "Orbitron", "Segoe UI", system-ui, sans-serif;
-  font-size: 8px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.02em;
-  color: #ffd6dc;
-  background: linear-gradient(145deg, rgba(90, 12, 28, 0.95), rgba(40, 4, 14, 0.96));
-  border: 1px solid rgba(255, 90, 110, 0.85);
-  clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));
-  box-shadow:
-    0 0 10px rgba(255, 61, 90, 0.4),
-    inset 0 1px 0 rgba(255, 180, 190, 0.15);
-}
-
-.sl-tile-intel .sl-unrest-pip .up-ico {
-  width: 0;
-  height: 0;
-  border-left: 3px solid transparent;
-  border-right: 3px solid transparent;
-  border-bottom: 5px solid #ff6b80;
-  filter: drop-shadow(0 0 2px rgba(255, 80, 100, 0.8));
-  flex-shrink: 0;
-  margin-top: -1px;
-}
-
-.sl-tile-intel .sl-unrest-pip .up-n {
   line-height: 1;
-  min-width: 0.6em;
-  text-align: center;
-}
-
-.sl-tile-intel .sl-unrest-pip.hot,
-.sl-tile.has-high-unrest .sl-tile-intel .sl-unrest-pip {
   color: #fff;
-  background: linear-gradient(145deg, #ff3d5a, #8a1028);
-  border-color: #ffb0bc;
-  box-shadow:
-    0 0 12px rgba(255, 61, 90, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  animation: sl-unrest-chip-pulse 1.4s ease-in-out infinite;
+  background: #c41838;
+  border: 1px solid rgba(255, 200, 210, 0.45);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
-.sl-tile-intel .sl-unrest-pip.hot .up-ico,
-.sl-tile.has-high-unrest .sl-tile-intel .sl-unrest-pip .up-ico {
-  border-bottom-color: #fff;
+.sl-tile-intel .sl-unrest-mark .um-n {
+  line-height: 1;
+}
+
+.sl-tile-intel .sl-unrest-mark.hot,
+.sl-tile.has-high-unrest .sl-tile-intel .sl-unrest-mark {
+  background: #ff3d5a;
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .sl-tile.has-high-unrest .sl-tile-top .sl-unrest {
-  opacity: max(var(--unrest-op, 0), 0.55);
-}
-
-@keyframes sl-unrest-chip-pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 0 8px rgba(255, 61, 90, 0.45),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
-  50% {
-    box-shadow:
-      0 0 14px rgba(255, 61, 90, 0.8),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  }
+  opacity: max(var(--unrest-op, 0), 0.5);
 }
 
 .sl-tile-top .sl-gloss {
@@ -1782,27 +1640,25 @@
     width: 28px;
     height: 28px;
   }
+  .sl-tile-intel .sl-owner-mark {
+    width: 11px;
+    height: 11px;
+    top: 4px;
+    left: 4px;
+  }
   .sl-tile-intel .sl-site-pips {
     gap: 5px;
-    padding: 4px 7px;
+    padding: 3px 6px;
     bottom: 4px;
   }
   .sl-tile-intel .sl-site-pips .pip {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
-  .sl-tile-intel .sl-site-pips .pip .gem {
-    width: 7px;
-    height: 7px;
-  }
-  .sl-tile-intel .sl-unrest-pip {
-    min-height: 15px;
-    font-size: 9px;
-    padding: 2px 6px 2px 5px;
-  }
-  .sl-tile-intel .sl-owner-tag {
-    font-size: 8px;
-    padding: 3px 6px 3px 5px;
+  .sl-tile-intel .sl-unrest-mark {
+    min-width: 15px;
+    height: 15px;
+    font-size: 10px;
   }
   .sl-tile-portraits img.mine {
     /* Easier finger select for friendly crews */
