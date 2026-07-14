@@ -468,20 +468,51 @@ export class Game3DScene extends Phaser.Scene {
 
     // Hire drawer open → board picks are deploy targets only (no accidental move/claim).
     if (this.drawer === 'hire') {
-      this.selected = id;
-      if (mine.length > 0) {
-        const free = mine.find((gid) => !state.orders.some((o) => o.gangId === gid));
-        this.selectedGang = free ?? mine[0]!;
+      const human = this.controller.humanId;
+      const ownedHere = s.owner === human;
+      // Phone: hard to land on owned tiles under the hire sheet — snap to nearest owned
+      let deployId: SectorId = id;
+      let snapped = false;
+      if (!ownedHere) {
+        if (this.isMobileUi()) {
+          const near = this.nearestOwnedSector(id);
+          if (near) {
+            deployId = near;
+            snapped = true;
+          } else {
+            this.statusMsg = 'No owned block to hire into — claim turf first.';
+            this.refreshBoard();
+            this.render();
+            SFX.play('error');
+            return;
+          }
+        } else {
+          this.selected = id;
+          this.selectedGang = null;
+          this.statusMsg = `Block ${id} is not yours — click an owned block, then hire.`;
+          this.refreshBoard();
+          this.render();
+          SFX.play('error');
+          return;
+        }
+      }
+      this.selected = deployId;
+      const onTile = state.sectors[deployId]!.gangIds.filter(
+        (g) =>
+          state.gangs[g]?.ownerId === human && (state.gangs[g]?.hp ?? 0) > 0,
+      );
+      if (onTile.length > 0) {
+        const free = onTile.find((gid) => !state.orders.some((o) => o.gangId === gid));
+        this.selectedGang = free ?? onTile[0]!;
       } else {
         this.selectedGang = null;
       }
-      const owned = s.owner === this.controller.humanId;
-      this.statusMsg = owned
-        ? `Hire deploys to block ${id}. Pick a crew card to hire.`
-        : `Block ${id} is not yours — click an owned block, then hire.`;
+      this.statusMsg = snapped
+        ? `Hire → block ${deployId} (nearest owned to ${id}). Pick a crew card.`
+        : `Hire deploys to block ${deployId}. Pick a crew card to hire.`;
       this.refreshBoard();
       this.render();
-      SFX.play(owned ? 'ui' : 'error');
+      SFX.play('ui');
       return;
     }
 
@@ -1809,9 +1840,12 @@ export class Game3DScene extends Phaser.Scene {
     if (this.drawer === 'hire') {
       const cash = me.cash;
       const deploy = this.hireDeploySector();
+      const mobileHire = this.isMobileUi();
       const deployLine =
         deploy && 'sid' in deploy
-          ? `Deploys to <b>block ${escapeHtml(deploy.sid)}</b> (${escapeHtml(deploy.reason)}). Click another owned tile to change — board clicks won’t move crews while hiring.`
+          ? mobileHire
+            ? `Deploys to <b>block ${escapeHtml(deploy.sid)}</b> (${escapeHtml(deploy.reason)}). Tap the map to change — off-turf taps snap to nearest owned.`
+            : `Deploys to <b>block ${escapeHtml(deploy.sid)}</b> (${escapeHtml(deploy.reason)}). Click another owned tile to change — board clicks won’t move crews while hiring.`
           : deploy && 'error' in deploy
             ? escapeHtml(deploy.error)
             : `No owned block — claim turf before hiring.`;
@@ -2303,7 +2337,18 @@ export class Game3DScene extends Phaser.Scene {
       return;
     }
     if (act === 'hire-open') {
-      this.drawer = this.drawer === 'hire' ? 'none' : 'hire';
+      const opening = this.drawer !== 'hire';
+      this.drawer = opening ? 'hire' : 'none';
+      // Phone: pre-aim deploy at owned turf so hire cards work without a precise tile hit
+      if (opening && this.isMobileUi()) {
+        const deploy = this.hireDeploySector();
+        if (deploy && 'sid' in deploy) {
+          this.selected = deploy.sid;
+        } else {
+          const near = this.nearestOwnedSector(this.selected);
+          if (near) this.selected = near;
+        }
+      }
       this.render();
       SFX.play('ui');
       return;
@@ -2862,12 +2907,37 @@ export class Game3DScene extends Phaser.Scene {
     );
   }
 
+  /** Manhattan-nearest sector you own (for mobile hire snap). */
+  private nearestOwnedSector(from: SectorId | null | undefined): SectorId | null {
+    const state = this.controller.state;
+    const human = this.controller.humanId;
+    const owned = Object.values(state.sectors).filter((s) => s.owner === human);
+    if (owned.length === 0) return null;
+    const origin = from ? state.sectors[from] : null;
+    if (!origin) {
+      const home = this.humanHomeId();
+      if (home && state.sectors[home]?.owner === human) return home;
+      return owned[0]!.id;
+    }
+    let best = owned[0]!;
+    let bestD = Infinity;
+    for (const s of owned) {
+      const d = Math.abs(s.x - origin.x) + Math.abs(s.y - origin.y);
+      if (d < bestD || (d === bestD && s.id.localeCompare(best.id) < 0)) {
+        bestD = d;
+        best = s;
+      }
+    }
+    return best.id;
+  }
+
   /**
    * Where a hire should land:
    * 1) Selected tile if you own it (explicit pick)
-   * 2) Selected crew's block if you own it
-   * 3) Only if nothing is selected: first owned / home block
-   * Never silently place on a different tile than a non-owned selection.
+   * 2) Mobile: nearest owned to selection / crew if pick is awkward
+   * 3) Selected crew's block if you own it
+   * 4) Home / any owned
+   * Desktop still errors if you explicitly selected non-owned turf.
    */
   private hireDeploySector():
     | { sid: SectorId; reason: string }
@@ -2877,12 +2947,22 @@ export class Game3DScene extends Phaser.Scene {
     const human = this.controller.humanId;
     const owned = (id: SectorId | null | undefined): id is SectorId =>
       !!id && state.sectors[id]?.owner === human;
+    const mobile = this.isMobileUi();
 
     if (owned(this.selected)) {
       return { sid: this.selected, reason: 'selected block' };
     }
-    // User clicked a non-owned tile — do not quietly hire elsewhere
+    // Non-owned selection: phone snaps to nearest owned; desktop asks for a real pick
     if (this.selected && !owned(this.selected)) {
+      if (mobile) {
+        const near = this.nearestOwnedSector(this.selected);
+        if (near) {
+          return {
+            sid: near,
+            reason: `nearest owned to ${this.selected}`,
+          };
+        }
+      }
       return {
         error: `Block ${this.selected} is not yours. Click an owned block, then hire.`,
       };
@@ -2892,6 +2972,10 @@ export class Game3DScene extends Phaser.Scene {
       : null;
     if (owned(gangSector)) {
       return { sid: gangSector, reason: 'selected crew block' };
+    }
+    if (mobile) {
+      const near = this.nearestOwnedSector(gangSector ?? this.selected);
+      if (near) return { sid: near, reason: 'nearest owned' };
     }
     const home = this.humanHomeId();
     if (owned(home)) {
