@@ -2047,6 +2047,28 @@ button.crew-filter:disabled {
     gap: 6px;
   }
 
+  /* KEY panel sits above bottom bar so it doesn’t fight the top stats */
+  #sl-legend {
+    left: 6px;
+    top: auto;
+    bottom: max(148px, calc(130px + env(safe-area-inset-bottom, 0px)));
+    width: min(260px, calc(100vw - 52px));
+    max-height: min(36vh, 280px);
+  }
+
+  #sl-legend:not(.is-open) {
+    width: auto;
+    max-width: calc(100vw - 52px);
+  }
+
+  #sl-legend .legend-row {
+    grid-template-columns: 64px 1fr;
+  }
+
+  #sl-legend .legend-v {
+    font-size: 10px;
+  }
+
   #sl-brand {
     min-width: 0;
     flex: 1 1 auto;
