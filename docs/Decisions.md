@@ -50,4 +50,4 @@ Traces live locally (gitignored): `chrome dev tools saves/Trace.json.gz`, `Trace
 | Credits | Morgan + Grok/xAI + Gemini music | Accurate attribution |
 | Domain | sectorlords.com on Cloudflare Pages | Custom domain live; pages.dev remains as fallback |
 | Docs | Obsidian vault **in this folder** | Progress + evaluation notes |
-| Source | **GitHub next** | Share, backup, portfolio |
+| Source | **Public GitHub** https://github.com/msinclair25/sector-lords | Portfolio + backup (MIT) |

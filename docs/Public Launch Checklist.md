@@ -44,7 +44,7 @@ Optional: a **social preview** image under Settings → General → Social previ
 | 6 | **IP wording** — inspired by / not official remake | ✅ in README |
 | 7 | **Homepage + description** on GitHub | ✅ set |
 | 8 | **Build + tests pass** | ✅ re-check before flip |
-| 9 | Flip visibility **public** | ⬜ When ready |
+| 9 | Flip visibility **public** | ✅ 2026-07-14 |
 
 ### Should do
 

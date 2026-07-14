@@ -21,8 +21,8 @@ Done (2026-07-13 → 2026-07-14):
 
 Optional later:
 
-- [ ] Flip to public when ready for portfolio
-- [ ] GitHub topics / social preview polish
+- [x] Flip to **public** (2026-07-14) → https://github.com/msinclair25/sector-lords
+- [ ] GitHub social preview image (Settings → General)
 - [ ] Fresh screenshots if board chrome changed a lot
 
 Do **not** force-push or rewrite history on a shared remote without saying so.

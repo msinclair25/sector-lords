@@ -11,6 +11,7 @@ Reverse-chronological ship log. Add new entries at the top.
 - **Mobile KEY:** lower so it clears stats/brand
 - **Rival stacks:** one face + card peeks + red `×N` (no tile spill / gold sticker)
 - README how-to-play synced to current order flow; GitHub topics + docs catch-up
+- **GitHub repo public:** https://github.com/msinclair25/sector-lords
 
 ## 2026-07-13 (late) — Mobile pinch pass + repo sync
 
