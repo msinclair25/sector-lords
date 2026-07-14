@@ -1036,7 +1036,7 @@ export class Game3DScene extends Phaser.Scene {
           }</span></div>
           <div class="stat" title="Territory $${incomeBr.territory} · Sites $${incomeBr.sites} · Unrest $${incomeBr.unrest} · Landmarks $${incomeBr.landmarks}"><span class="lbl">Cash</span><span class="val">$${me.cash}<small>→$${nextCash}</small></span></div>
           <div class="stat" title="Empire loyalty score. Gained from owned blocks, influenced sites, and landmarks. Empty owned blocks bleed support. Counts toward Combined victory."><span class="lbl">Support</span><span class="val">${me.support}</span></div>
-          <div class="stat" title="Citywide police attention. High heat risks crackdowns. Raised by unrest jobs and some events."><span class="lbl">Heat</span><span class="val">${state.cityHeat}<small>${escapeHtml(fc.policeRisk)}</small></span></div>
+          <div class="stat" title="City police attention. Raise Unrest spikes Heat; high Heat risks crackdowns. Some events also move Heat."><span class="lbl">Heat</span><span class="val">${state.cityHeat}<small>${escapeHtml(fc.policeRisk)}</small></span></div>
           <div class="stat goal-stat" title="${escapeHtml(paths.label)}"><span class="lbl">Goal</span><span class="val">${myScore?.value ?? 0}<small>${escapeHtml(paths.label)}</small></span></div>
         </div>
       </div>
@@ -1072,7 +1072,7 @@ export class Game3DScene extends Phaser.Scene {
             })
             .join('')}
         </div>
-        <div id="sl-hint">One order per crew · green = move/claim/attack · Influence = business bonus · Esc cancel</div>
+        <div id="sl-hint">1 order/crew · green = go · stack chip cycles free · Unrest/Influence need your turf · End Turn resolves · Esc cancel</div>
       </div>
     `;
 
@@ -1291,7 +1291,13 @@ export class Game3DScene extends Phaser.Scene {
       const name = ord.itemId ? itemDefById(ord.itemId).name : 'tech';
       return `RESEARCH ${name}`;
     }
-    if (t === 'unrest') return 'UNREST (here)';
+    if (t === 'unrest') {
+      const g = this.controller.state.gangs[ord.gangId];
+      const prev = g ? previewUnrestOrder(this.controller.state, g.id) : null;
+      return prev && prev.unrestGain > 0
+        ? `UNREST +$${prev.cash} · +${prev.unrestGain}`
+        : 'UNREST (here)';
+    }
     if (t === 'scout') return `SCOUT → ${ord.targetSectorId ?? '…'}`;
     if (t === 'claim') return `CLAIM → ${ord.targetSectorId ?? '…'}`;
     if (t === 'attack') return `ATTACK → ${ord.targetSectorId ?? '…'}`;
@@ -1527,6 +1533,31 @@ export class Game3DScene extends Phaser.Scene {
       })
       .join('');
 
+    const onOwn =
+      this.controller.state.sectors[g.sectorId]?.owner === human;
+    const unrestPrev = onOwn ? previewUnrestOrder(this.controller.state, curId) : null;
+    const openSites = onOwn
+      ? (this.controller.state.sectors[g.sectorId]?.sites.filter(
+          (s) => s.influencer !== human,
+        ).length ?? 0)
+      : 0;
+    const localActs = [
+      unrestPrev && unrestPrev.unrestGain > 0
+        ? `<button type="button" class="act" data-act="unrest">
+            <span class="act-label">Unrest</span>
+            <span class="act-sub">+$${unrestPrev.cash} · End Turn</span>
+          </button>`
+        : '',
+      openSites > 0
+        ? `<button type="button" class="act primary" data-act="influence-hint">
+            <span class="act-label">Influence</span>
+            <span class="act-sub">${openSites} open site${openSites === 1 ? '' : 's'}</span>
+          </button>`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('');
+
     return `<div id="sl-order-guide" class="active">
       <div class="og-head">
         <span class="og-tag">ORDER GUIDE</span>
@@ -1536,7 +1567,7 @@ export class Game3DScene extends Phaser.Scene {
         <img src="${img}" alt="" />
         <div>
           <div class="og-name">${escapeHtml(d.name)}</div>
-          <div class="og-meta">At ${g.sectorId} · HP ${g.hp} · pick a green tile or button</div>
+          <div class="og-meta">At ${g.sectorId} · HP ${g.hp} · green tile, Unrest, or Influence</div>
         </div>
       </div>
       <div class="og-progress" aria-hidden="true">
@@ -1545,8 +1576,9 @@ export class Game3DScene extends Phaser.Scene {
       ${
         destBtns
           ? `<div class="dest-quick-list">${destBtns}</div>`
-          : `<p class="og-copy">No legal neighbors — Skip or use Unrest / Influence / Research.</p>`
+          : `<p class="og-copy">No legal neighbors from here.</p>`
       }
+      ${localActs ? `<div class="dest-quick-list og-local">${localActs}</div>` : ''}
       <div class="og-actions">
         <button type="button" class="act" data-act="guide-next" style="flex:1">
           <span class="act-label">Skip →</span>
@@ -1568,7 +1600,7 @@ export class Game3DScene extends Phaser.Scene {
   ): string {
     if (!gang || !def) {
       return `<div id="sl-crew-dock" class="empty">
-        <div class="dock-empty">No crew selected — click a portrait or roster row</div>
+        <div class="dock-empty">No crew selected — tap a face on the board, the stack chip, or a roster row</div>
       </div>`;
     }
 
@@ -1667,28 +1699,49 @@ export class Game3DScene extends Phaser.Scene {
           </div>
           <div class="legend-row">
             <span class="legend-ico legend-pips"><i class="ico pip you"></i><i class="ico pip foe"></i><i class="ico pip open"></i></span>
-            <span class="legend-v"><b>Tiny dots</b> — sites (only if influenced). Gold you · red rival · hollow open</span>
+            <span class="legend-v"><b>Tiny dots</b> — sites only if someone influences them. Gold you · red rival · hollow open</span>
           </div>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico unrest">3</i></span>
-            <span class="legend-v"><b>Red #</b> — unrest only when &gt; 0</span>
+            <span class="legend-v"><b>Red #</b> — unrest only when &gt; 0 (cash + heat on End Turn)</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-ico"><i class="ico stack">2/3</i></span>
+            <span class="legend-v"><b>Stack</b> — overlapping faces. Tap face or <b>1/N</b> chip to cycle free crews</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-ico"><i class="ico dest"></i></span>
+            <span class="legend-v"><b>Green glow</b> — legal move/claim/attack. One click orders (needs End Turn)</span>
+          </div>
+          <p class="legend-lead">Orders</p>
+          <div class="legend-row">
+            <span class="legend-k">1 / crew</span>
+            <span class="legend-v">Each crew one order per turn. Nothing pays until <b>End Turn</b>.</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-k">Unrest</span>
+            <span class="legend-v">On your turf: cash now, +unrest, +Heat. Stand on owned block.</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-k">Influence</span>
+            <span class="legend-v">Pick a business on your block for passive cash / research / combat / heal.</span>
           </div>
           <p class="legend-lead">Top bar</p>
           <div class="legend-row">
             <span class="legend-k">Support</span>
-            <span class="legend-v">Empire loyalty from turf + influenced sites. Empty owned blocks drain it. Scores Combined wins.</span>
+            <span class="legend-v">Loyalty from turf + sites. Empty owned blocks drain it. Combined-win goals.</span>
           </div>
           <div class="legend-row">
             <span class="legend-k">Heat</span>
-            <span class="legend-v">City police heat. High = crackdowns.</span>
+            <span class="legend-v">Police attention. Unrest spikes it; high Heat = crackdowns.</span>
           </div>
           <div class="legend-row">
             <span class="legend-k">Cash</span>
-            <span class="legend-v">Hire, gear, upkeep. → is next income.</span>
+            <span class="legend-v">Hire, gear, upkeep. → is projected next income.</span>
           </div>
           <div class="legend-row">
             <span class="legend-k">Goal</span>
-            <span class="legend-v">How this scenario ends (see menu before Jack In).</span>
+            <span class="legend-v">How this scenario ends (menu before Jack In).</span>
           </div>
         </div>`
             : ''
