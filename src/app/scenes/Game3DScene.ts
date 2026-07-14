@@ -525,6 +525,7 @@ export class Game3DScene extends Phaser.Scene {
 
     // ── Select YOUR crews on this tile (list in panel; NEXT on board cycles) ──
     if (mine.length > 0) {
+      const wasOnTile = this.selected === id;
       this.selected = id;
       const free = mine.filter(
         (gid) => !state.orders.some((o) => o.gangId === gid),
@@ -547,9 +548,11 @@ export class Game3DScene extends Phaser.Scene {
       }
 
       // Multi-crew blocks: show only crews here + open crew panel on phone
+      // (only when first landing — not every cycle, or the panel jumps)
       if (mine.length > 1) {
         this.crewFilter = 'here';
         if (
+          !wasOnTile &&
           typeof window !== 'undefined' &&
           window.matchMedia('(max-width: 720px)').matches
         ) {
@@ -560,18 +563,19 @@ export class Game3DScene extends Phaser.Scene {
       this.statusMsg = this.describeSelection();
       if (this.selectedGang && this.coachStep === 0) this.advanceCoach();
       this.refreshBoard();
-      this.board?.focusSector(id);
+      if (!wasOnTile) this.board?.focusSector(id);
       this.render();
       SFX.play('ui');
       return;
     }
 
     // Just focus the sector (no crew here) — clear crew pick so hire/deploy matches the tile
+    const wasSelected = this.selected === id;
     this.selected = id;
     this.selectedGang = null;
     this.statusMsg = this.describeSelection();
     this.refreshBoard();
-    this.board?.focusSector(id);
+    if (!wasSelected) this.board?.focusSector(id);
     this.render();
     SFX.play('ui');
   }
@@ -596,6 +600,8 @@ export class Game3DScene extends Phaser.Scene {
     if (this.actionBusy || this.resolving) return;
     const g = this.controller.state.gangs[gid];
     if (!g || g.ownerId !== this.controller.humanId || g.hp <= 0) return;
+    const sameTile = this.selected === g.sectorId;
+    const sameGang = this.selectedGang === gid;
     this.selectedGang = gid;
     this.selected = g.sectorId;
     // Keep "Here" filter when picking among a stack so the list stays useful
@@ -608,9 +614,12 @@ export class Game3DScene extends Phaser.Scene {
     if (stackN > 1) this.crewFilter = 'here';
     this.statusMsg = this.describeSelection();
     this.refreshBoard();
-    this.board?.focusSector(g.sectorId);
+    // Stay put when cycling stacked crews on the same block (NEXT / Prev / list)
+    if (!sameTile) {
+      this.board?.focusSector(g.sectorId);
+    }
     this.render();
-    SFX.play('ui');
+    if (!sameGang) SFX.play('ui');
     if (this.coachStep === 0) this.advanceCoach();
   }
 
@@ -1071,6 +1080,9 @@ export class Game3DScene extends Phaser.Scene {
 
   private paintHud(): void {
     if (!this.root) return;
+    // Preserve side-panel scroll so NEXT / crew cycle doesn't jump the list
+    const sideEl = this.root.querySelector('#sl-side') as HTMLElement | null;
+    const sideScroll = sideEl?.scrollTop ?? 0;
     const state = this.controller.state;
     const me = state.players[this.controller.humanId]!;
     const paths = pathsToVictory(state);
@@ -1156,18 +1168,20 @@ export class Game3DScene extends Phaser.Scene {
     }
     this.applyTutorialUiHints();
     this.applyTutorialBoardHints();
-    // Keep selected crew visible without forcing smooth scroll every paint
+    // Restore panel scroll first — cycling crews must not yank the HUD
+    const sideAfter = this.root.querySelector('#sl-side') as HTMLElement | null;
+    if (sideAfter && sideScroll > 0) {
+      sideAfter.scrollTop = sideScroll;
+    }
+    // Only nudge roster if selected row is fully off-screen (not on every NEXT)
     const row = this.root.querySelector(
       '#sl-gang-pick .gang-pick.selected',
     ) as HTMLElement | null;
-    if (row) {
-      const list = this.root.querySelector('#sl-gang-pick') as HTMLElement | null;
-      if (list) {
-        const lr = list.getBoundingClientRect();
-        const rr = row.getBoundingClientRect();
-        if (rr.top < lr.top || rr.bottom > lr.bottom) {
-          row.scrollIntoView({ block: 'nearest' });
-        }
+    if (row && sideAfter) {
+      const lr = sideAfter.getBoundingClientRect();
+      const rr = row.getBoundingClientRect();
+      if (rr.bottom < lr.top + 8 || rr.top > lr.bottom - 8) {
+        row.scrollIntoView({ block: 'nearest' });
       }
     }
   }
