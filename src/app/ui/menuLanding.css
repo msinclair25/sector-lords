@@ -574,6 +574,72 @@
     0 0 18px rgba(120, 90, 255, 0.2);
 }
 
+/* Soft support link — under credits, not competing with Jack In */
+#sl-menu-root .sl-coffee {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 10px 14px 8px;
+  width: 100%;
+  max-width: 360px;
+  text-decoration: none;
+  border: 1px solid rgba(252, 238, 10, 0.28);
+  background: linear-gradient(
+    160deg,
+    rgba(252, 238, 10, 0.08) 0%,
+    rgba(12, 8, 24, 0.55) 55%,
+    rgba(8, 6, 16, 0.4) 100%
+  );
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  box-shadow: 0 0 18px rgba(252, 238, 10, 0.08);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+  cursor: pointer;
+}
+
+#sl-menu-root .sl-coffee:hover,
+#sl-menu-root .sl-coffee:focus-visible {
+  border-color: rgba(252, 238, 10, 0.65);
+  box-shadow: 0 0 26px rgba(252, 238, 10, 0.18);
+  background: linear-gradient(
+    160deg,
+    rgba(252, 238, 10, 0.14) 0%,
+    rgba(18, 12, 32, 0.7) 55%,
+    rgba(8, 6, 16, 0.5) 100%
+  );
+  outline: none;
+}
+
+#sl-menu-root .sl-coffee-lbl {
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  color: rgba(252, 238, 10, 0.75);
+}
+
+#sl-menu-root .sl-coffee-msg {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f0e8ff;
+  text-align: center;
+  line-height: 1.3;
+}
+
+#sl-menu-root .sl-coffee-cta {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold, #fcee0a);
+  text-shadow: 0 0 12px rgba(252, 238, 10, 0.35);
+}
+
 #sl-menu-root .sl-credit-sep {
   font-size: 11px;
   color: rgba(90, 112, 128, 0.75);
@@ -727,6 +793,18 @@
 
   #sl-menu-root .sl-credit-x {
     font-size: 11px;
+  }
+
+  #sl-menu-root .sl-coffee {
+    margin-top: 8px;
+    padding: 10px 12px;
+    max-width: 100%;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  #sl-menu-root .sl-coffee-msg {
+    font-size: 12px;
   }
 
   #sl-menu-root .sl-menu-foot {

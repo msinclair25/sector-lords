@@ -165,6 +165,17 @@ export class MenuScene extends Phaser.Scene {
             <span class="sl-credit-lbl music">MUSIC BY</span>
             <span class="sl-credit-name gemini">Gemini</span>
           </div>
+          <a
+            class="sl-coffee"
+            href="https://buymeacoffee.com/morganinc"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Buy Morgan a coffee"
+          >
+            <span class="sl-coffee-lbl">// SUPPORT</span>
+            <span class="sl-coffee-msg">If you enjoy this, buy me a coffee</span>
+            <span class="sl-coffee-cta">☕ buymeacoffee.com/morganinc</span>
+          </a>
         </footer>
         <p class="sl-menu-foot">Autosave · green glow moves · scroll zoom</p>
       </div>
