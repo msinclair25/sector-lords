@@ -2155,6 +2155,60 @@ button.crew-filter:disabled {
     min-height: 40px;
     touch-action: manipulation;
   }
+
+  /* Combined Menu (Hire · Jobs · Tech) hub */
+  #sl-drawer .empire-hub {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #sl-drawer .empire-hub-btn {
+    width: 100%;
+    min-height: 56px;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 12px 14px;
+  }
+
+  #sl-drawer .empire-hub-btn .act-label {
+    font-size: 15px;
+    letter-spacing: 0.08em;
+  }
+
+  #sl-drawer .empire-hub-btn .act-sub {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    opacity: 0.85;
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+
+  #sl-drawer .empire-hub-sep {
+    font-family: var(--font-display);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin: 6px 0 0;
+    padding-top: 8px;
+    border-top: 1px solid rgba(43, 240, 255, 0.15);
+  }
+
+  /* Fewer bottom chips — primary path is green tiles + Menu + End turn */
+  #sl-actions {
+    gap: 8px;
+  }
+
+  #sl-actions .act .act-sub {
+    display: none;
+  }
+
+  #sl-actions .act {
+    min-width: 70px;
+    padding: 10px 12px;
+  }
 }
 
 /* ── Site / racket cards (influence transparency) ── */

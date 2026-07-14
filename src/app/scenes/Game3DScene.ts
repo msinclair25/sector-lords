@@ -128,7 +128,7 @@ export class Game3DScene extends Phaser.Scene {
   private selectedGang: string | null = null;
   private unsub: (() => void) | null = null;
   private coachStep = 0;
-  private drawer: 'none' | 'hire' | 'jobs' | 'tech' = 'none';
+  private drawer: 'none' | 'hire' | 'jobs' | 'tech' | 'empire' = 'none';
   /** Roster filter when you have many crews */
   private crewFilter: 'all' | 'free' | 'ordered' | 'here' = 'all';
   /** Right-panel sections the player minimized (− / +) */
@@ -1611,6 +1611,47 @@ export class Game3DScene extends Phaser.Scene {
   private renderDrawer(): string {
     const state = this.controller.state;
     const me = state.players[this.controller.humanId]!;
+    // Phone: one hub instead of many bottom buttons
+    if (this.drawer === 'empire') {
+      const hireN = state.hirePool.length;
+      const jobN = state.jobBoard.length;
+      const flat = this.board?.getViewMode() === 'flat';
+      return this.drawerChrome(
+        'Empire',
+        'Tools that used to crowd the bottom bar — mobile only hub.',
+        `<div class="empire-hub">
+          <button type="button" class="act empire-hub-btn primary" data-act="hire-open">
+            <span class="act-label">Hire</span>
+            <span class="act-sub">${hireN} available · deploy to selected block</span>
+          </button>
+          <button type="button" class="act empire-hub-btn" data-act="jobs-open">
+            <span class="act-label">Jobs</span>
+            <span class="act-sub">${jobN} on the board · city contracts</span>
+          </button>
+          <button type="button" class="act empire-hub-btn" data-act="tech-open">
+            <span class="act-label">Tech</span>
+            <span class="act-sub">Research · fabricate · equip</span>
+          </button>
+          <div class="empire-hub-sep">// SYSTEM</div>
+          <button type="button" class="act empire-hub-btn ghost" data-act="board-view">
+            <span class="act-label">${flat ? 'War table view' : 'Flat map view'}</span>
+            <span class="act-sub">${flat ? 'Switch to tilted table' : 'Switch to top-down'}</span>
+          </button>
+          <button type="button" class="act empire-hub-btn ghost" data-act="save">
+            <span class="act-label">Save</span>
+            <span class="act-sub">Checkpoint this run</span>
+          </button>
+          <button type="button" class="act empire-hub-btn ghost" data-act="export-save">
+            <span class="act-label">Export</span>
+            <span class="act-sub">.json backup</span>
+          </button>
+          <button type="button" class="act empire-hub-btn danger" data-act="menu">
+            <span class="act-label">Main menu</span>
+            <span class="act-sub">Leave the war table</span>
+          </button>
+        </div>`,
+      );
+    }
     if (this.drawer === 'hire') {
       const cash = me.cash;
       const deploy = this.hireDeploySector();
@@ -1914,27 +1955,40 @@ export class Game3DScene extends Phaser.Scene {
       disabled: openSites === 0 || !mine || !!pending || this.actionBusy || this.resolving,
     });
 
-    // Meta / empire actions (not a crew order)
-    acts.push({
-      id: 'hire-open',
-      label: 'Hire',
-      sub: 'Recruit a crew',
-      disabled: this.resolving,
-    });
-    acts.push({
-      id: 'jobs-open',
-      label: 'Jobs',
-      sub: 'City contracts',
-      cls: 'ghost',
-      disabled: this.resolving,
-    });
-    acts.push({
-      id: 'tech-open',
-      label: 'Tech',
-      sub: 'Research & gear',
-      cls: 'ghost',
-      disabled: this.resolving,
-    });
+    // Meta / empire — phone gets one combined Menu; desktop keeps separate drawers
+    const mobileUi =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 720px)').matches;
+    if (mobileUi) {
+      acts.push({
+        id: 'empire-open',
+        label: 'Empire',
+        sub: 'Hire · Jobs · Tech · more',
+        cls: 'ghost',
+        disabled: this.resolving,
+      });
+    } else {
+      acts.push({
+        id: 'hire-open',
+        label: 'Hire',
+        sub: 'Recruit a crew',
+        disabled: this.resolving,
+      });
+      acts.push({
+        id: 'jobs-open',
+        label: 'Jobs',
+        sub: 'City contracts',
+        cls: 'ghost',
+        disabled: this.resolving,
+      });
+      acts.push({
+        id: 'tech-open',
+        label: 'Tech',
+        sub: 'Research & gear',
+        cls: 'ghost',
+        disabled: this.resolving,
+      });
+    }
     const freeN = this.freeCrewIds().length;
     // If idle warning is up but everyone now has orders, drop it
     if (this.endTurnConfirm && freeN === 0) this.endTurnConfirm = false;
@@ -1972,31 +2026,34 @@ export class Game3DScene extends Phaser.Scene {
         disabled: this.resolving || this.actionBusy,
       });
     }
-    acts.push({
-      id: 'board-view',
-      label: this.board?.getViewMode() === 'flat' ? 'Flat map' : 'War table',
-      sub:
-        this.board?.getViewMode() === 'flat'
-          ? 'Tilted table view'
-          : 'Flat top-down',
-      cls: 'ghost util',
-      disabled: this.resolving,
-    });
-    acts.push({
-      id: 'save',
-      label: 'Save',
-      sub: 'Checkpoint',
-      cls: 'ghost util',
-      disabled: this.resolving || this.actionBusy,
-    });
-    acts.push({
-      id: 'export-save',
-      label: 'Export',
-      sub: '.json backup',
-      cls: 'ghost util',
-      disabled: this.resolving || this.actionBusy,
-    });
-    acts.push({ id: 'menu', label: 'Menu', cls: 'ghost util' });
+    // Desktop keeps system chips on the bar; mobile folds them into Empire hub
+    if (!mobileUi) {
+      acts.push({
+        id: 'board-view',
+        label: this.board?.getViewMode() === 'flat' ? 'Flat map' : 'War table',
+        sub:
+          this.board?.getViewMode() === 'flat'
+            ? 'Tilted table view'
+            : 'Flat top-down',
+        cls: 'ghost util',
+        disabled: this.resolving,
+      });
+      acts.push({
+        id: 'save',
+        label: 'Save',
+        sub: 'Checkpoint',
+        cls: 'ghost util',
+        disabled: this.resolving || this.actionBusy,
+      });
+      acts.push({
+        id: 'export-save',
+        label: 'Export',
+        sub: '.json backup',
+        cls: 'ghost util',
+        disabled: this.resolving || this.actionBusy,
+      });
+      acts.push({ id: 'menu', label: 'Menu', cls: 'ghost util' });
+    }
 
     return acts;
   }
@@ -2039,6 +2096,12 @@ export class Game3DScene extends Phaser.Scene {
     if (act === 'drawer-close') {
       this.drawer = 'none';
       this.render();
+      return;
+    }
+    if (act === 'empire-open') {
+      this.drawer = this.drawer === 'empire' ? 'none' : 'empire';
+      this.render();
+      SFX.play('ui');
       return;
     }
     if (act === 'hire-open') {

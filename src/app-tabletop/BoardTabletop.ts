@@ -656,7 +656,7 @@ export class BoardTabletop {
     const sectors = Object.values(state.sectors)
       .map(
         (s) =>
-          `${s.id}:${s.owner ?? '-'}:${s.unrest}:${s.gangIds.join(',')}:${s.sites.map((x) => x.defId).join(',')}:${s.landmark?.id ?? ''}`,
+          `${s.id}:${s.owner ?? '-'}:${s.unrest}:${s.gangIds.join(',')}:${s.sites.map((x) => `${x.defId}:${x.influencer ?? ''}`).join(',')}:${s.landmark?.id ?? ''}`,
       )
       .join('|');
     const gangs = Object.values(state.gangs)
@@ -765,6 +765,10 @@ export class BoardTabletop {
         <div class="sl-unrest"></div>
         <div class="sl-gloss"></div>
         <div class="sl-dest-ring"></div>
+        <div class="sl-tile-chrome" aria-hidden="true">
+          <div class="sl-site-pips"></div>
+          <span class="sl-unrest-pip" hidden></span>
+        </div>
       `;
 
       const holo = document.createElement('div');
@@ -783,6 +787,7 @@ export class BoardTabletop {
       el.appendChild(holo);
       el.appendChild(portraits);
       el.appendChild(orderMark);
+      this.applyTileIntel(el, state, sector);
 
       if (sector.landmark) {
         const star = document.createElement('div');
@@ -902,6 +907,87 @@ export class BoardTabletop {
     }
   }
 
+  /**
+   * Ownership ring, site-influence pips, unrest badge — readable at a glance.
+   */
+  private applyTileIntel(
+    el: HTMLElement,
+    state: GameState,
+    sector: GameState['sectors'][string],
+  ): void {
+    el.classList.toggle('is-owned', !!sector.owner);
+    el.classList.toggle('is-mine', sector.owner === this.humanId);
+    el.classList.toggle(
+      'is-foe',
+      !!sector.owner && sector.owner !== this.humanId,
+    );
+    el.classList.toggle('is-neutral', !sector.owner);
+    el.classList.toggle('has-unrest', sector.unrest > 0);
+    el.classList.toggle('has-high-unrest', sector.unrest >= 5);
+
+    const pips = el.querySelector('.sl-site-pips') as HTMLElement | null;
+    if (pips) {
+      const bits = sector.sites.map((site) => {
+        if (!site.influencer) return 'open';
+        return site.influencer === this.humanId ? 'you' : 'foe';
+      });
+      const sig = bits.join(',');
+      if (pips.dataset.sig !== sig) {
+        pips.dataset.sig = sig;
+        pips.replaceChildren();
+        for (const kind of bits) {
+          const i = document.createElement('i');
+          i.className = `pip ${kind}`;
+          i.title =
+            kind === 'you'
+              ? 'You influence this site'
+              : kind === 'foe'
+                ? 'Rival influences this site'
+                : 'Open site';
+          pips.appendChild(i);
+        }
+      }
+    }
+
+    const unrestPip = el.querySelector('.sl-unrest-pip') as HTMLElement | null;
+    if (unrestPip) {
+      if (sector.unrest > 0) {
+        unrestPip.hidden = false;
+        unrestPip.textContent = String(sector.unrest);
+        unrestPip.title = `Unrest ${sector.unrest}/10 on this block`;
+      } else {
+        unrestPip.hidden = true;
+        unrestPip.textContent = '';
+      }
+    }
+
+    el.title = this.tileTitle(state, sector);
+  }
+
+  private tileTitle(
+    state: GameState,
+    sector: GameState['sectors'][string],
+  ): string {
+    const owner = sector.owner
+      ? sector.owner === this.humanId
+        ? 'You own this block'
+        : `${state.players[sector.owner]?.name ?? 'Rival'} owns this block`
+      : 'Unclaimed block';
+    const sites = sector.sites
+      .map((s, i) => {
+        const who = !s.influencer
+          ? 'open'
+          : s.influencer === this.humanId
+            ? 'you'
+            : 'rival';
+        return `site ${i + 1}:${who}`;
+      })
+      .join(', ');
+    const unrest =
+      sector.unrest > 0 ? ` · unrest ${sector.unrest}` : '';
+    return `${sector.id} · ${owner} · ${sites}${unrest}`;
+  }
+
   private refreshChrome(state: GameState, selectedCrewId: string | null): void {
     // Hit cache may be stale after class changes that affect layout rarely;
     // selection chrome alone doesn't move centers, so keep cache.
@@ -913,7 +999,7 @@ export class BoardTabletop {
       el.style.setProperty('--unrest-op', String(Math.min(1, sector.unrest / 8)));
       el.classList.toggle('is-selected', sector.id === this.selected);
       el.classList.toggle('is-dest', this.highlights.has(sector.id));
-      el.classList.toggle('is-owned', !!sector.owner);
+      this.applyTileIntel(el, state, sector);
       el.classList.remove('is-tut-home', 'is-tut-dest', 'is-tut-pulse');
       if (this.tutorialIds.has(sector.id) && this.tutorialMode) {
         if (this.tutorialMode === 'home') el.classList.add('is-tut-home');

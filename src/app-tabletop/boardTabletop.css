@@ -794,6 +794,114 @@
   mix-blend-mode: screen;
 }
 
+/* Ownership / influence / unrest chrome on each block */
+.sl-tile-top .sl-tile-chrome {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* Strong owner ring — your color vs rival color vs dim neutral */
+.sl-tile.is-mine .sl-tile-top {
+  box-shadow:
+    3px 4px 0 color-mix(in srgb, var(--owner) 45%, #0a0814),
+    6px 10px 18px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px color-mix(in srgb, var(--owner) 80%, #fcee0a),
+    0 0 14px color-mix(in srgb, var(--owner) 40%, transparent);
+}
+
+.sl-tile.is-foe .sl-tile-top {
+  box-shadow:
+    3px 4px 0 color-mix(in srgb, var(--owner) 45%, #0a0814),
+    6px 10px 18px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px color-mix(in srgb, var(--owner) 75%, #ff3d5a),
+    0 0 12px color-mix(in srgb, var(--owner) 35%, transparent);
+}
+
+.sl-tile.is-mine .sl-tile-top .sl-tint {
+  opacity: 0.34;
+}
+
+.sl-tile.is-foe .sl-tile-top .sl-tint {
+  opacity: 0.32;
+}
+
+.sl-tile.is-neutral .sl-tile-top .sl-tint {
+  opacity: 0.12;
+}
+
+/* Three site pips: open / you / rival */
+.sl-site-pips {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 3px;
+  z-index: 2;
+}
+
+.sl-site-pips .pip {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  background: rgba(160, 170, 190, 0.45);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.sl-site-pips .pip.you {
+  background: #fcee0a;
+  border-color: rgba(252, 238, 10, 0.9);
+  box-shadow: 0 0 6px rgba(252, 238, 10, 0.65);
+}
+
+.sl-site-pips .pip.foe {
+  background: #ff3d5a;
+  border-color: rgba(255, 61, 90, 0.9);
+  box-shadow: 0 0 6px rgba(255, 61, 90, 0.55);
+}
+
+.sl-site-pips .pip.open {
+  background: rgba(40, 48, 64, 0.75);
+  border-color: rgba(143, 168, 184, 0.5);
+}
+
+/* Unrest number badge (tile heat) */
+.sl-unrest-pip {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 12px;
+  height: 12px;
+  padding: 0 3px;
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", "Segoe UI", system-ui, sans-serif;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0;
+  color: #ffd0d8;
+  background: rgba(80, 8, 24, 0.88);
+  border: 1px solid rgba(255, 61, 90, 0.75);
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(255, 61, 90, 0.35);
+  z-index: 3;
+}
+
+.sl-tile.has-high-unrest .sl-unrest-pip {
+  color: #fff;
+  background: rgba(120, 10, 30, 0.95);
+  border-color: #ff3d5a;
+  box-shadow: 0 0 10px rgba(255, 61, 90, 0.55);
+}
+
+.sl-tile.has-high-unrest .sl-tile-top .sl-unrest {
+  opacity: max(var(--unrest-op, 0), 0.55);
+}
+
 .sl-tile-top .sl-gloss {
   position: absolute;
   inset: 0;
@@ -1484,6 +1592,15 @@
   .sl-tile-portraits img {
     width: 28px;
     height: 28px;
+  }
+  .sl-site-pips .pip {
+    width: 7px;
+    height: 7px;
+  }
+  .sl-unrest-pip {
+    min-width: 14px;
+    height: 14px;
+    font-size: 9px;
   }
   .sl-tile-portraits img.mine {
     /* Easier finger select for friendly crews */
