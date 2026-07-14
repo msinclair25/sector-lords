@@ -48,8 +48,16 @@ export function validateOrder(state: GameState, order: Order): string | null {
   switch (order.type) {
     case 'idle':
     case 'defend':
-    case 'unrest':
       return null;
+    case 'unrest': {
+      const sector = state.sectors[from];
+      if (!sector) return 'Invalid sector.';
+      if (sector.owner !== order.playerId) {
+        return 'Raise unrest on your own turf — crew must stand on a block you own.';
+      }
+      if (sector.unrest >= 10) return 'This block is already at max unrest (10).';
+      return null;
+    }
     case 'move':
     case 'claim':
     case 'attack': {

@@ -209,29 +209,52 @@ export function resolveTurn(input: GameState): ResolveTurnResult {
     }
   }
 
-  // 5) Unrest
+  // 5) Unrest — cash + sector unrest + city heat (must own the block)
   for (const o of unrestOrders) {
     const gang = state.gangs[o.gangId];
     if (!gang) continue;
     const sector = state.sectors[gang.sectorId];
-    if (!sector || sector.owner !== o.playerId) continue;
+    const who = state.players[o.playerId]?.name ?? o.playerId;
+    if (!sector || sector.owner !== o.playerId) {
+      state.log.push({
+        turn: state.turn,
+        kind: 'info',
+        message: `${who}'s unrest fizzles — crew must stand on turf they own.`,
+      });
+      continue;
+    }
+    if (sector.unrest >= 10) {
+      state.log.push({
+        turn: state.turn,
+        kind: 'info',
+        message: `${who} tries to stir ${sector.id} but unrest is already maxed (10).`,
+      });
+      continue;
+    }
     const def = gangDefById(gang.defId);
-    // Diminishing returns: high sector unrest pays less
+    // Diminishing returns: high sector unrest pays less cash
     const unrestMult = 1 - sector.unrest * 0.06;
     let unrestGain = 2;
-    let cash = Math.floor((16 + def.combat * 2.5) * Math.max(0.45, unrestMult));
-    if (def.id === 'static_kids') unrestGain += 1;
+    let cash = Math.floor((18 + def.combat * 3) * Math.max(0.5, unrestMult));
+    let heatSpike = 4;
+    if (def.id === 'static_kids') {
+      unrestGain += 1;
+      heatSpike += 1;
+    }
     if (def.id === 'ledger_saints') cash += 12;
     if (def.id === 'moon_debtors') {
       cash += 10;
-      state.cityHeat = Math.min(100, state.cityHeat + 1);
+      heatSpike += 1;
     }
+    const before = sector.unrest;
     sector.unrest = Math.min(10, sector.unrest + unrestGain);
+    const gained = sector.unrest - before;
     state.players[o.playerId]!.cash += cash;
+    state.cityHeat = Math.min(100, state.cityHeat + heatSpike);
     state.log.push({
       turn: state.turn,
       kind: 'economy',
-      message: `${state.players[o.playerId]?.name} raises unrest in ${sector.id} (+$${cash}, Unrest ${sector.unrest}).`,
+      message: `${who} raises unrest in ${sector.id}: +$${cash}, unrest ${before}→${sector.unrest} (+${gained}), city Heat +${heatSpike} (now ${state.cityHeat}).`,
     });
     for (const m of noteJobAction(state, o.playerId, { type: 'unrest' })) {
       state.log.push({ turn: state.turn, kind: 'job', message: m });

@@ -43,6 +43,48 @@ export function computeIncome(state: GameState, playerId: PlayerId): number {
   return computeIncomeBreakdown(state, playerId).total;
 }
 
+/** Preview cash / unrest / heat for a Raise Unrest order (mirrors resolveTurn). */
+export function previewUnrestOrder(
+  state: GameState,
+  gangId: string,
+): { cash: number; unrestGain: number; heatSpike: number; sectorId: string; unrestNow: number } | null {
+  const gang = state.gangs[gangId];
+  if (!gang) return null;
+  const sector = state.sectors[gang.sectorId];
+  if (!sector || sector.owner !== gang.ownerId) return null;
+  if (sector.unrest >= 10) {
+    return {
+      cash: 0,
+      unrestGain: 0,
+      heatSpike: 0,
+      sectorId: sector.id,
+      unrestNow: sector.unrest,
+    };
+  }
+  const def = gangDefById(gang.defId);
+  const unrestMult = 1 - sector.unrest * 0.06;
+  let unrestGain = 2;
+  let cash = Math.floor((18 + def.combat * 3) * Math.max(0.5, unrestMult));
+  let heatSpike = 4;
+  if (def.id === 'static_kids') {
+    unrestGain += 1;
+    heatSpike += 1;
+  }
+  if (def.id === 'ledger_saints') cash += 12;
+  if (def.id === 'moon_debtors') {
+    cash += 10;
+    heatSpike += 1;
+  }
+  unrestGain = Math.min(unrestGain, 10 - sector.unrest);
+  return {
+    cash,
+    unrestGain,
+    heatSpike,
+    sectorId: sector.id,
+    unrestNow: sector.unrest,
+  };
+}
+
 export function computeUpkeep(state: GameState, playerId: PlayerId): number {
   let upkeep = 0;
   for (const g of Object.values(state.gangs)) {
@@ -120,15 +162,26 @@ export function applyEconomy(state: GameState): string[] {
     }
   }
 
-  // City heat drifts from total unrest
+  // City heat: drift toward unrest pressure (do NOT hard-reset — action spikes would vanish)
   const totalUnrest = Object.values(state.sectors).reduce((s, sec) => s + sec.unrest, 0);
-  state.cityHeat = Math.min(100, Math.max(0, Math.floor(totalUnrest * 1.2)));
+  const pressure = Math.floor(totalUnrest * 1.35);
+  if (pressure > state.cityHeat) {
+    // Climb toward pressure so map-wide unrest bites
+    const climb = Math.max(1, Math.ceil((pressure - state.cityHeat) * 0.4));
+    state.cityHeat = Math.min(100, state.cityHeat + climb);
+  } else if (state.cityHeat > pressure + 2) {
+    // Cool slowly when the streets calm
+    state.cityHeat = Math.max(pressure, state.cityHeat - 2);
+  }
+  state.cityHeat = Math.min(100, Math.max(0, state.cityHeat));
 
   // Slightly earlier police pressure so unrest snowballing is riskier
   if (state.cityHeat >= 75) {
     messages.push(...policeCrackdown(state));
   } else if (state.cityHeat >= 55) {
-    messages.push('Police scanners light up the skyline. Heat is high.');
+    messages.push(`Police scanners light up the skyline. Heat ${state.cityHeat} — high.`);
+  } else if (state.cityHeat >= 35) {
+    messages.push(`Heat ${state.cityHeat}: patrols thicken. Keep pushing unrest and they'll come hard.`);
   }
 
   // Empty sector decay: unoccupied owned sectors may go neutral
@@ -200,10 +253,10 @@ export function forecastTurn(state: GameState): TurnForecast {
     });
   }
 
-  // Approximate heat if unrest orders fire
+  // Project heat if unrest orders fire (matches resolveTurn spikes)
   let heat = state.cityHeat;
   for (const order of state.orders) {
-    if (order.type === 'unrest') heat += 3;
+    if (order.type === 'unrest') heat += 4;
   }
   heat = Math.min(100, heat);
 

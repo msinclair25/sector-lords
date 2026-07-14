@@ -19,6 +19,7 @@ import {
   formatOdds,
   pathsToVictory,
   previewAttackWithIntel,
+  previewUnrestOrder,
   researchableItems,
   type CityEventFlash,
   type DebriefReport,
@@ -1366,12 +1367,21 @@ export class Game3DScene extends Phaser.Scene {
 
       ${
         onOwn
-          ? `<button type="button" class="act" data-act="unrest" style="width:100%;margin-top:8px" ${
-              this.actionBusy || this.resolving ? 'disabled' : ''
-            }>
-              <span class="act-label">Raise unrest</span>
-              <span class="act-sub">Cash now · heat later · uses this order</span>
-            </button>`
+          ? (() => {
+              const prev = previewUnrestOrder(state, gang.id);
+              if (!prev || prev.unrestGain <= 0) {
+                return `<button type="button" class="act" disabled style="width:100%;margin-top:8px">
+                  <span class="act-label">Raise unrest</span>
+                  <span class="act-sub">Already maxed (10) on this block</span>
+                </button>`;
+              }
+              return `<button type="button" class="act" data-act="unrest" style="width:100%;margin-top:8px" ${
+                this.actionBusy || this.resolving || pending ? 'disabled' : ''
+              }>
+                <span class="act-label">Raise unrest</span>
+                <span class="act-sub">+$${prev.cash} · unrest ${prev.unrestNow}→${prev.unrestNow + prev.unrestGain} · heat +${prev.heatSpike} · End Turn</span>
+              </button>`;
+            })()
           : ''
       }
       ${
@@ -1998,11 +2008,25 @@ export class Game3DScene extends Phaser.Scene {
       });
     }
 
+    const unrestPrev =
+      mine && gang ? previewUnrestOrder(state, gang.id) : null;
     acts.push({
       id: 'unrest',
       label: 'Unrest',
-      sub: 'Cash now, heat later',
-      disabled: !onOwn || this.actionBusy || this.resolving,
+      sub: unrestPrev
+        ? unrestPrev.unrestGain > 0
+          ? `+$${unrestPrev.cash} · +${unrestPrev.unrestGain} unrest · heat +${unrestPrev.heatSpike} (End Turn)`
+          : 'Block maxed at 10 unrest'
+        : onOwn
+          ? 'Cash + heat on End Turn'
+          : 'Stand on your turf',
+      disabled:
+        !onOwn ||
+        !unrestPrev ||
+        unrestPrev.unrestGain <= 0 ||
+        !!pending ||
+        this.actionBusy ||
+        this.resolving,
     });
 
     // Influence: open side panel work-sites, or auto-commit if only one open site
@@ -2651,6 +2675,7 @@ export class Game3DScene extends Phaser.Scene {
     }
     const gang = this.controller.state.gangs[gangId]!;
     if (type === 'unrest') {
+      const prev = previewUnrestOrder(this.controller.state, gangId);
       const err = this.controller.orderForGang('unrest', gangId);
       if (err) {
         this.statusMsg = err;
@@ -2658,11 +2683,14 @@ export class Game3DScene extends Phaser.Scene {
         this.render(true);
         return;
       }
+      const doneMsg = prev
+        ? `UNREST queued on ${prev.sectorId}: +$${prev.cash}, unrest ${prev.unrestNow}→${prev.unrestNow + prev.unrestGain}, heat +${prev.heatSpike}. Press END TURN — nothing pays until then.`
+        : 'Unrest ordered. Press END TURN to resolve.';
       this.actionBusy = true;
       this.board?.pulseTile(gang.sectorId, 'unrest', false);
       SFX.play('unrest');
       if (this.orderGuide) {
-        this.advanceGuideAfterOrder(gangId, 'Unrest ordered');
+        this.advanceGuideAfterOrder(gangId, doneMsg);
       } else {
         this.statusMsg = 'Raising unrest…';
         this.render(true);
@@ -2670,7 +2698,7 @@ export class Game3DScene extends Phaser.Scene {
       window.setTimeout(() => {
         this.actionBusy = false;
         if (!this.orderGuide) {
-          this.statusMsg = 'Unrest ordered — cash now, heat later.';
+          this.statusMsg = doneMsg;
         }
         this.refreshBoard();
         this.render(true);
