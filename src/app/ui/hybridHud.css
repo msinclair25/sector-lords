@@ -2136,6 +2136,19 @@ button.crew-filter:disabled {
   padding-top: 2px;
 }
 
+#sl-turn-card .turn-local-acts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(43, 240, 255, 0.12);
+}
+
+#sl-turn-card .turn-local-acts .act {
+  width: 100%;
+}
+
 #sl-turn-card .turn-foot {
   margin: 8px 0 0;
   font-size: 12px;

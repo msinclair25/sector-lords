@@ -1403,8 +1403,8 @@ export class Game3DScene extends Phaser.Scene {
   }
 
   /**
-   * Primary side-panel card: one order per crew, with move destinations
-   * and influence sites promoted (not buried under the roster).
+   * Side-panel work card: local actions only.
+   * Move / claim / attack live on the board (green neighbors).
    */
   private renderCrewTurnCard(
     gang: GangInstance | null | undefined,
@@ -1416,7 +1416,7 @@ export class Game3DScene extends Phaser.Scene {
       return `<div id="sl-turn-card" class="idle">
         <div class="turn-kicker">// CREW ORDER</div>
         <strong>Pick a crew</strong>
-        <p class="body-text">Each crew gets <b>one order</b> per turn. Click a portrait on the board or a roster row.</p>
+        <p class="body-text">Each crew gets <b>one order</b> per turn. Select on the board or roster — then work here or move on green tiles.</p>
       </div>`;
     }
 
@@ -1436,82 +1436,54 @@ export class Game3DScene extends Phaser.Scene {
     const state = this.controller.state;
     const sector = state.sectors[gang.sectorId]!;
     const onOwn = sector.owner === human;
-    const dests = this.validDestinations();
-    const destBtns = dests
-      .map((did) => {
-        const t = state.sectors[did]!;
-        const kind = !t.owner
-          ? 'CLAIM'
-          : t.owner === human
-            ? 'MOVE'
-            : 'ATTACK';
-        const cls =
-          kind === 'ATTACK' ? 'danger' : kind === 'CLAIM' ? 'primary' : '';
-        const gloss =
-          kind === 'CLAIM'
-            ? 'Take empty block'
-            : kind === 'ATTACK'
-              ? 'Fight for block'
-              : 'Friendly block';
-        return `<button type="button" class="act dest-quick ${cls}" data-act="dest-${did}" title="${gloss}">
-          <span class="act-label">${kind} ${did}</span>
-          <span class="act-sub">${gloss}</span>
-        </button>`;
-      })
-      .join('');
+    const busy = this.actionBusy || this.resolving;
 
-    const openSites = onOwn
-      ? sector.sites.filter((s) => s.influencer !== human).length
-      : 0;
     const workSites =
       onOwn && sector.sites.length > 0
         ? `<div id="sl-crew-work" class="turn-work">
-            <div class="turn-subhead">Work a business <em>· uses this order</em></div>
-            <p class="body-text site-help">Influence = permanent passive bonus every End Turn (cash, heal, research, combat). You must <b>own</b> the block and have a <b>free crew standing on it</b>.</p>
+            <div class="turn-subhead">Influence <em>· uses this order</em></div>
+            <p class="body-text site-help">Permanent passive every End Turn (cash, heal, research, combat).</p>
             <div class="site-card-list">${this.renderSiteCards(sector, true)}</div>
           </div>`
         : onOwn
           ? `<p class="body-text">No businesses on this block.</p>`
-          : `<p class="body-text site-help">Influence only works on <b>your</b> turf. Claim or move onto an owned block first.</p>`;
+          : `<p class="body-text site-help">Influence needs <b>your</b> turf — claim or move onto an owned block first.</p>`;
+
+    const unrestBtn = onOwn
+      ? (() => {
+          const prev = previewUnrestOrder(state, gang.id);
+          if (!prev || prev.unrestGain <= 0) {
+            return `<button type="button" class="act" disabled style="width:100%">
+              <span class="act-label">Raise unrest</span>
+              <span class="act-sub">Already maxed (10) on this block</span>
+            </button>`;
+          }
+          return `<button type="button" class="act" data-act="unrest" style="width:100%" ${
+            busy ? 'disabled' : ''
+          }>
+            <span class="act-label">Raise unrest</span>
+            <span class="act-sub">+$${prev.cash} · unrest ${prev.unrestNow}→${prev.unrestNow + prev.unrestGain} · heat +${prev.heatSpike}</span>
+          </button>`;
+        })()
+      : `<button type="button" class="act" disabled style="width:100%">
+          <span class="act-label">Raise unrest</span>
+          <span class="act-sub">Stand on a block you own</span>
+        </button>`;
 
     return `<div id="sl-turn-card" class="ready">
-      <div class="turn-kicker">// ONE ORDER THIS TURN</div>
+      <div class="turn-kicker">// WORK THIS BLOCK</div>
       <strong>${escapeHtml(def.name)}</strong>
-      <p class="body-text turn-rule">Choose <b>one</b>: move/claim/attack a neighbor, influence a business here, raise unrest, or research (Tech).</p>
-
-      <div class="turn-subhead">Send them <em>· green tiles on map</em></div>
-      ${
-        destBtns
-          ? `<div class="dest-quick-list">${destBtns}</div>`
-          : `<p class="body-text">No legal neighbors from ${gang.sectorId}.</p>`
-      }
+      <p class="body-text turn-rule">Move / claim / attack on the <b>map</b> (green neighbors). Here: influence, unrest, or tech — each uses this crew’s one order.</p>
 
       ${workSites}
 
-      ${
-        onOwn
-          ? (() => {
-              const prev = previewUnrestOrder(state, gang.id);
-              if (!prev || prev.unrestGain <= 0) {
-                return `<button type="button" class="act" disabled style="width:100%;margin-top:8px">
-                  <span class="act-label">Raise unrest</span>
-                  <span class="act-sub">Already maxed (10) on this block</span>
-                </button>`;
-              }
-              return `<button type="button" class="act" data-act="unrest" style="width:100%;margin-top:8px" ${
-                this.actionBusy || this.resolving || pending ? 'disabled' : ''
-              }>
-                <span class="act-label">Raise unrest</span>
-                <span class="act-sub">+$${prev.cash} · unrest ${prev.unrestNow}→${prev.unrestNow + prev.unrestGain} · heat +${prev.heatSpike} · End Turn</span>
-              </button>`;
-            })()
-          : ''
-      }
-      ${
-        openSites > 0
-          ? `<p class="body-text turn-foot">${openSites} business${openSites === 1 ? '' : 'es'} still open on this block.</p>`
-          : ''
-      }
+      <div class="turn-local-acts">
+        ${unrestBtn}
+        <button type="button" class="act" data-act="tech-open" style="width:100%" ${busy ? 'disabled' : ''}>
+          <span class="act-label">Tech &amp; research</span>
+          <span class="act-sub">Blueprint · uses this crew’s Tech · one order</span>
+        </button>
+      </div>
     </div>`;
   }
 
