@@ -1804,17 +1804,24 @@
 
 /* Phone: full-width board — crew panel is a slide-over, not a permanent side column */
 @media (max-width: 720px) {
+  #sl-table-host {
+    /* Stop browser scroll chaining / pull-to-refresh fighting our pan */
+    overscroll-behavior: none;
+    -webkit-touch-callout: none;
+  }
   #sl-table-viewport {
     /* Room for compact top stats + bottom action scroller + Crew FAB */
-    padding: max(108px, calc(96px + env(safe-area-inset-top, 0px))) 10px
-      max(148px, calc(128px + env(safe-area-inset-bottom, 0px))) 10px;
+    padding: max(100px, calc(88px + env(safe-area-inset-top, 0px))) 8px
+      max(132px, calc(116px + env(safe-area-inset-bottom, 0px))) 8px;
+    /* Touch goes to board, not browser chrome */
+    touch-action: none;
   }
   #sl-table-host.is-flat #sl-table-viewport {
-    padding: max(108px, calc(96px + env(safe-area-inset-top, 0px))) 10px
-      max(148px, calc(128px + env(safe-area-inset-bottom, 0px))) 10px;
+    padding: max(100px, calc(88px + env(safe-area-inset-top, 0px))) 8px
+      max(132px, calc(116px + env(safe-area-inset-bottom, 0px))) 8px;
   }
   #sl-table-plane {
-    --cell: 54px;
+    --cell: 56px;
   }
   .sl-axis-lab {
     font-size: 8px;

@@ -4,6 +4,13 @@ Reverse-chronological ship log. Add new entries at the top.
 
 ---
 
+## 2026-07-13 (late) — Mobile pinch pass + repo sync
+
+- **Pinch/zoom dialed in:** no early pointer-capture on touch (2nd finger works), pinch deadzone, wider coarse-pointer scale range, smoother wheel/trackpad, **double-tap zoom** toward finger, gestureend blocked for iOS
+- **Mobile bar:** hide disabled Unrest/Influence (turn card still has local work); leaner bottom chrome + sticky End turn in scroller
+- **Board safe area:** tighter phone viewport padding, overscroll/pull-to-refresh guards
+- GitHub: pushed outstanding main commits; tooling scripts (`check:live`, `check:trace`, `smoke:import`) + playwright devDep
+
 ## 2026-07-13 — Orders UI cleanup + live polish
 
 - **Tech gated on selection:** desktop bottom bar and empire hub hide Tech until a free human crew is selected; `tech-open` refuses otherwise (research uses that crew’s Tech rating)

@@ -14,6 +14,7 @@ Done (2026-07-13):
 - [x] `git init` + remote `origin` → https://github.com/msinclair25/sector-lords.git
 - [x] Initial commit pushed to `main` (private repo)
 - [x] Assets included in repo (no LFS for now)
+- [x] Catch-up push of local main (orders UI, mobile pinch, docs)
 
 Optional later:
 

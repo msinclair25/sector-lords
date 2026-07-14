@@ -2082,25 +2082,6 @@ export class Game3DScene extends Phaser.Scene {
 
     const unrestPrev =
       mine && gang ? previewUnrestOrder(state, gang.id) : null;
-    acts.push({
-      id: 'unrest',
-      label: 'Unrest',
-      sub: unrestPrev
-        ? unrestPrev.unrestGain > 0
-          ? `+$${unrestPrev.cash} · +${unrestPrev.unrestGain} unrest · heat +${unrestPrev.heatSpike} (End Turn)`
-          : 'Block maxed at 10 unrest'
-        : onOwn
-          ? 'Cash + heat on End Turn'
-          : 'Stand on your turf',
-      disabled:
-        !onOwn ||
-        !unrestPrev ||
-        unrestPrev.unrestGain <= 0 ||
-        !!pending ||
-        this.actionBusy ||
-        this.resolving,
-    });
-
     // Influence: open side panel work-sites, or auto-commit if only one open site
     const ownSector =
       mine && gang ? state.sectors[gang.sectorId] : null;
@@ -2108,25 +2089,58 @@ export class Game3DScene extends Phaser.Scene {
       ownSector?.owner === this.controller.humanId
         ? ownSector.sites.filter((s) => s.influencer !== this.controller.humanId).length
         : 0;
-    acts.push({
-      id: 'influence-hint',
-      label: 'Influence',
-      sub:
-        openSites === 1
-          ? '1 open site · click to order it'
-          : openSites > 1
-            ? `${openSites} open · pick site (costs order)`
-            : onOwn
-              ? 'All sites yours already'
-              : 'Crew must stand on your block',
-      cls: openSites > 0 ? 'primary' : undefined,
-      disabled: openSites === 0 || !mine || !!pending || this.actionBusy || this.resolving,
-    });
+
+    const mobileUi = this.isMobileUi();
+    const unrestReady =
+      !!onOwn &&
+      !!unrestPrev &&
+      unrestPrev.unrestGain > 0 &&
+      !pending &&
+      !this.actionBusy &&
+      !this.resolving;
+    const influenceReady =
+      openSites > 0 &&
+      !!mine &&
+      !pending &&
+      !this.actionBusy &&
+      !this.resolving;
+
+    // Phone: only show actionable local verbs (side turn card has the rest).
+    // Desktop: keep disabled stubs so the bar layout stays stable.
+    if (unrestReady || !mobileUi) {
+      acts.push({
+        id: 'unrest',
+        label: 'Unrest',
+        sub: unrestPrev
+          ? unrestPrev.unrestGain > 0
+            ? `+$${unrestPrev.cash} · +${unrestPrev.unrestGain} unrest · heat +${unrestPrev.heatSpike} (End Turn)`
+            : 'Block maxed at 10 unrest'
+          : onOwn
+            ? 'Cash + heat on End Turn'
+            : 'Stand on your turf',
+        disabled: !unrestReady,
+      });
+    }
+    if (influenceReady || !mobileUi) {
+      acts.push({
+        id: 'influence-hint',
+        label: 'Influence',
+        sub:
+          openSites === 1
+            ? '1 open site · click to order it'
+            : openSites > 1
+              ? `${openSites} open · pick site (costs order)`
+              : onOwn
+                ? 'All sites yours already'
+                : 'Crew must stand on your block',
+        cls: openSites > 0 ? 'primary' : undefined,
+        disabled: !influenceReady,
+      });
+    }
 
     // Meta / empire — phone gets one combined Menu; desktop keeps separate drawers
     // Tech needs a selected human crew (research uses their Tech rating) — never offer it bare
     const techReady = !!(mine && gang && !pending);
-    const mobileUi = this.isMobileUi();
     if (mobileUi) {
       acts.push({
         id: 'empire-open',

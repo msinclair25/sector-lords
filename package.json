@@ -10,10 +10,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "deploy": "npm run build && wrangler pages deploy dist --project-name sector-lords",
-    "deploy:preview": "npm run build && wrangler pages deploy dist --project-name sector-lords --branch preview"
+    "deploy:preview": "npm run build && wrangler pages deploy dist --project-name sector-lords --branch preview",
+    "check:live": "node scripts/check-live.mjs",
+    "check:trace": "node scripts/analyze-trace.mjs",
+    "smoke:import": "node scripts/smoke-import.mjs"
   },
   "devDependencies": {
     "@types/three": "^0.185.1",
+    "playwright": "^1.49.1",
     "typescript": "~6.0.2",
     "vite": "^8.1.1",
     "vitest": "^4.1.10",

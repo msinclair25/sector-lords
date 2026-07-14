@@ -160,10 +160,17 @@ export class BoardTabletop {
   private pinchLastMidY = 0;
   /** True after a pinch this gesture — suppress click on finger-up */
   private didPinch = false;
+  /** Double-tap zoom (touch / pen) */
+  private lastTapTs = 0;
+  private lastTapX = 0;
+  private lastTapY = 0;
   /** Slightly generous so tiny hand jitter still counts as a click */
-  private static readonly CLICK_SLOP = 16;
-  private static readonly SCALE_MIN = 0.4;
-  private static readonly SCALE_MAX = 2.4;
+  private static readonly CLICK_SLOP = 18;
+  private static readonly SCALE_MIN = 0.35;
+  private static readonly SCALE_MAX = 2.75;
+  private static readonly PINCH_DEADZONE = 0.012;
+  private static readonly DOUBLE_TAP_MS = 320;
+  private static readonly DOUBLE_TAP_PX = 40;
 
   constructor(host: HTMLElement) {
     this.styleEl = document.createElement('style');
@@ -213,6 +220,7 @@ export class BoardTabletop {
     this.root.addEventListener('pointermove', this.onPointerMove);
     this.root.addEventListener('pointerup', this.onPointerUp);
     this.root.addEventListener('pointercancel', this.onPointerUp);
+    this.root.addEventListener('lostpointercapture', this.onLostCapture);
     this.root.addEventListener('wheel', this.onWheel, { passive: false });
     // iOS Safari: block browser page-zoom so pinch reaches our handlers
     this.root.addEventListener('gesturestart', this.onGestureBlock, {
@@ -221,7 +229,36 @@ export class BoardTabletop {
     this.root.addEventListener('gesturechange', this.onGestureBlock, {
       passive: false,
     } as AddEventListenerOptions);
+    this.root.addEventListener('gestureend', this.onGestureBlock, {
+      passive: false,
+    } as AddEventListenerOptions);
     this.applyView();
+  }
+
+  /** Coarser pointer → slightly wider zoom range for phone thumbs. */
+  private scaleClamp(next: number): number {
+    const coarse =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(pointer: coarse)').matches;
+    const min = coarse ? 0.3 : BoardTabletop.SCALE_MIN;
+    const max = coarse ? 3.0 : BoardTabletop.SCALE_MAX;
+    return Math.min(max, Math.max(min, next));
+  }
+
+  private capturePointer(id: number): void {
+    try {
+      this.root.setPointerCapture(id);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private releasePointer(id: number): void {
+    try {
+      if (this.root.hasPointerCapture?.(id)) this.root.releasePointerCapture(id);
+    } catch {
+      /* ignore */
+    }
   }
 
   getViewMode(): BoardViewMode {
@@ -334,14 +371,17 @@ export class BoardTabletop {
   private onPointerDown = (ev: PointerEvent): void => {
     if (ev.button !== 0 && ev.pointerType === 'mouse') return;
     this.pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
-    try {
-      this.root.setPointerCapture(ev.pointerId);
-    } catch {
-      /* ignore */
+
+    // Mouse: capture immediately so drag works outside the host.
+    // Touch: do NOT capture until pan/pinch — early capture breaks 2nd finger on some mobile browsers.
+    if (ev.pointerType === 'mouse') {
+      this.capturePointer(ev.pointerId);
     }
 
     // Second finger → pinch zoom (mobile)
     if (this.pointers.size >= 2) {
+      // Release any one-finger capture so both pointers stay free
+      for (const id of this.pointers.keys()) this.releasePointer(id);
       this.beginPinch();
       return;
     }
@@ -366,7 +406,10 @@ export class BoardTabletop {
       this.pendingSelect = tileHit;
     }
     this.panning = !this.pendingSelect && !this.pendingGang;
-    if (this.panning) this.root.classList.add('is-panning');
+    if (this.panning) {
+      this.root.classList.add('is-panning');
+      if (ev.pointerType !== 'mouse') this.capturePointer(ev.pointerId);
+    }
   };
 
   private beginPinch(): void {
@@ -377,10 +420,11 @@ export class BoardTabletop {
     this.panning = false;
     this.pendingSelect = null;
     this.pendingGang = null;
+    this.lastTapTs = 0; // cancel double-tap after multi-touch
     this.root.classList.add('is-panning');
     const a = pts[0]!;
     const b = pts[1]!;
-    this.pinchStartDist = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+    this.pinchStartDist = Math.max(12, Math.hypot(a.x - b.x, a.y - b.y));
     this.pinchStartScale = this.scale;
     this.pinchLastMidX = (a.x + b.x) / 2;
     this.pinchLastMidY = (a.y + b.y) / 2;
@@ -406,10 +450,7 @@ export class BoardTabletop {
    */
   private zoomTowardClient(clientX: number, clientY: number, nextScale: number): void {
     const prev = this.scale;
-    const next = Math.min(
-      BoardTabletop.SCALE_MAX,
-      Math.max(BoardTabletop.SCALE_MIN, nextScale),
-    );
+    const next = this.scaleClamp(nextScale);
     if (prev < 1e-6) {
       this.scale = next;
       return;
@@ -431,7 +472,7 @@ export class BoardTabletop {
     if (pts.length < 2) return;
     const a = pts[0]!;
     const b = pts[1]!;
-    const dist = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+    const dist = Math.max(12, Math.hypot(a.x - b.x, a.y - b.y));
     const midX = (a.x + b.x) / 2;
     const midY = (a.y + b.y) / 2;
 
@@ -441,8 +482,10 @@ export class BoardTabletop {
     this.pinchLastMidX = midX;
     this.pinchLastMidY = midY;
 
-    // Then scale about the current midpoint (fingers stay glued to the map)
-    const ratio = dist / this.pinchStartDist;
+    // Scale about midpoint (fingers stay glued). Deadzone kills micro jitter.
+    const rawRatio = dist / this.pinchStartDist;
+    const ratio =
+      Math.abs(rawRatio - 1) < BoardTabletop.PINCH_DEADZONE ? 1 : rawRatio;
     const next = this.pinchStartScale * ratio;
     this.zoomTowardClient(midX, midY, next);
 
@@ -472,6 +515,8 @@ export class BoardTabletop {
       this.pendingGang = null;
       this.panning = true;
       this.root.classList.add('is-panning');
+      // Touch pan: capture now so finger can leave the board chrome
+      if (ev.pointerType !== 'mouse') this.capturePointer(ev.pointerId);
     }
 
     if (!this.panning) return;
@@ -482,13 +527,16 @@ export class BoardTabletop {
     this.applyView();
   };
 
+  private onLostCapture = (ev: PointerEvent): void => {
+    // If the browser steals capture mid-gesture, drop that pointer cleanly
+    if (this.pointers.has(ev.pointerId) && !this.pinching) {
+      /* keep map entry until up/cancel for multi-touch math */
+    }
+  };
+
   private onPointerUp = (ev: PointerEvent): void => {
     this.pointers.delete(ev.pointerId);
-    try {
-      this.root.releasePointerCapture(ev.pointerId);
-    } catch {
-      /* ignore */
-    }
+    this.releasePointer(ev.pointerId);
 
     // End of pinch: drop to one-finger pan or idle
     if (this.pinching) {
@@ -498,13 +546,17 @@ export class BoardTabletop {
       }
       this.pinching = false;
       if (this.pointers.size === 1) {
-        const p = [...this.pointers.values()][0]!;
+        const remainingId = [...this.pointers.keys()][0]!;
+        const p = this.pointers.get(remainingId)!;
         this.lastX = p.x;
         this.lastY = p.y;
         this.downX = p.x;
         this.downY = p.y;
         this.panning = true;
+        this.pendingSelect = null;
+        this.pendingGang = null;
         this.root.classList.add('is-panning');
+        if (ev.pointerType !== 'mouse') this.capturePointer(remainingId);
       } else {
         this.panning = false;
         this.root.classList.remove('is-panning');
@@ -513,11 +565,14 @@ export class BoardTabletop {
     }
 
     if (this.didPinch) {
-      this.didPinch = false;
-      this.pendingSelect = null;
-      this.pendingGang = null;
-      this.panning = false;
-      this.root.classList.remove('is-panning');
+      // Suppress click for the whole multi-touch gesture (including last finger up)
+      if (this.pointers.size === 0) {
+        this.didPinch = false;
+        this.pendingSelect = null;
+        this.pendingGang = null;
+        this.panning = false;
+        this.root.classList.remove('is-panning');
+      }
       return;
     }
 
@@ -529,7 +584,32 @@ export class BoardTabletop {
     this.root.classList.remove('is-panning');
 
     const dist = Math.hypot(ev.clientX - this.downX, ev.clientY - this.downY);
-    if (dist > BoardTabletop.CLICK_SLOP) return;
+    if (dist > BoardTabletop.CLICK_SLOP) {
+      this.lastTapTs = 0;
+      return;
+    }
+
+    // Double-tap zoom (touch/pen) — same art, map stays under the finger
+    if (ev.pointerType === 'touch' || ev.pointerType === 'pen') {
+      const now =
+        typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const tapDist = Math.hypot(ev.clientX - this.lastTapX, ev.clientY - this.lastTapY);
+      if (
+        now - this.lastTapTs < BoardTabletop.DOUBLE_TAP_MS &&
+        tapDist < BoardTabletop.DOUBLE_TAP_PX
+      ) {
+        this.lastTapTs = 0;
+        // Toggle: zoom in if small, ease out if already close
+        const target =
+          this.scale < 1.25 ? this.scale * 1.55 : this.scale * 0.62;
+        this.zoomTowardClient(ev.clientX, ev.clientY, target);
+        this.applyView();
+        return;
+      }
+      this.lastTapTs = now;
+      this.lastTapX = ev.clientX;
+      this.lastTapY = ev.clientY;
+    }
 
     // Portrait click wins — pick exact crew
     const gangNow = this.pickGangAt(ev.clientX, ev.clientY) ?? gangId;
@@ -546,7 +626,11 @@ export class BoardTabletop {
 
   private onWheel = (ev: WheelEvent): void => {
     ev.preventDefault();
-    const factor = ev.deltaY > 0 ? 0.92 : 1.08;
+    // Pixel-ish deltas (trackpads) get a gentler curve than notch wheels
+    const dy = ev.deltaY;
+    const intensity = Math.min(0.22, Math.abs(dy) / 400);
+    const factor =
+      dy > 0 ? 1 - (0.06 + intensity * 0.35) : 1 + (0.06 + intensity * 0.35);
     this.zoomTowardClient(ev.clientX, ev.clientY, this.scale * factor);
     this.applyView();
   };
@@ -608,7 +692,7 @@ export class BoardTabletop {
         (safe.height / board.height) * margin,
         1.35,
       );
-      this.scale = Math.max(0.48, Math.min(1.55, next));
+      this.scale = this.scaleClamp(Math.max(0.42, Math.min(1.55, next)));
       this.applyView();
       board = this.plane.getBoundingClientRect();
     }
@@ -1449,9 +1533,11 @@ export class BoardTabletop {
     this.root.removeEventListener('pointermove', this.onPointerMove);
     this.root.removeEventListener('pointerup', this.onPointerUp);
     this.root.removeEventListener('pointercancel', this.onPointerUp);
+    this.root.removeEventListener('lostpointercapture', this.onLostCapture);
     this.root.removeEventListener('wheel', this.onWheel);
     this.root.removeEventListener('gesturestart', this.onGestureBlock);
     this.root.removeEventListener('gesturechange', this.onGestureBlock);
+    this.root.removeEventListener('gestureend', this.onGestureBlock);
     this.pointers.clear();
     this.root.remove();
     this.styleEl.remove();
