@@ -1121,12 +1121,12 @@ export class Game3DScene extends Phaser.Scene {
             `Heat 0–${HEAT_BANDS.calmMax} calm · ${HEAT_BANDS.calmMax + 1}–${HEAT_BANDS.watchMax} watch · ${HEAT_BANDS.watchMax + 1}–${HEAT_BANDS.elevatedMax} elevated · ${HEAT_BANDS.crackdownAt}+ crackdown. Raise Unrest spikes Heat. Cool-off after a raid prevents a second hit.`,
           )}"><span class="lbl">Heat</span><span class="val"><span class="heat-ico" aria-hidden="true">${
             state.cityHeat >= HEAT_BANDS.crackdownAt && (state.crackdownCooldown ?? 0) === 0
-              ? `<span class="heat-cop"><i class="hc-r"></i><i class="hc-b"></i></span>`
+              ? `<span class="px-siren hud"></span>`
               : (state.crackdownCooldown ?? 0) > 0
-                ? `<span class="heat-cop cool"><i class="hc-r"></i><i class="hc-b"></i></span>`
-                : `<span class="heat-fire lv-${
+                ? `<span class="px-siren hud cool"></span>`
+                : `<span class="px-fire hud lv-${
                     state.cityHeat >= 55 ? '3' : state.cityHeat >= 35 ? '2' : '1'
-                  }"><i></i><i></i></span>`
+                  }"></span>`
           }</span>${state.cityHeat}<small>${escapeHtml(
             (state.crackdownCooldown ?? 0) > 0
               ? `cool ${state.crackdownCooldown}t`
@@ -1838,12 +1838,12 @@ export class Game3DScene extends Phaser.Scene {
             <span class="legend-v"><b>Tiny dots</b> — sites only if someone influences them. Gold you · red rival · hollow open</span>
           </div>
           <div class="legend-row">
-            <span class="legend-ico"><i class="ico fire" aria-hidden="true"><span></span></i></span>
-            <span class="legend-v"><b>Fire</b> — unrest on block (amber→red as it climbs). Cash + city Heat on End Turn</span>
+            <span class="legend-ico"><i class="ico px-fire-ico" aria-hidden="true"></i></span>
+            <span class="legend-v"><b>Pixel fire</b> — unrest (amber→red). Cheap stepped anim. Cash + Heat on End Turn</span>
           </div>
           <div class="legend-row">
-            <span class="legend-ico"><i class="ico cop-light" aria-hidden="true"><b></b><b></b></i></span>
-            <span class="legend-v"><b>Police light</b> — crackdown residual on that block (red/blue strobe)</span>
+            <span class="legend-ico"><i class="ico px-siren-ico" aria-hidden="true"></i></span>
+            <span class="legend-v"><b>Pixel siren</b> — crackdown residual (red/blue 2-frame strobe)</span>
           </div>
           <div class="legend-row">
             <span class="legend-k">Heat</span>
