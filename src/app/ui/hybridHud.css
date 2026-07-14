@@ -403,6 +403,71 @@
   box-sizing: border-box;
 }
 
+#sl-legend .ico.raid {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+  color: #041018;
+  background: linear-gradient(135deg, #5ad0ff, #2b8cff);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Heat meter in top stats */
+#sl-stats .stat.heat-stat {
+  min-width: 88px;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+#sl-stats .stat.heat-stat .heat-meter {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 4px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: visible;
+}
+
+#sl-stats .stat.heat-stat .heat-meter i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #4d9fff, #fcee0a 55%, #ff3d5a);
+  transition: width 0.25s ease;
+}
+
+#sl-stats .stat.heat-stat .heat-meter .hm-mark {
+  position: absolute;
+  top: -2px;
+  width: 2px;
+  height: 7px;
+  margin-left: -1px;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+  opacity: 0.85;
+}
+
+#sl-stats .stat.heat-stat.heat-critical .val,
+#sl-stats .stat.heat-stat.cooloff .val small {
+  color: #ff8a9a;
+}
+
+#sl-stats .stat.heat-stat.cooloff .val small {
+  color: #5ad0ff;
+}
+
+#sl-stats .stat.heat-stat.heat-elevated .val small {
+  color: #fcee0a;
+}
+
 #sl-brand::after,
 #sl-stats::after,
 #sl-side::after,

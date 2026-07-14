@@ -125,6 +125,11 @@ function migrateState(state: GameState): GameState {
   if (state.lastEventId === undefined) state.lastEventId = null;
   if (!state.history) state.history = [];
   if (!state.humanStyle) state.humanStyle = emptyStyle();
+  if (typeof state.crackdownCooldown !== 'number') state.crackdownCooldown = 0;
+  if (typeof state.cityHeat !== 'number') state.cityHeat = 10;
+  for (const s of Object.values(state.sectors)) {
+    if (typeof s.crackdownTurns !== 'number') s.crackdownTurns = 0;
+  }
   return state;
 }
 
@@ -359,9 +364,11 @@ export class GameController {
         : '';
     const msg = this.state.winnerId
       ? `${this.state.players[this.state.winnerId]?.name} wins!`
-      : cityEvent
-        ? `Turn ${this.state.turn} · City event: ${cityEvent.name}${unrestTail}`
-        : `Turn ${this.state.turn} begins. ${combats.length} battle(s)${unrestTail || ' resolved.'}`;
+      : cityEvent?.id === 'police_crackdown'
+        ? `Turn ${this.state.turn} · POLICE CRACKDOWN — check hit blocks (RAID badge). Cool-off active.${unrestTail}`
+        : cityEvent
+          ? `Turn ${this.state.turn} · City event: ${cityEvent.name}${unrestTail}`
+          : `Turn ${this.state.turn} begins. ${combats.length} battle(s)${unrestTail || ' resolved.'}`;
     return {
       combats: combats.length,
       message: msg,

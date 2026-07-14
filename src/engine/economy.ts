@@ -1,11 +1,74 @@
 import { gangDefById, siteDefById } from '../content';
 import { countSectorsOwned } from './map';
-import type { GameState, PlayerId, TurnForecast } from './types';
+import type {
+  CrackdownResult,
+  GameState,
+  HeatBand,
+  PlayerId,
+  SectorId,
+  TurnForecast,
+} from './types';
 import { previewAttackWithIntel } from './intel';
 
 /** Balance: territory pays; pure unrest is weaker and heat-heavier late. */
 const BASE_SECTOR_INCOME = 18;
 const UNREST_CASH_PER_POINT = 5;
+
+/** Heat breakpoints (0–100) for UI + crackdown trigger */
+export const HEAT_BANDS = {
+  calmMax: 24,
+  watchMax: 49,
+  elevatedMax: 69,
+  /** Crackdown fires at this heat when cool-off is over */
+  crackdownAt: 70,
+  criticalMax: 100,
+} as const;
+
+export const CRACKDOWN_COOLDOWN_TURNS = 3;
+export const CRACKDOWN_TILE_TURNS = 3;
+export const CRACKDOWN_HIT_SECTORS = 4;
+export const CRACKDOWN_HP_DAMAGE = 40;
+export const CRACKDOWN_UNREST_DROP = 3;
+export const CRACKDOWN_HEAT_AFTER = 22;
+
+export function heatBand(heat: number): HeatBand {
+  if (heat >= HEAT_BANDS.crackdownAt) return 'critical';
+  if (heat > HEAT_BANDS.elevatedMax) return 'critical';
+  if (heat > HEAT_BANDS.watchMax) return 'elevated';
+  if (heat > HEAT_BANDS.calmMax) return 'watch';
+  return 'calm';
+}
+
+export function heatBandLabel(band: HeatBand): string {
+  switch (band) {
+    case 'calm':
+      return 'Calm';
+    case 'watch':
+      return 'Watch';
+    case 'elevated':
+      return 'Elevated';
+    case 'critical':
+      return 'Critical';
+    case 'crackdown':
+      return 'Crackdown';
+  }
+}
+
+/** Short UI line for the current heat state */
+export function describeHeatState(state: GameState): string {
+  const h = state.cityHeat;
+  const cd = state.crackdownCooldown ?? 0;
+  if (cd > 0) {
+    return `Cool-off ${cd}t · Heat ${h}`;
+  }
+  const band = heatBand(h);
+  if (band === 'critical' || h >= HEAT_BANDS.crackdownAt) {
+    return `CRACKDOWN RISK · ${h}/${HEAT_BANDS.crackdownAt}`;
+  }
+  if (band === 'elevated') return `Elevated · ${h} → crack at ${HEAT_BANDS.crackdownAt}`;
+  if (band === 'watch') return `Watch · ${h}`;
+  return `Calm · ${h}`;
+}
 
 export interface IncomeBreakdown {
   total: number;
@@ -94,7 +157,10 @@ export function computeUpkeep(state: GameState, playerId: PlayerId): number {
   return upkeep;
 }
 
-export function applyEconomy(state: GameState): string[] {
+export function applyEconomy(state: GameState): {
+  messages: string[];
+  crackdown: CrackdownResult | null;
+} {
   const messages: string[] = [];
   for (const pid of state.playerOrder) {
     const p = state.players[pid];
@@ -162,27 +228,66 @@ export function applyEconomy(state: GameState): string[] {
     }
   }
 
-  // City heat: drift toward unrest pressure (do NOT hard-reset — action spikes would vanish)
+  if (typeof state.crackdownCooldown !== 'number') state.crackdownCooldown = 0;
+
+  // Tile residual fades each economy tick
+  for (const sector of Object.values(state.sectors)) {
+    if ((sector.crackdownTurns ?? 0) > 0) {
+      sector.crackdownTurns = Math.max(0, (sector.crackdownTurns ?? 0) - 1);
+    }
+  }
+
+  // Unrest pressure can climb heat (spikes from Raise Unrest already applied earlier in the turn)
   const totalUnrest = Object.values(state.sectors).reduce((s, sec) => s + sec.unrest, 0);
-  const pressure = Math.floor(totalUnrest * 1.35);
+  const pressure = Math.floor(totalUnrest * 1.5);
+  const coolOff = state.crackdownCooldown > 0;
   if (pressure > state.cityHeat) {
-    // Climb toward pressure so map-wide unrest bites
-    const climb = Math.max(1, Math.ceil((pressure - state.cityHeat) * 0.4));
+    const climbRaw = Math.max(1, Math.ceil((pressure - state.cityHeat) * 0.45));
+    const climb = coolOff ? Math.max(1, Math.floor(climbRaw * 0.4)) : climbRaw;
     state.cityHeat = Math.min(100, state.cityHeat + climb);
-  } else if (state.cityHeat > pressure + 2) {
-    // Cool slowly when the streets calm
-    state.cityHeat = Math.max(pressure, state.cityHeat - 2);
   }
   state.cityHeat = Math.min(100, Math.max(0, state.cityHeat));
 
-  // Slightly earlier police pressure so unrest snowballing is riskier
-  if (state.cityHeat >= 75) {
-    messages.push(...policeCrackdown(state));
-  } else if (state.cityHeat >= 55) {
-    messages.push(`Police scanners light up the skyline. Heat ${state.cityHeat} — high.`);
-  } else if (state.cityHeat >= 35) {
-    messages.push(`Heat ${state.cityHeat}: patrols thicken. Keep pushing unrest and they'll come hard.`);
+  // Fire crackdown while heat is still at the peak for this tick
+  let crackdown: CrackdownResult | null = null;
+  if (
+    state.crackdownCooldown === 0 &&
+    state.cityHeat >= HEAT_BANDS.crackdownAt
+  ) {
+    crackdown = policeCrackdown(state);
+    messages.push(...crackdown.messages);
+  } else if (state.crackdownCooldown > 0) {
+    state.crackdownCooldown = Math.max(0, state.crackdownCooldown - 1);
+    if (state.crackdownCooldown === 0) {
+      messages.push('Police cool-off ends — the city can crack down again if Heat climbs.');
+    } else {
+      messages.push(
+        `Police cool-off: ${state.crackdownCooldown} turn${state.crackdownCooldown === 1 ? '' : 's'} left (no crackdown).`,
+      );
+    }
+    // Cool-off: heat bleeds faster
+    if (state.cityHeat > pressure + 1) {
+      state.cityHeat = Math.max(pressure, state.cityHeat - 4);
+    }
+  } else {
+    // Natural cool only when not cracking this turn
+    if (state.cityHeat > pressure + 1) {
+      state.cityHeat = Math.max(pressure, state.cityHeat - 2);
+    }
+    const band = heatBand(state.cityHeat);
+    if (band === 'critical' || state.cityHeat >= HEAT_BANDS.elevatedMax) {
+      messages.push(
+        `Heat ${state.cityHeat}: CRITICAL — crackdown at ${HEAT_BANDS.crackdownAt}. Stop raising unrest or pay the price.`,
+      );
+    } else if (band === 'elevated') {
+      messages.push(
+        `Heat ${state.cityHeat}: elevated. Patrols thicken — crackdown at ${HEAT_BANDS.crackdownAt}.`,
+      );
+    } else if (band === 'watch') {
+      messages.push(`Heat ${state.cityHeat}: watch list. Unrest is feeding the scanners.`);
+    }
   }
+  state.cityHeat = Math.min(100, Math.max(0, state.cityHeat));
 
   // Empty sector decay: unoccupied owned sectors may go neutral
   for (const sector of Object.values(state.sectors)) {
@@ -199,30 +304,83 @@ export function applyEconomy(state: GameState): string[] {
     }
   }
 
-  return messages;
+  return { messages, crackdown };
 }
 
-function policeCrackdown(state: GameState): string[] {
-  const messages: string[] = ['WUS POLICE CRACKDOWN! Neon cages drop across the hottest blocks.'];
-  // Hit highest unrest sectors
-  const ranked = Object.values(state.sectors).sort((a, b) => b.unrest - a.unrest).slice(0, 4);
+function policeCrackdown(state: GameState): CrackdownResult {
+  const heatBefore = state.cityHeat;
+  const messages: string[] = [
+    `WUS POLICE CRACKDOWN! Heat ${heatBefore} — neon cages drop on the hottest blocks.`,
+  ];
+  const ranked = Object.values(state.sectors)
+    .filter((s) => s.unrest > 0 || s.gangIds.length > 0)
+    .sort((a, b) => b.unrest - a.unrest || b.gangIds.length - a.gangIds.length)
+    .slice(0, CRACKDOWN_HIT_SECTORS);
+
+  const hitIds: SectorId[] = [];
+  const fines: Record<string, number> = {};
+
   for (const sector of ranked) {
-    sector.unrest = Math.max(0, sector.unrest - 3);
+    hitIds.push(sector.id);
+    sector.crackdownTurns = CRACKDOWN_TILE_TURNS;
+    sector.unrest = Math.max(0, sector.unrest - CRACKDOWN_UNREST_DROP);
+
     for (const gid of [...sector.gangIds]) {
       const g = state.gangs[gid];
       if (!g) continue;
-      g.hp = Math.max(0, g.hp - 35);
+      g.hp = Math.max(0, g.hp - CRACKDOWN_HP_DAMAGE);
+      // Cash fine to the owner for each crew hit
+      const owner = state.players[g.ownerId];
+      if (owner && !owner.eliminated) {
+        const fine = 18;
+        const paid = Math.min(owner.cash, fine);
+        owner.cash -= paid;
+        fines[g.ownerId] = (fines[g.ownerId] ?? 0) + paid;
+      }
       if (g.hp <= 0) {
         sector.gangIds = sector.gangIds.filter((x) => x !== gid);
         delete state.gangs[gid];
-        messages.push(`Police wipe out a gang in ${sector.id}.`);
+        messages.push(
+          `Cops wipe out a crew on ${sector.id} (${state.players[g.ownerId]?.name ?? g.ownerId}).`,
+        );
       } else {
-        messages.push(`Police maul a gang in ${sector.id} (HP ${g.hp}).`);
+        messages.push(
+          `Cops maul a crew on ${sector.id} → HP ${g.hp} (${state.players[g.ownerId]?.name ?? g.ownerId}).`,
+        );
       }
     }
+    if (sector.gangIds.length === 0 && sector.unrest === 0) {
+      messages.push(`Block ${sector.id} locked down (crackdown residual ${CRACKDOWN_TILE_TURNS} turns).`);
+    } else {
+      messages.push(
+        `Block ${sector.id}: unrest down, crackdown mark ${CRACKDOWN_TILE_TURNS} turns.`,
+      );
+    }
   }
-  state.cityHeat = Math.max(40, state.cityHeat - 25);
-  return messages;
+
+  for (const [pid, amt] of Object.entries(fines)) {
+    if (amt > 0) {
+      messages.push(`${state.players[pid]?.name ?? pid} pays $${amt} in “processing fees”.`);
+    }
+  }
+
+  state.cityHeat = CRACKDOWN_HEAT_AFTER;
+  state.crackdownCooldown = CRACKDOWN_COOLDOWN_TURNS;
+  messages.push(
+    `Heat collapses to ${state.cityHeat}. Cool-off ${CRACKDOWN_COOLDOWN_TURNS} turns — no second crackdown until then.`,
+  );
+
+  if (hitIds.length === 0) {
+    messages.push('No hot blocks found — citywide scare only. Heat still resets.');
+  }
+
+  return {
+    sectorIds: hitIds,
+    heatBefore,
+    heatAfter: state.cityHeat,
+    cooldownTurns: state.crackdownCooldown,
+    messages,
+  };
 }
 
 export function forecastTurn(state: GameState): TurnForecast {
@@ -260,10 +418,17 @@ export function forecastTurn(state: GameState): TurnForecast {
   }
   heat = Math.min(100, heat);
 
+  const cd = state.crackdownCooldown ?? 0;
   let policeRisk: TurnForecast['policeRisk'] = 'low';
-  if (heat >= 80) policeRisk = 'critical';
-  else if (heat >= 60) policeRisk = 'high';
-  else if (heat >= 40) policeRisk = 'medium';
+  if (cd > 0) {
+    policeRisk = heat >= 50 ? 'medium' : 'low';
+  } else if (heat >= HEAT_BANDS.crackdownAt) {
+    policeRisk = 'critical';
+  } else if (heat >= 55) {
+    policeRisk = 'high';
+  } else if (heat >= 35) {
+    policeRisk = 'medium';
+  }
 
   return {
     projectedCash,

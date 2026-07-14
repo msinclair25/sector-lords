@@ -11,12 +11,15 @@ import {
   siteDefById,
   summarizeEmpireRackets,
 } from '../../content';
-import { eventArtUrl } from '../../content/eventArt';
+import { flashArtUrl } from '../../content/eventArt';
 import {
   areAdjacent,
   computeIncomeBreakdown,
   describeVictoryGoal,
   formatOdds,
+  HEAT_BANDS,
+  heatBand,
+  heatBandLabel,
   pathsToVictory,
   previewAttackWithIntel,
   previewUnrestOrder,
@@ -1110,7 +1113,15 @@ export class Game3DScene extends Phaser.Scene {
           }</span></div>
           <div class="stat" title="Territory $${incomeBr.territory} · Sites $${incomeBr.sites} · Unrest $${incomeBr.unrest} · Landmarks $${incomeBr.landmarks}"><span class="lbl">Cash</span><span class="val">$${me.cash}<small>→$${nextCash}</small></span></div>
           <div class="stat" title="Empire loyalty score. Gained from owned blocks, influenced sites, and landmarks. Empty owned blocks bleed support. Counts toward Combined victory."><span class="lbl">Support</span><span class="val">${me.support}</span></div>
-          <div class="stat" title="City police attention. Raise Unrest spikes Heat; high Heat risks crackdowns. Some events also move Heat."><span class="lbl">Heat</span><span class="val">${state.cityHeat}<small>${escapeHtml(fc.policeRisk)}</small></span></div>
+          <div class="stat heat-stat heat-${heatBand(state.cityHeat)}${(state.crackdownCooldown ?? 0) > 0 ? ' cooloff' : ''}" title="${escapeHtml(
+            `Heat 0–${HEAT_BANDS.calmMax} calm · ${HEAT_BANDS.calmMax + 1}–${HEAT_BANDS.watchMax} watch · ${HEAT_BANDS.watchMax + 1}–${HEAT_BANDS.elevatedMax} elevated · ${HEAT_BANDS.crackdownAt}+ crackdown. Raise Unrest spikes Heat. Cool-off after a raid prevents a second hit.`,
+          )}"><span class="lbl">Heat</span><span class="val">${state.cityHeat}<small>${escapeHtml(
+            (state.crackdownCooldown ?? 0) > 0
+              ? `cool ${state.crackdownCooldown}t`
+              : `${heatBandLabel(heatBand(state.cityHeat))} · crack@${HEAT_BANDS.crackdownAt}`,
+          )}</small></span>
+            <div class="heat-meter" aria-hidden="true"><i style="width:${Math.min(100, state.cityHeat)}%"></i><b class="hm-mark" style="left:${HEAT_BANDS.crackdownAt}%"></b></div>
+          </div>
           <div class="stat goal-stat" title="${escapeHtml(paths.label)}"><span class="lbl">Goal</span><span class="val">${myScore?.value ?? 0}<small>${escapeHtml(paths.label)}</small></span></div>
         </div>
       </div>
@@ -1814,7 +1825,15 @@ export class Game3DScene extends Phaser.Scene {
           </div>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico unrest">3</i></span>
-            <span class="legend-v"><b>Red #</b> — unrest only when &gt; 0 (cash + heat on End Turn)</span>
+            <span class="legend-v"><b>Red #</b> — unrest only when &gt; 0 (cash + Heat on End Turn)</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-ico"><i class="ico raid">⚔</i></span>
+            <span class="legend-v"><b>Blue RAID badge</b> — cops hit this block (fades over a few turns)</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-k">Heat</span>
+            <span class="legend-v">0–24 calm · 25–49 watch · 50–69 elevated · <b>70+</b> crackdown. Then cool-off (no re-raid).</span>
           </div>
           <div class="legend-row">
             <span class="legend-ico"><i class="ico stack">NEXT</i></span>
@@ -3956,11 +3975,14 @@ export class Game3DScene extends Phaser.Scene {
   private showEventCard(flash: CityEventFlash): Promise<void> {
     return new Promise((resolve) => {
       const def = EVENT_DEFS.find((e) => e.id === flash.id);
-      const art = def
-        ? eventArtUrl(def)
-        : '/assets/events/tone_neutral.jpg';
+      const art = flashArtUrl(
+        flash.artUrl || !def
+          ? flash
+          : { id: def.id, tone: def.tone, artUrl: flash.artUrl },
+      );
       const toneKey = flash.tone ?? 'neutral';
       const tone = toneKey.toUpperCase();
+      const isCrackdown = flash.id === 'police_crackdown';
       const effects = flash.messages
         .map((m) => `<li>${escapeHtml(m)}</li>`)
         .join('');
@@ -3977,9 +3999,9 @@ export class Game3DScene extends Phaser.Scene {
       const overlay = document.createElement('div');
       overlay.id = 'sl-event-overlay';
       overlay.innerHTML = `
-        <div class="sle-card tone-${escapeHtml(toneKey)}" role="dialog" aria-modal="true" aria-label="City event">
+        <div class="sle-card tone-${escapeHtml(toneKey)}${isCrackdown ? ' is-crackdown' : ''}" role="dialog" aria-modal="true" aria-label="${isCrackdown ? 'Police crackdown' : 'City event'}">
           <div class="sle-head">
-            <span class="tag">CITY EVENT</span>
+            <span class="tag">${isCrackdown ? 'POLICE RAID' : 'CITY EVENT'}</span>
             <span class="tone">${escapeHtml(tone)}</span>
           </div>
           <div class="sle-art" style="background-image:url('${art}')">

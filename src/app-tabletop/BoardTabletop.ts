@@ -658,7 +658,7 @@ export class BoardTabletop {
     const sectors = Object.values(state.sectors)
       .map(
         (s) =>
-          `${s.id}:${s.owner ?? '-'}:${s.unrest}:${s.gangIds.join(',')}:${s.sites.map((x) => `${x.defId}:${x.influencer ?? ''}`).join(',')}:${s.landmark?.id ?? ''}`,
+          `${s.id}:${s.owner ?? '-'}:${s.unrest}:${s.crackdownTurns ?? 0}:${s.gangIds.join(',')}:${s.sites.map((x) => `${x.defId}:${x.influencer ?? ''}`).join(',')}:${s.landmark?.id ?? ''}`,
       )
       .join('|');
     const gangs = Object.values(state.gangs)
@@ -776,10 +776,11 @@ export class BoardTabletop {
       const intel = document.createElement('div');
       intel.className = 'sl-tile-intel';
       intel.setAttribute('aria-hidden', 'true');
-      // Owner = tile outline (CSS is-mine / is-foe); sites = pips; unrest = # when > 0
+      // Owner = outline; sites = pips; unrest #; raid residual
       intel.innerHTML = `
         <div class="sl-site-pips" title="Site influence"></div>
         <span class="sl-unrest-mark" hidden title=""><span class="um-n"></span></span>
+        <span class="sl-raid-mark" hidden title="">RAID</span>
       `;
 
       const portraits = document.createElement('div');
@@ -987,6 +988,24 @@ export class BoardTabletop {
     el.classList.toggle('is-neutral', !sector.owner);
     el.classList.toggle('has-unrest', sector.unrest > 0);
     el.classList.toggle('has-high-unrest', sector.unrest >= 5);
+    const raidT = sector.crackdownTurns ?? 0;
+    el.classList.toggle('has-crackdown', raidT > 0);
+    el.classList.toggle('has-crackdown-hot', raidT >= 2);
+
+    let raidMark = el.querySelector('.sl-raid-mark') as HTMLElement | null;
+    if (raidT > 0) {
+      if (!raidMark) {
+        raidMark = document.createElement('span');
+        raidMark.className = 'sl-raid-mark';
+        el.querySelector('.sl-tile-intel')?.appendChild(raidMark);
+      }
+      raidMark.hidden = false;
+      raidMark.textContent = 'RAID';
+      raidMark.title = `Police crackdown residual — ${raidT} turn${raidT === 1 ? '' : 's'} left`;
+    } else if (raidMark) {
+      raidMark.hidden = true;
+      raidMark.textContent = '';
+    }
 
     const pips = el.querySelector('.sl-site-pips') as HTMLElement | null;
     if (pips) {

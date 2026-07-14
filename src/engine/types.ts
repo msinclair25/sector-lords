@@ -153,6 +153,8 @@ export interface SectorState {
   gangIds: GangInstanceId[];
   /** Rare city landmark (null if none) */
   landmark: LandmarkState | null;
+  /** Turns remaining of police crackdown residual (tile badge) */
+  crackdownTurns?: number;
 }
 
 export interface GangInstance {
@@ -267,6 +269,11 @@ export interface GameState {
   log: TurnLogEntry[];
   /** Citywide police heat 0–100 */
   cityHeat: number;
+  /**
+   * Turns remaining after a crackdown where another crackdown cannot fire
+   * (cool-off). 0 = can crack down again when heat is high enough.
+   */
+  crackdownCooldown: number;
   seed: number;
   difficulty: Difficulty;
   /** playerId → sectorId → reveal expires on this turn (inclusive) */
@@ -336,6 +343,20 @@ export interface CityEventFlash {
   name: string;
   description: string;
   tone?: string;
+  messages: string[];
+  /** Optional art override (e.g. police crackdown) */
+  artUrl?: string;
+}
+
+/** Heat band for UI / forecast copy */
+export type HeatBand = 'calm' | 'watch' | 'elevated' | 'critical' | 'crackdown';
+
+/** Structured crackdown report (engine → UI card) */
+export interface CrackdownResult {
+  sectorIds: SectorId[];
+  heatBefore: number;
+  heatAfter: number;
+  cooldownTurns: number;
   messages: string[];
 }
 

@@ -105,6 +105,7 @@ export function createNewGame(options?: {
       },
     ],
     cityHeat: 10,
+    crackdownCooldown: 0,
     seed,
     difficulty,
     scoutReveal: {},

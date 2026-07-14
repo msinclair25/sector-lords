@@ -9,6 +9,7 @@ const BY_ID: Record<string, string> = {
   free_pizza_friday: '/assets/events/free_pizza_friday.jpg',
   haunted_atm: '/assets/events/haunted_atm.jpg',
   ufo_over_docks: '/assets/events/ufo_over_docks.jpg',
+  police_crackdown: '/assets/events/police_crackdown.jpg',
 };
 
 const BY_TONE: Record<string, string> = {
@@ -17,6 +18,20 @@ const BY_TONE: Record<string, string> = {
   weird: '/assets/events/tone_weird.jpg',
   neutral: '/assets/events/tone_neutral.jpg',
 };
+
+/** Art for any flash-style card (city events + crackdown). */
+export function flashArtUrl(flash: {
+  id: string;
+  tone?: string;
+  artUrl?: string;
+}): string {
+  if (flash.artUrl) return flash.artUrl;
+  return (
+    BY_ID[flash.id] ??
+    BY_TONE[flash.tone ?? 'neutral'] ??
+    BY_TONE.neutral!
+  );
+}
 
 export function eventArtUrl(def: EventDef): string {
   return (

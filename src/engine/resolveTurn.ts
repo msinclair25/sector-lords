@@ -261,30 +261,49 @@ export function resolveTurn(input: GameState): ResolveTurnResult {
     }
   }
 
-  // 6) Economy + police
-  const econMsgs = applyEconomy(state);
+  // 6) Economy + police (may fire a full crackdown)
+  const { messages: econMsgs, crackdown } = applyEconomy(state);
   for (const m of econMsgs) {
     state.log.push({
       turn: state.turn,
-      kind: m.includes('POLICE') || m.includes('Police') ? 'police' : 'economy',
+      kind:
+        m.includes('POLICE') ||
+        m.includes('Police') ||
+        m.includes('Cops') ||
+        m.includes('crackdown') ||
+        m.includes('Crackdown') ||
+        m.includes('cool-off')
+          ? 'police'
+          : 'economy',
       message: m,
     });
   }
 
-  // 6b) City events
+  // 6b) City events — crackdown card wins the spotlight when it fires
   const cityEventResult = maybeFireCityEvent(state);
   for (const m of cityEventResult.messages) {
     state.log.push({ turn: state.turn, kind: 'event', message: m });
   }
-  const cityEvent = cityEventResult.def
+  const cityEvent = crackdown
     ? {
-        id: cityEventResult.def.id,
-        name: cityEventResult.def.name,
-        description: cityEventResult.def.description,
-        tone: cityEventResult.def.tone,
-        messages: cityEventResult.messages.filter((m) => !m.startsWith('CITY EVENT')),
+        id: 'police_crackdown',
+        name: 'Police Crackdown',
+        description: `Heat hit ${crackdown.heatBefore}. WUS cages drop on the hottest blocks — crews take damage, unrest is crushed, and the city cools for ${crackdown.cooldownTurns} turns before another raid can fire.`,
+        tone: 'grim',
+        artUrl: '/assets/events/police_crackdown.jpg',
+        messages: crackdown.messages.filter(
+          (m) => !m.startsWith('WUS POLICE'),
+        ),
       }
-    : null;
+    : cityEventResult.def
+      ? {
+          id: cityEventResult.def.id,
+          name: cityEventResult.def.name,
+          description: cityEventResult.def.description,
+          tone: cityEventResult.def.tone,
+          messages: cityEventResult.messages.filter((m) => !m.startsWith('CITY EVENT')),
+        }
+      : null;
 
   // 6c) Jobs tick / expire
   for (const m of tickJobs(state)) {
