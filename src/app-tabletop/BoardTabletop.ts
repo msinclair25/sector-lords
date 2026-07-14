@@ -753,7 +753,6 @@ export class BoardTabletop {
       el.style.setProperty('--district', d.url);
       el.style.setProperty('--crop-x', d.cropX);
       el.style.setProperty('--crop-y', d.cropY);
-      el.style.setProperty('--unrest-op', String(Math.min(1, sector.unrest / 8)));
       // Iso depth: lower-right of board paints/hits above upper-left neighbors
       el.style.zIndex = String(sector.x + sector.y);
 
@@ -771,13 +770,12 @@ export class BoardTabletop {
       holo.className = 'sl-holo';
       holo.innerHTML = `<span class="sl-holo-tr"></span><span class="sl-holo-bl"></span>`;
 
-      // Intel layer sits ABOVE portraits so pips/flags stay readable
+      // Intel layer sits ABOVE portraits so pips stay readable
       const intel = document.createElement('div');
       intel.className = 'sl-tile-intel';
       intel.setAttribute('aria-hidden', 'true');
-      // Minimal map language: owner disc · 3 site dots · unrest # 
+      // Owner = tile outline (CSS is-mine / is-foe); sites = pips; unrest = # when > 0
       intel.innerHTML = `
-        <span class="sl-owner-mark" hidden title=""></span>
         <div class="sl-site-pips" title="Site influence"></div>
         <span class="sl-unrest-mark" hidden title=""><span class="um-n"></span></span>
       `;
@@ -916,7 +914,7 @@ export class BoardTabletop {
   }
 
   /**
-   * Ownership bar/tag, site-influence pips, unrest badge — readable at a glance.
+   * Ownership via tile outline classes; site pips; unrest badge only when > 0.
    */
   private applyTileIntel(
     el: HTMLElement,
@@ -932,25 +930,6 @@ export class BoardTabletop {
     el.classList.toggle('has-unrest', sector.unrest > 0);
     el.classList.toggle('has-high-unrest', sector.unrest >= 5);
 
-    const ownerMark = el.querySelector('.sl-owner-mark') as HTMLElement | null;
-    if (ownerMark) {
-      if (mine) {
-        ownerMark.hidden = false;
-        ownerMark.className = 'sl-owner-mark mine';
-        ownerMark.title = 'You own this block';
-        ownerMark.textContent = '';
-      } else if (foe) {
-        ownerMark.hidden = false;
-        ownerMark.className = 'sl-owner-mark foe';
-        ownerMark.title = `${state.players[sector.owner!]?.name ?? 'Rival'} owns this block`;
-        ownerMark.textContent = '';
-      } else {
-        ownerMark.hidden = true;
-        ownerMark.className = 'sl-owner-mark';
-        ownerMark.title = '';
-      }
-    }
-
     const pips = el.querySelector('.sl-site-pips') as HTMLElement | null;
     if (pips) {
       const bits = sector.sites.map((site) => {
@@ -960,22 +939,31 @@ export class BoardTabletop {
       const youN = bits.filter((b) => b === 'you').length;
       const foeN = bits.filter((b) => b === 'foe').length;
       const openN = bits.filter((b) => b === 'open').length;
-      pips.title = `Sites: ${youN} yours · ${foeN} rival · ${openN} open`;
-      const sig = bits.join(',');
-      if (pips.dataset.sig !== sig) {
-        pips.dataset.sig = sig;
-        pips.replaceChildren();
-        for (const kind of bits) {
-          const i = document.createElement('i');
-          i.className = `pip ${kind}`;
-          i.title =
-            kind === 'you'
-              ? 'You influence this site'
-              : kind === 'foe'
-                ? 'Rival influences this site'
-                : 'Open site';
-          pips.appendChild(i);
+      // Hide chrome when nothing is influenced — empty triple-dots on every tile is noise
+      const anyClaimed = youN + foeN > 0;
+      pips.hidden = !anyClaimed;
+      if (anyClaimed) {
+        pips.title = `Sites: ${youN} yours · ${foeN} rival · ${openN} open`;
+        const sig = bits.join(',');
+        if (pips.dataset.sig !== sig) {
+          pips.dataset.sig = sig;
+          pips.replaceChildren();
+          for (const kind of bits) {
+            const i = document.createElement('i');
+            i.className = `pip ${kind}`;
+            i.title =
+              kind === 'you'
+                ? 'You influence this site'
+                : kind === 'foe'
+                  ? 'Rival influences this site'
+                  : 'Open site';
+            pips.appendChild(i);
+          }
         }
+      } else {
+        pips.title = '';
+        pips.dataset.sig = '';
+        pips.replaceChildren();
       }
     }
 
@@ -1029,7 +1017,6 @@ export class BoardTabletop {
       if (!el) continue;
 
       el.style.setProperty('--owner', this.ownerColor(state, sector.owner));
-      el.style.setProperty('--unrest-op', String(Math.min(1, sector.unrest / 8)));
       el.classList.toggle('is-selected', sector.id === this.selected);
       el.classList.toggle('is-dest', this.highlights.has(sector.id));
       this.applyTileIntel(el, state, sector);

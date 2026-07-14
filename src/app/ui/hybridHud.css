@@ -176,30 +176,30 @@
   font-weight: 700;
 }
 
-/* Match tile icons 1:1 */
-#sl-legend .ico.disc {
+/* Match tile ownership glow / rings */
+#sl-legend .ico.ring {
   display: inline-block;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(0, 0, 0, 0.5);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: rgba(18, 14, 32, 0.85);
+  box-sizing: border-box;
 }
 
-#sl-legend .ico.disc.mine {
-  background: #fcee0a;
-  box-shadow: 0 0 6px rgba(252, 238, 10, 0.5);
+#sl-legend .ico.ring.mine {
+  border: 2px solid #fcee0a;
+  box-shadow:
+    0 0 6px rgba(252, 238, 10, 0.75),
+    0 0 12px rgba(252, 238, 10, 0.4);
 }
 
-#sl-legend .ico.disc.foe {
-  background: #ff3d5a;
-  box-shadow: 0 0 6px rgba(255, 61, 90, 0.45);
+#sl-legend .ico.ring.foe {
+  border: 1.5px solid rgba(255, 61, 90, 0.85);
+  box-shadow: 0 0 5px rgba(255, 61, 90, 0.25);
 }
 
-#sl-legend .ico.disc.empty {
-  background: transparent;
-  border-color: rgba(160, 175, 195, 0.55);
-  border-style: dashed;
+#sl-legend .ico.ring.empty {
+  border: 1.5px dashed rgba(160, 175, 195, 0.45);
 }
 
 #sl-legend .ico.pip {
