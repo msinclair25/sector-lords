@@ -40,7 +40,7 @@
 
 - **Build:** `npm run build` → `dist/`
 - **Host:** Cloudflare Pages project `sector-lords`
-- **Production:** https://sector-lords.pages.dev
+- **Production:** https://sectorlords.com (Cloudflare Pages · also sector-lords.pages.dev)
 - **Headers:** `public/_headers` (HTML revalidate; hashed assets immutable)
 
 ## Notable technical decisions

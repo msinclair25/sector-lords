@@ -6,7 +6,7 @@ Instructions for coding agents (Grok Build, Cursor, Claude Code, etc.) working i
 
 - **Name:** Sector Lords  
 - **What:** Browser cyberpunk crime-war strategy game (hybrid war-table board + HTML HUD)  
-- **Live:** https://sector-lords.pages.dev  
+- **Live:** https://sectorlords.com (also https://sector-lords.pages.dev)  
 - **Host:** Cloudflare Pages project `sector-lords`  
 - **Designer:** Morgan Sinclair (`@morganinc` on X)  
 - **Purpose:** Playable game **and** evaluation of Grok Build under human direction  

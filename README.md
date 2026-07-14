@@ -2,7 +2,8 @@
 
 A browser-based cyberpunk crime-war strategy game **inspired by** classic 1990s overlord strategy (*Chaos Overlords* vibes — original build, not an official remake).
 
-**Play:** https://sector-lords.pages.dev  
+**Play:** https://sectorlords.com  
+**Also:** https://sector-lords.pages.dev  
 **Author:** Morgan Sinclair ([@morganinc](https://x.com/morganinc))
 
 Also used as a **Grok Build (Grok 4.5) evaluation**: ship a multi-system game under human direction. Notes live in the Obsidian vault under [`docs/`](docs/00%20Home.md).

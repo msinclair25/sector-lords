@@ -34,6 +34,6 @@ Product and design calls worth remembering.
 | Decision | Choice | Why |
 |----------|--------|-----|
 | Credits | Morgan + Grok/xAI + Gemini music | Accurate attribution |
-| Domain | pages.dev for now | Fine for share; custom domain later if needed |
+| Domain | sectorlords.com on Cloudflare Pages | Custom domain live; pages.dev remains as fallback |
 | Docs | Obsidian vault **in this folder** | Progress + evaluation notes |
 | Source | **GitHub next** | Share, backup, portfolio |

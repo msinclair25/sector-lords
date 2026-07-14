@@ -1,6 +1,6 @@
 # Sector Lords — Vault Home
 
-**Live:** https://sector-lords.pages.dev  
+**Live:** https://sectorlords.com (also https://sector-lords.pages.dev)  
 **Designer:** Morgan Sinclair ([@morganinc](https://x.com/morganinc))  
 **Stack:** Vite · TypeScript · Phaser 4 · pure `src/engine` · Cloudflare Pages  
 
