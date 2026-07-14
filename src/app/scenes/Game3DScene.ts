@@ -1914,10 +1914,7 @@ export class Game3DScene extends Phaser.Scene {
             <span class="act-label">Tech</span>
             <span class="act-sub">Research · fabricate · equip</span>
           </button>`
-              : `<button type="button" class="act empire-hub-btn" disabled>
-            <span class="act-label">Tech</span>
-            <span class="act-sub">Select a crew first</span>
-          </button>`
+              : ''
           }
           <div class="empire-hub-sep">// SYSTEM</div>
           <button type="button" class="act empire-hub-btn ghost" data-act="board-view">
@@ -2257,12 +2254,14 @@ export class Game3DScene extends Phaser.Scene {
     });
 
     // Meta / empire — phone gets one combined Menu; desktop keeps separate drawers
+    // Tech needs a selected human crew (research uses their Tech rating) — never offer it bare
+    const techReady = !!(mine && gang && !pending);
     const mobileUi = this.isMobileUi();
     if (mobileUi) {
       acts.push({
         id: 'empire-open',
         label: 'Menu',
-        sub: 'Hire · Jobs · Tech',
+        sub: techReady ? 'Hire · Jobs · Tech' : 'Hire · Jobs',
         cls: 'ghost',
         disabled: this.resolving,
       });
@@ -2280,8 +2279,7 @@ export class Game3DScene extends Phaser.Scene {
         cls: 'ghost',
         disabled: this.resolving,
       });
-      // Research uses the selected crew's Tech rating — hide until a crew is picked
-      if (mine && gang && !pending) {
+      if (techReady) {
         acts.push({
           id: 'tech-open',
           label: 'Tech',
