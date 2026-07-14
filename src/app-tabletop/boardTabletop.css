@@ -1965,10 +1965,12 @@
     width: 6px;
     height: 6px;
   }
-  .sl-tile-intel .sl-unrest-mark {
-    min-width: 14px;
-    height: 14px;
+  .sl-tile-intel .sl-unrest-mark .um-n {
     font-size: 9px;
+  }
+  .sl-tile-intel .sl-raid-mark .pl-body {
+    width: 20px;
+    height: 13px;
   }
   .sl-tile-portraits .sl-portrait-more {
     min-width: 26px;
