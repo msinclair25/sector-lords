@@ -597,16 +597,20 @@ export class Game3DScene extends Phaser.Scene {
     const g = this.controller.state.gangs[gid];
     if (!g || g.ownerId !== this.controller.humanId || g.hp <= 0) return;
     const sameGang = this.selectedGang === gid;
+    const sameTile = this.selected === g.sectorId;
     this.selectedGang = gid;
     this.selected = g.sectorId;
-    // Keep "Here" filter when picking among a stack so the list stays useful
-    const stackN = Object.values(this.controller.state.gangs).filter(
-      (x) =>
-        x.sectorId === g.sectorId &&
-        x.ownerId === this.controller.humanId &&
-        x.hp > 0,
-    ).length;
-    if (stackN > 1) this.crewFilter = 'here';
+    // Only switch roster filter when first landing on a multi-crew tile —
+    // never re-shuffle "Here" every time you pick a name in the stack list
+    if (!sameTile) {
+      const stackN = Object.values(this.controller.state.gangs).filter(
+        (x) =>
+          x.sectorId === g.sectorId &&
+          x.ownerId === this.controller.humanId &&
+          x.hp > 0,
+      ).length;
+      if (stackN > 1) this.crewFilter = 'here';
+    }
     this.statusMsg = this.describeSelection();
     this.refreshBoard();
     // Never pan on select — camera only moves via pan/zoom or Find on map
@@ -620,17 +624,16 @@ export class Game3DScene extends Phaser.Scene {
     const state = this.controller.state;
     const human = this.controller.humanId;
     if (!this.selected) return '';
+    // Stable order (name) so selecting ACTIVE does not jump rows around
     const here = Object.values(state.gangs)
       .filter(
         (g) => g.sectorId === this.selected && g.ownerId === human && g.hp > 0,
       )
       .sort((a, b) => {
-        const ao = state.orders.some((o) => o.gangId === a.id) ? 1 : 0;
-        const bo = state.orders.some((o) => o.gangId === b.id) ? 1 : 0;
-        if (ao !== bo) return ao - bo;
-        if (a.id === this.selectedGang) return -1;
-        if (b.id === this.selectedGang) return 1;
-        return gangDefById(a.defId).name.localeCompare(gangDefById(b.defId).name);
+        const na = gangDefById(a.defId).name;
+        const nb = gangDefById(b.defId).name;
+        const c = na.localeCompare(nb);
+        return c !== 0 ? c : a.id.localeCompare(b.id);
       });
     if (here.length < 2) return '';
 
@@ -1178,22 +1181,12 @@ export class Game3DScene extends Phaser.Scene {
     }
     this.applyTutorialUiHints();
     this.applyTutorialBoardHints();
-    // Restore panel scroll first — cycling crews must not yank the HUD
+    // Restore panel scroll — picking a crew must not jump the side list
     const sideAfter = this.root.querySelector('#sl-side') as HTMLElement | null;
-    if (sideAfter && sideScroll > 0) {
+    if (sideAfter) {
       sideAfter.scrollTop = sideScroll;
     }
-    // Only nudge roster if selected row is fully off-screen (not on every NEXT)
-    const row = this.root.querySelector(
-      '#sl-gang-pick .gang-pick.selected',
-    ) as HTMLElement | null;
-    if (row && sideAfter) {
-      const lr = sideAfter.getBoundingClientRect();
-      const rr = row.getBoundingClientRect();
-      if (rr.bottom < lr.top + 8 || rr.top > lr.bottom - 8) {
-        row.scrollIntoView({ block: 'nearest' });
-      }
-    }
+    // Do not scrollIntoView on selection — that re-jumps the roster every click
   }
 
   private renderSidePanel(): string {
@@ -1235,14 +1228,13 @@ export class Game3DScene extends Phaser.Scene {
     } else if (this.crewFilter === 'here' && this.selected) {
       listed = listed.filter((g) => g.sectorId === this.selected);
     }
-    // Selected first, then free, then by sector id
+    // Stable order: sector, then name — never hoist selection (that reorders the list on every click)
     listed.sort((a, b) => {
-      if (a.id === this.selectedGang) return -1;
-      if (b.id === this.selectedGang) return 1;
-      const ao = state.orders.some((o) => o.gangId === a.id) ? 1 : 0;
-      const bo = state.orders.some((o) => o.gangId === b.id) ? 1 : 0;
-      if (ao !== bo) return ao - bo;
-      return a.sectorId.localeCompare(b.sectorId);
+      const sec = a.sectorId.localeCompare(b.sectorId);
+      if (sec !== 0) return sec;
+      const na = gangDefById(a.defId).name.localeCompare(gangDefById(b.defId).name);
+      if (na !== 0) return na;
+      return a.id.localeCompare(b.id);
     });
 
     const filters = `
