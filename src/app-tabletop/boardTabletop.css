@@ -724,8 +724,8 @@
   cursor: pointer;
   transform: none;
   transition: filter 0.15s ease;
-  /* Clip crew chrome so stacks never paint into neighbor cells (iso z-fight) */
-  overflow: hidden;
+  /* Visible so portraits / NEXT aren't cropped at the chip edge */
+  overflow: visible;
   /* Improve hit reliability under CSS 3D transforms */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -1372,7 +1372,7 @@
 .sl-tile-portraits {
   position: absolute;
   left: 50%;
-  bottom: 3px;
+  bottom: 5px;
   transform: translateX(-50%);
   display: flex;
   align-items: flex-end;
@@ -1380,17 +1380,17 @@
   gap: 3px;
   z-index: 8;
   pointer-events: auto;
-  width: calc(100% - 6px);
-  max-width: calc(100% - 6px);
+  width: calc(100% - 8px);
+  max-width: calc(100% - 8px);
   box-sizing: border-box;
-  /* Second line of defense vs tile overflow (iso neighbors) */
-  overflow: hidden;
+  /* Don't crop faces — tile overflow is visible; foe stack is self-contained */
+  overflow: visible;
 }
 
 .sl-tile-portraits img {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
   object-fit: cover;
   border: 1.5px solid rgba(43, 240, 255, 0.8);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
@@ -1519,11 +1519,11 @@
   align-items: center;
   justify-content: center;
   gap: 1px;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 3px 6px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 2px 5px;
   margin: 0;
-  border-radius: 8px;
+  border-radius: 7px;
   border: 1.5px solid rgba(252, 238, 10, 0.65);
   background: linear-gradient(160deg, rgba(40, 28, 8, 0.95), rgba(8, 6, 18, 0.96));
   color: #fcee0a;
@@ -1908,13 +1908,13 @@
     bottom: 2px;
   }
   .sl-tile-portraits img.mine {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-width: 2px;
   }
   .sl-tile-portraits .sl-stack-next {
-    min-width: 36px;
-    min-height: 36px;
+    min-width: 30px;
+    min-height: 30px;
   }
   .sl-tile-portraits .sl-stack-next .sn-lab {
     font-size: 9px;
