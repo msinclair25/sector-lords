@@ -172,7 +172,11 @@ export class MenuScene extends Phaser.Scene {
             <span class="sl-credit-lbl music">MUSIC BY</span>
             <span class="sl-credit-name gemini">Gemini</span>
           </div>
-          <a
+          ${
+            // Itch builds set VITE_ITCH=1 — tips stay on the store page, not a second CTA
+            import.meta.env.VITE_ITCH === '1' || import.meta.env.VITE_ITCH === 'true'
+              ? ''
+              : `<a
             class="sl-coffee"
             href="https://buymeacoffee.com/morganinc"
             target="_blank"
@@ -182,7 +186,8 @@ export class MenuScene extends Phaser.Scene {
             <span class="sl-coffee-lbl">// SUPPORT</span>
             <span class="sl-coffee-msg">If you enjoy this, buy me a coffee</span>
             <span class="sl-coffee-cta">☕ buymeacoffee.com/morganinc</span>
-          </a>
+          </a>`
+          }
         </footer>
         <p class="sl-menu-foot">Autosave · green glow moves · scroll zoom</p>
       </div>
