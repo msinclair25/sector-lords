@@ -48,3 +48,7 @@ coverage/
 # Optional local image/tool session dumps
 .grok/
 *.tmp
+
+# itch.io HTML upload (local artifact)
+sector-lords-itch.zip
+
