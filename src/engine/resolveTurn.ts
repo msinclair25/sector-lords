@@ -290,7 +290,7 @@ export function resolveTurn(input: GameState): ResolveTurnResult {
         name: 'Police Crackdown',
         description: `Heat hit ${crackdown.heatBefore}. WUS cages drop on the hottest blocks — crews take damage, unrest is crushed, and the city cools for ${crackdown.cooldownTurns} turns before another raid can fire.`,
         tone: 'grim',
-        artUrl: '/assets/events/police_crackdown.jpg',
+        artUrl: 'assets/events/police_crackdown.jpg',
         messages: crackdown.messages.filter(
           (m) => !m.startsWith('WUS POLICE'),
         ),
