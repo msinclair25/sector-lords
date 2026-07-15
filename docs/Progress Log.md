@@ -4,6 +4,13 @@ Reverse-chronological ship log. Add new entries at the top.
 
 ---
 
+## 2026-07-15 — First-session hire / selection
+
+- **Default board view = flat** (war table still toggleable; clearer for hire/stack pick)
+- **Move/claim no longer jumps tile selection** to the destination — stays on origin so home stays easy to re-click for Hire
+- **Easier crew-tile hits** (larger pick radius + prefer mine tiles)
+- **Hire always snaps** off-turf picks to nearest owned (desktop + mobile); open Hire pre-aims an owned block
+
 ## 2026-07-14 — Feedback park + repo polish
 
 - **[[Player Feedback]]** vault note: first r/playmygame comment stored; themes tallied; act when repeats land

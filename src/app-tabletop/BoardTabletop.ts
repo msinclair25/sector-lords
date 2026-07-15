@@ -80,7 +80,8 @@ export function loadBoardViewMode(): BoardViewMode {
   } catch {
     /* ignore */
   }
-  return 'table';
+  // Flat is clearer for first sessions (hire / stack pick); tilt stays optional
+  return 'flat';
 }
 
 export function saveBoardViewMode(mode: BoardViewMode): void {
@@ -142,7 +143,7 @@ export class BoardTabletop {
   private humanId = 'player';
   private tutorialIds = new Set<SectorId>();
   private tutorialMode: 'home' | 'dest' | 'pulse' | null = null;
-  private viewMode: BoardViewMode = 'table';
+  private viewMode: BoardViewMode = 'flat';
   /** Cached tile screen centers for hit-testing (invalidated on pan/zoom/rebuild) */
   private rectCache: Map<
     SectorId,
@@ -338,14 +339,18 @@ export class BoardTabletop {
 
     for (const [id, hit] of cache) {
       const dist = Math.hypot(clientX - hit.cx, clientY - hit.cy);
-      if (dist > hit.r) continue;
+      // Crew tiles get a bigger finger target so home stacks stay easy to re-select
+      const reach = hit.mine ? hit.r * 1.28 : hit.r;
+      if (dist > reach) continue;
       let score = dist;
       if (hit.dest) score -= 55;
       const el = this.tiles.get(id);
       if (el?.classList.contains('is-selected') || el?.classList.contains('is-tut-home')) {
         score -= 12;
       }
-      if (hit.mine) score -= 18;
+      // Prefer blocks with your crews (hire / re-select after a move)
+      if (hit.mine) score -= 36;
+      if (el?.classList.contains('is-mine')) score -= 10;
       if (!best || score < best.score) best = { id, score };
     }
 
@@ -727,13 +732,17 @@ export class BoardTabletop {
     for (const [id, el] of this.tiles) {
       const box = el.getBoundingClientRect();
       if (box.width < 4 || box.height < 4) continue;
+      const hasMine = !!el.querySelector('img.mine');
       cache.set(id, {
         cx: box.left + box.width / 2,
         cy: box.top + box.height / 2,
-        r: Math.max(48, Math.max(box.width, box.height) * 0.55),
+        r: Math.max(
+          hasMine ? 56 : 48,
+          Math.max(box.width, box.height) * (hasMine ? 0.62 : 0.55),
+        ),
         dest:
           el.classList.contains('is-dest') || el.classList.contains('is-tut-dest'),
-        mine: !!el.querySelector('img.mine'),
+        mine: hasMine,
       });
     }
     this.rectCache = cache;
