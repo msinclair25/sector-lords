@@ -48,6 +48,7 @@ import hudCss from '../ui/hybridHud.css?inline';
 import battleCss from '../ui/battleClash.css?inline';
 import eventCss from '../ui/eventCard.css?inline';
 import endingCss from '../ui/endingCard.css?inline';
+import { assetUrl, rewriteCssAssetUrls } from '../assetUrl';
 
 const COACH_KEY = 'sector-lords-hybrid-coach';
 const SIDE_COLLAPSE_KEY = 'sector-lords-side-collapse';
@@ -224,7 +225,7 @@ export class Game3DScene extends Phaser.Scene {
     }
 
     this.styleEl = document.createElement('style');
-    this.styleEl.textContent = hudCss;
+    this.styleEl.textContent = rewriteCssAssetUrls(hudCss);
     document.head.appendChild(this.styleEl);
 
     this.host = document.createElement('div');
@@ -674,7 +675,7 @@ export class Game3DScene extends Phaser.Scene {
     const rows = here
       .map((g) => {
         const d = gangDefById(g.defId);
-        const img = `/${(d.art.portrait ?? 'assets/portraits/neon_jackals.jpg').replace(/^\//, '')}`;
+        const img = assetUrl(d.art.portrait ?? 'assets/portraits/neon_jackals.jpg');
         const ord = state.orders.find((o) => o.gangId === g.id);
         const sel = g.id === this.selectedGang ? ' selected' : '';
         const status = ord
@@ -1282,7 +1283,7 @@ export class Game3DScene extends Phaser.Scene {
         ? `<div id="sl-gang-pick">${listed
             .map((g) => {
               const d = gangDefById(g.defId);
-              const img = `/${(d.art.portrait ?? 'assets/portraits/neon_jackals.jpg').replace(/^\//, '')}`;
+              const img = assetUrl(d.art.portrait ?? 'assets/portraits/neon_jackals.jpg');
               const sel = g.id === this.selectedGang ? ' selected' : '';
               const ord = state.orders.find((o) => o.gangId === g.id);
               const gearN = g.equipped?.length ?? 0;
@@ -1574,7 +1575,7 @@ export class Game3DScene extends Phaser.Scene {
       </div>`;
     }
 
-    const art = `/${(def.art.portrait ?? 'assets/portraits/neon_jackals.jpg').replace(/^\//, '')}`;
+    const art = assetUrl(def.art.portrait ?? 'assets/portraits/neon_jackals.jpg');
     const equipped = (gang.equipped ?? [])
       .map((id) => {
         const it = itemDefById(id);
@@ -1852,9 +1853,9 @@ export class Game3DScene extends Phaser.Scene {
       const cards = state.hirePool
         .map((h, i) => {
           const d = gangDefById(h.defId);
-          const art = d.art.portrait
-            ? `/${d.art.portrait.replace(/^\//, '')}`
-            : '/assets/portraits/neon_jackals.jpg';
+          const art = assetUrl(
+            d.art.portrait ?? 'assets/portraits/neon_jackals.jpg',
+          );
           const canAfford = cash >= d.hireCost;
           return `<button class="act hire-card" data-act="hire-${i}" ${canAfford ? '' : 'disabled'} title="${escapeHtml(d.description)}">
             <img src="${art}" alt="${escapeHtml(d.name)}" loading="lazy" />
@@ -3230,10 +3231,12 @@ export class Game3DScene extends Phaser.Scene {
         ? result.defenderNames
         : ['Defenders']
       ).join(', ');
-      const atkPort =
-        result.attackerPortrait ?? '/assets/portraits/neon_jackals.jpg';
-      const defPort =
-        result.defenderPortrait ?? '/assets/portraits/scrap_angels.jpg';
+      const atkPort = assetUrl(
+        result.attackerPortrait ?? 'assets/portraits/neon_jackals.jpg',
+      );
+      const defPort = assetUrl(
+        result.defenderPortrait ?? 'assets/portraits/scrap_angels.jpg',
+      );
       const winPct = Math.round(result.attackerWinChance * 100);
       const rollD100 = Math.max(
         1,
@@ -3346,7 +3349,7 @@ export class Game3DScene extends Phaser.Scene {
         st.id = 'sl-battle-style';
         document.head.appendChild(st);
       }
-      st.textContent = battleCss;
+      st.textContent = rewriteCssAssetUrls(battleCss);
 
       const overlay = document.createElement('div');
       overlay.id = 'sl-battle-overlay';
@@ -3717,7 +3720,7 @@ export class Game3DScene extends Phaser.Scene {
         st.id = 'sl-battle-style';
         document.head.appendChild(st);
       }
-      st.textContent = battleCss;
+      st.textContent = rewriteCssAssetUrls(battleCss);
 
       const rows = results
         .map((r, i) => {
@@ -3871,7 +3874,7 @@ export class Game3DScene extends Phaser.Scene {
         st.id = 'sl-ending-style';
         document.head.appendChild(st);
       }
-      st.textContent = endingCss;
+      st.textContent = rewriteCssAssetUrls(endingCss);
 
       const overlay = document.createElement('div');
       overlay.id = 'sl-ending-overlay';
@@ -3883,7 +3886,7 @@ export class Game3DScene extends Phaser.Scene {
             <span class="tag">${won ? 'CITY YOURS' : 'CITY LOST'}</span>
             <span class="tone">${escapeHtml(card.tone.toUpperCase())}</span>
           </div>
-          <div class="slf-art" style="background-image:url('${card.art}')">
+          <div class="slf-art" style="background-image:url('${assetUrl(card.art)}')">
             <div class="slf-art-fade"></div>
             <span class="slf-art-badge">${escapeHtml(card.badge)}</span>
           </div>
@@ -3979,7 +3982,7 @@ export class Game3DScene extends Phaser.Scene {
         st.id = 'sl-event-style';
         document.head.appendChild(st);
       }
-      st.textContent = eventCss;
+      st.textContent = rewriteCssAssetUrls(eventCss);
 
       const overlay = document.createElement('div');
       overlay.id = 'sl-event-overlay';

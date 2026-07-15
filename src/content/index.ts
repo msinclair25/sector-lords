@@ -12,6 +12,8 @@ import type {
   ScenarioDef,
   SiteDef,
 } from '../engine/types';
+import { assetUrl } from './assetUrl';
+export { assetUrl, rewriteCssAssetUrls } from './assetUrl';
 
 export const GANG_DEFS: GangDef[] = gangsJson as GangDef[];
 export const SITE_DEFS: SiteDef[] = sitesJson as SiteDef[];
@@ -102,16 +104,16 @@ export function itemDefById(id: string): ItemDef {
   return def;
 }
 
-/** Absolute URL path for item gear icon (equipped / stash). */
+/** Public URL for item gear icon (equipped / stash). Respects Vite base (itch subpath). */
 export function itemIconUrl(def: ItemDef): string {
   const raw = def.art.icon ?? `assets/gear/${def.id}.jpg`;
-  return raw.startsWith('/') ? raw : `/${raw}`;
+  return assetUrl(raw);
 }
 
-/** Absolute URL path for research blueprint art. */
+/** Public URL for research blueprint art. Respects Vite base (itch subpath). */
 export function itemBlueprintUrl(def: ItemDef): string {
   const raw = def.art.blueprint ?? def.art.icon ?? `assets/blueprints/${def.id}.jpg`;
-  return raw.startsWith('/') ? raw : `/${raw}`;
+  return assetUrl(raw);
 }
 
 export function eventDefById(id: string): EventDef {

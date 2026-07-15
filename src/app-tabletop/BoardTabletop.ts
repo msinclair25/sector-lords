@@ -1,6 +1,7 @@
 import { gangDefById } from '../content';
 import { parseSectorId, type CombatResult, type GameState, type SectorId } from '../engine';
 import boardCss from './boardTabletop.css?inline';
+import { assetUrl, rewriteCssAssetUrls } from '../content/assetUrl';
 
 const CELL = 78;
 const BOARD_VIEW_KEY = 'sector-lords-board-view';
@@ -174,7 +175,7 @@ export class BoardTabletop {
 
   constructor(host: HTMLElement) {
     this.styleEl = document.createElement('style');
-    this.styleEl.textContent = boardCss;
+    this.styleEl.textContent = rewriteCssAssetUrls(boardCss);
     document.head.appendChild(this.styleEl);
 
     this.viewMode = loadBoardViewMode();
@@ -283,9 +284,9 @@ export class BoardTabletop {
 
   async loadArt(): Promise<void> {
     const urls = [
-      '/assets/ui/mood_bg.jpg',
-      '/assets/ui/board_plate.jpg',
-      ...DISTRICTS.map((d) => `/assets/districts/${d}.jpg`),
+      assetUrl('assets/ui/mood_bg.jpg'),
+      assetUrl('assets/ui/board_plate.jpg'),
+      ...DISTRICTS.map((d) => assetUrl(`assets/districts/${d}.jpg`)),
     ];
     await Promise.all(
       urls.map(
@@ -801,7 +802,7 @@ export class BoardTabletop {
     const cropY = `${16 + ((n * 11) % 58)}%`;
     return {
       key: zone,
-      url: `url("/assets/districts/${zone}.jpg")`,
+      url: `url("${assetUrl(`assets/districts/${zone}.jpg`)}")`,
       cropX,
       cropY,
     };
@@ -1002,7 +1003,7 @@ export class BoardTabletop {
       const def = gangDefById(g.defId);
       const img = document.createElement('img');
       const src = def.art.portrait ?? 'assets/portraits/neon_jackals.jpg';
-      img.src = src.startsWith('/') ? src : `/${src}`;
+      img.src = assetUrl(src);
       img.alt = def.name;
       const busy = state.orders.some((o) => o.gangId === faceId);
       img.title = isStack
@@ -1070,7 +1071,7 @@ export class BoardTabletop {
 
       const img = document.createElement('img');
       const src = def.art.portrait ?? 'assets/portraits/scrap_angels.jpg';
-      img.src = src.startsWith('/') ? src : `/${src}`;
+      img.src = assetUrl(src);
       img.alt = def.name;
       img.loading = 'lazy';
       img.decoding = 'async';

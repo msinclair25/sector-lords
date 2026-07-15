@@ -279,7 +279,8 @@ export function resolveCombat(
     const g = state.gangs[gid];
     if (!g) return undefined;
     const p = gangDefById(g.defId).art.portrait;
-    return p ? (p.startsWith('/') ? p : `/${p}`) : undefined;
+    // Leave path unprefixed — UI applies assetUrl() for Vite base / itch subpaths
+    return p ? p.replace(/^\//, '') : undefined;
   };
   const nameOf = (gid: string): string => {
     const g = state.gangs[gid];

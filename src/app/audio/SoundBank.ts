@@ -4,6 +4,8 @@
  * (HTMLAudioElement.play() often fails after async unlock).
  */
 
+import { assetUrl } from '../assetUrl';
+
 export type Sfx =
   | 'ui'
   | 'hire'
@@ -23,8 +25,8 @@ const MUSIC_KEY = 'sector-lords-music';
 
 /** War-table playlist — plays in order, then loops the list */
 const THEME_TRACKS: ReadonlyArray<{ url: string; title: string }> = [
-  { url: '/assets/audio/The_Iron_Litany.mp3', title: 'The Iron Litany' },
-  { url: '/assets/audio/Iron_Vesper.mp3', title: 'Iron Vesper' },
+  { url: assetUrl('assets/audio/The_Iron_Litany.mp3'), title: 'The Iron Litany' },
+  { url: assetUrl('assets/audio/Iron_Vesper.mp3'), title: 'Iron Vesper' },
 ];
 /** Music bus gain (0–1 before master) */
 const MUSIC_GAIN = 0.55;

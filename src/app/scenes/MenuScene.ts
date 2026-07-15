@@ -10,6 +10,7 @@ import {
 } from '../../app-tabletop/BoardTabletop';
 import { SFX } from '../audio/SoundBank';
 import menuCss from '../ui/menuLanding.css?inline';
+import { assetUrl, rewriteCssAssetUrls } from '../assetUrl';
 // Static import — dynamic import('./Game3DScene') created a circular chunk
 // (Game3D → index → Game3D) that fails on mobile Safari with
 // "Failed to import module Game3DScene".
@@ -34,7 +35,7 @@ export class MenuScene extends Phaser.Scene {
     this.game.canvas.style.display = 'none';
 
     this.styleEl = document.createElement('style');
-    this.styleEl.textContent = menuCss;
+    this.styleEl.textContent = rewriteCssAssetUrls(menuCss);
     document.head.appendChild(this.styleEl);
 
     const parent = document.getElementById('app') ?? document.body;
@@ -83,7 +84,7 @@ export class MenuScene extends Phaser.Scene {
         <header class="sl-menu-hero">
           <h1 class="sl-title-art">
             <img
-              src="/assets/ui/title_logo.png"
+              src="${assetUrl('assets/ui/title_logo.png')}"
               alt="Sector Lords"
               width="960"
               height="540"
