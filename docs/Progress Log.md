@@ -4,6 +4,14 @@ Reverse-chronological ship log. Add new entries at the top.
 
 ---
 
+## 2026-07-15 — iOS Safari/Chrome stability
+
+- **Music on iOS:** HTMLAudioElement stream (no `decodeAudioData` of 4MB MP3s → RAM crash)
+- **Boot:** stop loading all portraits into Phaser (hybrid uses DOM assets)
+- **Board:** skip bulk district preload on iOS/coarse mobile
+- **Viewport:** `100dvh` / `-webkit-fill-available`, visualViewport resize; lighter Phaser CANVAS + noAudio
+- **UI:** tighter mobile chrome, hide brand on short height, mobile detection includes iPhone UA
+
 ## 2026-07-15 — First-session hire / selection
 
 - **Default board view = flat** (war table still toggleable; clearer for hire/stack pick)
