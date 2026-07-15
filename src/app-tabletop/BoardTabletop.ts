@@ -284,11 +284,24 @@ export class BoardTabletop {
   }
 
   async loadArt(): Promise<void> {
-    const urls = [
-      assetUrl('assets/ui/mood_bg.jpg'),
-      assetUrl('assets/ui/board_plate.jpg'),
-      ...DISTRICTS.map((d) => assetUrl(`assets/districts/${d}.jpg`)),
-    ];
+    // iOS: skip bulk district preload (lazy via CSS). Prefetching all JPGs at once
+    // spikes RAM and contributes to Safari/Chrome tab kills.
+    const lowMem =
+      typeof navigator !== 'undefined' &&
+      (/iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints ?? 0) > 1) ||
+        (typeof window !== 'undefined' &&
+          window.matchMedia('(pointer: coarse)').matches &&
+          window.innerWidth < 900));
+
+    const urls = lowMem
+      ? [assetUrl('assets/ui/board_plate.jpg')]
+      : [
+          assetUrl('assets/ui/mood_bg.jpg'),
+          assetUrl('assets/ui/board_plate.jpg'),
+          ...DISTRICTS.map((d) => assetUrl(`assets/districts/${d}.jpg`)),
+        ];
+
     await Promise.all(
       urls.map(
         (src) =>
@@ -297,7 +310,7 @@ export class BoardTabletop {
             img.onload = () => resolve();
             img.onerror = () => resolve();
             img.src = src;
-            window.setTimeout(() => resolve(), 1200);
+            window.setTimeout(() => resolve(), lowMem ? 800 : 1200);
           }),
       ),
     );

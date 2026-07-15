@@ -751,13 +751,21 @@
 }
 
 /* Phone: keep credits readable and always reachable by scroll */
-@media (max-width: 720px) {
+@media (max-width: 720px), ((max-height: 520px) and (pointer: coarse)) {
+  #sl-menu-root {
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
   #sl-menu-root .sl-menu-layout {
     justify-content: flex-start;
-    padding: max(16px, env(safe-area-inset-top, 0px)) 12px
-      max(28px, env(safe-area-inset-bottom, 0px));
-    gap: 12px;
+    padding: max(12px, env(safe-area-inset-top, 0px)) 10px
+      max(20px, env(safe-area-inset-bottom, 0px));
+    gap: 10px;
     -webkit-overflow-scrolling: touch;
+    max-height: 100dvh;
+    max-height: -webkit-fill-available;
+    overflow-y: auto;
   }
 
   #sl-menu-root button.sl-btn {

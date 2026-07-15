@@ -1666,9 +1666,12 @@ export class Game3DScene extends Phaser.Scene {
   }
 
   private isMobileUi(): boolean {
+    if (typeof window === 'undefined') return false;
+    // Width OR short iOS chrome height OR coarse pointer phone
     return (
-      typeof window !== 'undefined' &&
-      window.matchMedia('(max-width: 720px)').matches
+      window.matchMedia('(max-width: 720px)').matches ||
+      window.matchMedia('(max-height: 500px) and (pointer: coarse)').matches ||
+      (/iPad|iPhone|iPod/i.test(navigator.userAgent) && window.innerWidth < 900)
     );
   }
 

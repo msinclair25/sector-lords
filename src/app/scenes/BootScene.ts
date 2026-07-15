@@ -1,21 +1,20 @@
 import Phaser from 'phaser';
-import { GANG_DEFS } from '../../content';
 
+/**
+ * Minimal boot — hybrid Game3D uses DOM assets, not Phaser textures.
+ * Loading every portrait into Phaser crashed iOS Safari (GPU/RAM).
+ * Classic GameScene can load its own assets if re-enabled.
+ */
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
   }
 
   preload(): void {
-    this.load.image('sector_tile', 'assets/tiles/sector_base.jpg');
-    this.load.image('mood_bg', 'assets/ui/mood_bg.jpg');
-    this.load.image('clash', 'assets/combat/clash_impact.jpg');
+    // Intentionally empty: no bulk texture load.
+  }
 
-    for (const g of GANG_DEFS) {
-      const path = g.art.portrait ?? 'assets/portraits/neon_jackals.jpg';
-      this.load.image(`portrait_${g.id}`, path);
-    }
-
+  create(): void {
     const { width, height } = this.scale;
     const g = this.add.graphics();
     g.fillStyle(0x05030c, 1);
@@ -30,9 +29,10 @@ export class BootScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setShadow(0, 0, '#ff2bd6', 12);
-  }
 
-  create(): void {
-    this.scene.start('Menu');
+    // Next frame → Menu so the loading text paints once
+    this.time.delayedCall(40, () => {
+      this.scene.start('Menu');
+    });
   }
 }

@@ -1,7 +1,8 @@
 /**
- * Synth SFX + looped theme music via Web Audio API.
- * Theme is decoded into an AudioBuffer so it works after AudioContext unlock
- * (HTMLAudioElement.play() often fails after async unlock).
+ * Synth SFX + theme music.
+ * Desktop: Web Audio decode for playlist cross-control.
+ * iOS / low-memory: HTMLAudioElement for music (decodeAudioData of ~4MB MP3s
+ * expands to huge PCM and crashes Safari / iOS Chrome).
  */
 
 import { assetUrl } from '../assetUrl';
@@ -31,6 +32,31 @@ const THEME_TRACKS: ReadonlyArray<{ url: string; title: string }> = [
 /** Music bus gain (0–1 before master) */
 const MUSIC_GAIN = 0.55;
 
+function isIOSLike(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  if (/iPad|iPhone|iPod/i.test(ua)) return true;
+  // iPadOS desktop UA
+  if (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints ?? 0) > 1) {
+    return true;
+  }
+  return false;
+}
+
+/** Prefer streaming music on iOS / coarse mobile to avoid decode crashes */
+function preferHtmlMusic(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  if (isIOSLike()) return true;
+  try {
+    if (window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 900) {
+      return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
 class SoundBankImpl {
   private ctx: AudioContext | null = null;
   private sfxOn = true;
@@ -41,13 +67,51 @@ class SoundBankImpl {
   private musicTimer: number | null = null;
   private themeBuffers: (AudioBuffer | null)[] = THEME_TRACKS.map(() => null);
   private themeSource: AudioBufferSourceNode | null = null;
-  private themeMode: 'file' | 'synth' | null = null;
+  private themeMode: 'file' | 'synth' | 'html' | null = null;
   private trackIndex = 0;
   private unlocked = false;
   private unlockPromise: Promise<void> | null = null;
+  private trackLoads: Map<number, Promise<AudioBuffer | null>> = new Map();
+  /** Streaming music path (iOS) */
+  private htmlAudio: HTMLAudioElement | null = null;
+  private useHtmlMusic = preferHtmlMusic();
+  private gestureBound = false;
 
   constructor() {
     this.loadPreference();
+    this.bindGestureUnlock();
+  }
+
+  /** First touch/click anywhere unlocks WebAudio — required on iOS */
+  private bindGestureUnlock(): void {
+    if (typeof window === 'undefined' || this.gestureBound) return;
+    this.gestureBound = true;
+    const kick = () => {
+      void this.unlock();
+    };
+    window.addEventListener('touchstart', kick, { passive: true, capture: true });
+    window.addEventListener('pointerdown', kick, { passive: true, capture: true });
+    window.addEventListener('keydown', kick, { passive: true, capture: true });
+    document.addEventListener(
+      'visibilitychange',
+      () => {
+        if (document.visibilityState === 'visible' && this.ctx?.state === 'suspended') {
+          void this.ctx.resume();
+        }
+        if (document.visibilityState === 'hidden' && this.htmlAudio && !this.htmlAudio.paused) {
+          // Don't stop permanently — just pause to reduce background kills
+          try {
+            this.htmlAudio.pause();
+          } catch {
+            /* ignore */
+          }
+        }
+        if (document.visibilityState === 'visible' && this.musicOn && this.htmlAudio) {
+          void this.htmlAudio.play().catch(() => undefined);
+        }
+      },
+      false,
+    );
   }
 
   setEnabled(on: boolean): void {
@@ -82,9 +146,6 @@ class SoundBankImpl {
     return this.musicOn;
   }
 
-  /**
-   * What's on the music bus right now (for HUD "now playing").
-   */
   getNowPlaying(): {
     title: string;
     mode: 'file' | 'synth' | 'off' | 'idle';
@@ -96,7 +157,7 @@ class SoundBankImpl {
     if (this.themeMode === 'synth') {
       return { title: 'Synth ambient', mode: 'synth', index: -1 };
     }
-    if (this.themeMode === 'file') {
+    if (this.themeMode === 'file' || this.themeMode === 'html') {
       const title = THEME_TRACKS[this.trackIndex]?.title ?? 'Theme';
       return { title, mode: 'file', index: this.trackIndex };
     }
@@ -107,7 +168,6 @@ class SoundBankImpl {
     };
   }
 
-  /** Playlist titles (read-only). */
   getPlaylist(): ReadonlyArray<{ title: string }> {
     return THEME_TRACKS.map((t) => ({ title: t.title }));
   }
@@ -115,9 +175,7 @@ class SoundBankImpl {
   private emitTrackChange(): void {
     try {
       const np = this.getNowPlaying();
-      window.dispatchEvent(
-        new CustomEvent('sl-music-track', { detail: np }),
-      );
+      window.dispatchEvent(new CustomEvent('sl-music-track', { detail: np }));
     } catch {
       /* ignore */
     }
@@ -126,7 +184,6 @@ class SoundBankImpl {
   loadPreference(): void {
     try {
       if (localStorage.getItem(SFX_KEY) === '0') this.sfxOn = false;
-      // Default ON unless explicitly disabled
       const m = localStorage.getItem(MUSIC_KEY);
       if (m === '0') this.musicOn = false;
       else this.musicOn = true;
@@ -149,8 +206,12 @@ class SoundBankImpl {
             window.AudioContext ||
             (window as unknown as { webkitAudioContext: typeof AudioContext })
               .webkitAudioContext;
-          if (!AC) return;
-          this.ctx = new AC();
+          if (!AC) {
+            // Still mark unlocked for HTMLAudio path
+            this.unlocked = true;
+            return;
+          }
+          this.ctx = new AC({ latencyHint: 'interactive' } as AudioContextOptions);
         }
         if (this.ctx.state === 'suspended') {
           await this.ctx.resume();
@@ -164,11 +225,16 @@ class SoundBankImpl {
           o.start();
           o.stop(this.ctx.currentTime + 0.02);
           this.unlocked = true;
-          // Prefetch only the first theme track (second loads while first plays)
-          void this.ensureTrack(0).catch(() => undefined);
+          // Desktop only: prefetch first theme as AudioBuffer
+          if (!this.useHtmlMusic) {
+            void this.ensureTrack(0).catch(() => undefined);
+          }
+        } else {
+          this.unlocked = true; // allow HTMLAudio attempt
         }
       } catch (e) {
         console.warn('[Sector Lords] audio unlock failed', e);
+        this.unlocked = true;
       } finally {
         this.unlockPromise = null;
       }
@@ -185,7 +251,11 @@ class SoundBankImpl {
         (window as unknown as { webkitAudioContext: typeof AudioContext })
           .webkitAudioContext;
       if (!AC) return null;
-      this.ctx = new AC();
+      try {
+        this.ctx = new AC({ latencyHint: 'interactive' } as AudioContextOptions);
+      } catch {
+        this.ctx = new AC();
+      }
     }
     if (this.ctx.state === 'suspended') {
       void this.ctx.resume();
@@ -245,6 +315,11 @@ class SoundBankImpl {
     if (!this.sfxOn) return;
     const ctx = this.ensure();
     if (!ctx || ctx.state === 'suspended') return;
+    // Skip noise bursts on iOS — allocate less short-lived audio memory
+    if (this.useHtmlMusic) {
+      this.tone(180, Math.min(0.08, dur), 'square', gain * 0.8, delay);
+      return;
+    }
     const t0 = ctx.currentTime + delay;
     const len = Math.floor(ctx.sampleRate * dur);
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -283,38 +358,32 @@ class SoundBankImpl {
         break;
       case 'claim':
         this.tone(480, 0.08, 'sawtooth', 0.18);
-        this.tone(720, 0.14, 'sawtooth', 0.16, 0.06);
+        this.tone(640, 0.1, 'triangle', 0.16, 0.06);
         break;
       case 'attack':
-        this.noise(0.08, 0.14);
-        this.tone(160, 0.14, 'sawtooth', 0.28);
-        this.tone(90, 0.18, 'square', 0.2, 0.05);
+        this.noise(0.1, 0.16);
+        this.tone(140, 0.12, 'sawtooth', 0.22, 0.02);
         break;
       case 'unrest':
-        this.tone(200, 0.09, 'triangle', 0.2);
-        this.tone(260, 0.09, 'triangle', 0.16, 0.05);
-        this.tone(330, 0.12, 'triangle', 0.14, 0.1);
+        this.tone(200, 0.1, 'square', 0.18);
+        this.tone(160, 0.14, 'sawtooth', 0.14, 0.08);
         break;
       case 'research':
-        this.tone(523, 0.07, 'sine', 0.18);
-        this.tone(659, 0.07, 'sine', 0.16, 0.06);
-        this.tone(784, 0.12, 'sine', 0.16, 0.12);
+        this.tone(880, 0.05, 'sine', 0.14);
+        this.tone(1175, 0.08, 'sine', 0.12, 0.05);
         break;
       case 'combat':
-        this.noise(0.12, 0.18);
-        this.tone(80, 0.2, 'sawtooth', 0.3);
-        this.tone(180, 0.12, 'square', 0.22, 0.08);
-        this.tone(55, 0.22, 'triangle', 0.18, 0.12);
+        this.noise(0.12, 0.2);
+        this.tone(90, 0.15, 'sawtooth', 0.24);
         break;
       case 'win':
-        this.tone(523, 0.12, 'square', 0.22);
-        this.tone(659, 0.12, 'square', 0.22, 0.1);
-        this.tone(784, 0.2, 'square', 0.24, 0.2);
+        this.tone(523, 0.1, 'triangle', 0.2);
+        this.tone(659, 0.12, 'triangle', 0.18, 0.08);
+        this.tone(784, 0.16, 'triangle', 0.16, 0.16);
         break;
       case 'lose':
-        this.tone(280, 0.16, 'sawtooth', 0.22);
-        this.tone(200, 0.2, 'sawtooth', 0.18, 0.12);
-        this.tone(130, 0.28, 'triangle', 0.18, 0.25);
+        this.tone(200, 0.2, 'sawtooth', 0.18);
+        this.tone(140, 0.25, 'triangle', 0.14, 0.1);
         break;
       case 'endTurn':
         this.tone(330, 0.07, 'triangle', 0.2);
@@ -334,10 +403,9 @@ class SoundBankImpl {
     }
   }
 
-  private trackLoads: Map<number, Promise<AudioBuffer | null>> = new Map();
-
-  /** Load a single playlist track on demand (avoids decoding ~8MB of audio at once). */
+  /** Load a single playlist track on demand (desktop Web Audio path only). */
   private ensureTrack(index: number): Promise<AudioBuffer | null> {
+    if (this.useHtmlMusic) return Promise.resolve(null);
     if (this.themeBuffers[index]) return Promise.resolve(this.themeBuffers[index]!);
     const existing = this.trackLoads.get(index);
     if (existing) return existing;
@@ -351,6 +419,7 @@ class SoundBankImpl {
         const res = await fetch(track.url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const raw = await res.arrayBuffer();
+        // iOS sometimes needs a copy; desktop ok with slice
         const decoded = await ctx.decodeAudioData(raw.slice(0));
         this.themeBuffers[index] = decoded;
         return decoded;
@@ -377,25 +446,88 @@ class SoundBankImpl {
       return;
     }
     if (this.themeMode === 'file' && this.themeSource) return;
+    if (this.themeMode === 'html' && this.htmlAudio && !this.htmlAudio.paused) return;
     if (this.themeMode === 'synth' && this.musicBus) return;
 
-    void this.unlock()
-      .then(() => this.ensureTrack(this.trackIndex))
-      .then((buf) => {
-        if (buf) this.playTrack(this.trackIndex);
-        else {
-          // Try the other track once before synth
-          const alt = this.nextTrackIndex(this.trackIndex);
-          return this.ensureTrack(alt).then((b2) => {
-            if (b2) this.playTrack(alt);
-            else throw new Error('no tracks');
+    void this.unlock().then(() => {
+      if (this.useHtmlMusic) {
+        this.playHtmlTrack(this.trackIndex);
+        return;
+      }
+      void this.ensureTrack(this.trackIndex)
+        .then((buf) => {
+          if (buf) this.playTrack(this.trackIndex);
+          else {
+            const alt = this.nextTrackIndex(this.trackIndex);
+            return this.ensureTrack(alt).then((b2) => {
+              if (b2) this.playTrack(alt);
+              else throw new Error('no tracks');
+            });
+          }
+        })
+        .catch(() => {
+          console.warn('[Sector Lords] falling back to synth music');
+          this.startSynthMusic();
+        });
+    });
+  }
+
+  /** iOS-safe streaming music — no full-file PCM decode. */
+  private playHtmlTrack(index: number): void {
+    if (!this.musicOn) return;
+    const track = THEME_TRACKS[index];
+    if (!track) {
+      this.startSynthMusic();
+      return;
+    }
+
+    this.stopMusicInternal(true);
+    this.trackIndex = index;
+    this.themeMode = 'html';
+
+    const audio = new Audio();
+    audio.preload = 'auto';
+    audio.src = track.url;
+    audio.loop = false;
+    audio.volume = Math.min(1, MUSIC_GAIN * this.master * 1.35);
+    // playsInline helps iOS not force fullscreen video-style playback
+    audio.setAttribute('playsinline', 'true');
+    audio.setAttribute('webkit-playsinline', 'true');
+
+    const next = this.nextTrackIndex(index);
+    audio.onended = () => {
+      if (this.htmlAudio !== audio) return;
+      if (!this.musicOn) return;
+      this.playHtmlTrack(next);
+    };
+    audio.onerror = () => {
+      console.warn(`[Sector Lords] HTMLAudio failed: ${track.title}`);
+      if (this.htmlAudio === audio) {
+        this.htmlAudio = null;
+        // Try alt then synth
+        if (next !== index) this.playHtmlTrack(next);
+        else this.startSynthMusic();
+      }
+    };
+
+    this.htmlAudio = audio;
+    const playAttempt = audio.play();
+    if (playAttempt && typeof playAttempt.then === 'function') {
+      void playAttempt
+        .then(() => {
+          console.info(`[Sector Lords] theme playing (html): ${track.title}`);
+          this.emitTrackChange();
+        })
+        .catch((err) => {
+          console.warn('[Sector Lords] HTMLAudio play blocked', err);
+          // One more unlock+retry after gesture
+          void this.unlock().then(() => {
+            void audio.play().catch(() => this.startSynthMusic());
           });
-        }
-      })
-      .catch(() => {
-        console.warn('[Sector Lords] falling back to synth music');
-        this.startSynthMusic();
-      });
+        });
+    } else {
+      this.emitTrackChange();
+    }
   }
 
   private playTrack(index: number): void {
@@ -423,7 +555,6 @@ class SoundBankImpl {
 
     const src = ctx.createBufferSource();
     src.buffer = buf;
-    // Playlist advances on end (no single-track loop)
     src.loop = false;
     src.connect(bus);
     src.start(0);
@@ -439,17 +570,18 @@ class SoundBankImpl {
 
     const meta = THEME_TRACKS[index]!;
     const next = this.nextTrackIndex(index);
-    // Prefetch the next track while this one plays
+    // Prefetch next only on desktop Web Audio path
     void this.ensureTrack(next);
 
     src.onended = () => {
       if (this.themeSource !== src) return;
       this.themeSource = null;
       if (!this.musicOn || this.themeMode !== 'file') return;
+      // Free previous buffer on memory-constrained path (keep current index ready)
       void this.ensureTrack(next).then((b) => {
         if (!this.musicOn) return;
         if (b) this.playTrack(next);
-        else this.playTrack(index); // retry same if next missing
+        else this.playTrack(index);
       });
     };
 
@@ -457,12 +589,14 @@ class SoundBankImpl {
     this.emitTrackChange();
   }
 
-  /** Procedural cyberpunk drone — used only if the MP3 fails. */
   private startSynthMusic(): void {
     if (!this.musicOn) return;
     if (this.musicBus && this.themeMode === 'synth') return;
     const c = this.ensure();
-    if (!c || c.state === 'suspended') return;
+    if (!c || c.state === 'suspended') {
+      void this.unlock().then(() => this.startSynthMusic());
+      return;
+    }
 
     this.stopMusicInternal(true);
     this.themeMode = 'synth';
@@ -488,7 +622,6 @@ class SoundBankImpl {
       g.connect(master);
       o.start();
       this.musicNodes.push(o, g, f);
-      return { o, g, f };
     };
 
     mkPad(55, 'sawtooth', 0.22, 0);
@@ -507,6 +640,19 @@ class SoundBankImpl {
     if (this.musicTimer != null) {
       window.clearInterval(this.musicTimer);
       this.musicTimer = null;
+    }
+
+    if (this.htmlAudio) {
+      try {
+        this.htmlAudio.onended = null;
+        this.htmlAudio.onerror = null;
+        this.htmlAudio.pause();
+        this.htmlAudio.removeAttribute('src');
+        this.htmlAudio.load();
+      } catch {
+        /* ignore */
+      }
+      this.htmlAudio = null;
     }
 
     const ctx = this.ctx;

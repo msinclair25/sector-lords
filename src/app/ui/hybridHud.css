@@ -2254,9 +2254,12 @@ button.crew-filter:disabled {
 }
 
 /* ═══ Phone / narrow — board first, crew as sheet ═══ */
-@media (max-width: 720px) {
+@media (max-width: 720px), ((max-height: 520px) and (pointer: coarse)) {
   #sl-hybrid-root {
     padding-top: env(safe-area-inset-top, 0px);
+    /* Use dynamic viewport — iOS toolbars no longer crush the HUD */
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
   }
 
   .desktop-only {
@@ -2264,10 +2267,10 @@ button.crew-filter:disabled {
   }
 
   #sl-hybrid-root button.act {
-    min-width: 64px;
-    min-height: 48px;
-    font-size: 12px;
-    padding: 8px 12px;
+    min-width: 56px;
+    min-height: 44px;
+    font-size: 11px;
+    padding: 6px 10px;
     touch-action: manipulation;
     flex-shrink: 0;
   }
@@ -2282,17 +2285,17 @@ button.crew-filter:disabled {
 
   #sl-hybrid-root button.act.end-turn,
   #sl-hybrid-root button.act.is-end {
-    min-width: 88px;
+    min-width: 80px;
     border-color: rgba(252, 238, 10, 0.65);
     box-shadow: 0 0 14px rgba(252, 238, 10, 0.25);
   }
 
-  /* Top: stats first, brand compact */
+  /* Top: stats first, brand compact — less vertical stack on short iPhones */
   #sl-top {
-    left: 6px;
-    right: 6px;
-    top: max(4px, env(safe-area-inset-top, 0px));
-    gap: 4px;
+    left: 4px;
+    right: 4px;
+    top: max(2px, env(safe-area-inset-top, 0px));
+    gap: 3px;
     flex-direction: column-reverse;
     align-items: stretch;
   }
@@ -2300,16 +2303,16 @@ button.crew-filter:disabled {
   #sl-brand {
     min-width: 0;
     flex: 0 0 auto;
-    padding: 6px 10px 6px 12px;
+    padding: 4px 8px 4px 10px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px 10px;
+    gap: 4px 8px;
   }
 
   #sl-brand h1 {
-    font-size: 10px;
-    letter-spacing: 0.14em;
+    font-size: 9px;
+    letter-spacing: 0.12em;
     margin: 0;
   }
 
@@ -2371,16 +2374,25 @@ button.crew-filter:disabled {
     padding-bottom: 8px;
   }
 
-  /* KEY sits under full top stack (stats + brand) — was overlapping titles at ~92px */
+  /* KEY under top stack — lower on short iOS viewports */
   #sl-legend {
     left: 6px;
     right: auto;
-    top: max(128px, calc(116px + env(safe-area-inset-top, 0px)));
+    top: max(118px, calc(104px + env(safe-area-inset-top, 0px)));
     bottom: auto;
     width: auto;
-    max-width: min(280px, calc(100vw - 56px));
+    max-width: min(260px, calc(100vw - 56px));
     max-height: none;
     z-index: 12;
+  }
+
+  @media (max-height: 700px) {
+    #sl-legend {
+      top: max(102px, calc(90px + env(safe-area-inset-top, 0px)));
+    }
+    #sl-brand {
+      display: none; /* reclaim vertical space: stats stay, brand hides */
+    }
   }
 
   #sl-legend.is-open {
