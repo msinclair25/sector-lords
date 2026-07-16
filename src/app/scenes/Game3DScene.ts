@@ -1911,13 +1911,19 @@ export class Game3DScene extends Phaser.Scene {
       const gang = this.selectedGang ? state.gangs[this.selectedGang] : null;
       const gangName = gang ? gangDefById(gang.defId).name : null;
 
-      /** Compact stats + flavor for tech drawer cards (wraps; title has full text). */
+      /** Plain-language stats for tech cards — skip zero bonuses. */
       const itemBlurb = (it: ReturnType<typeof itemDefById>): string => {
-        const tags =
-          it.tags?.length > 0
-            ? ` · ${it.tags.map((t) => t.replace(/_/g, ' ')).join(', ')}`
-            : '';
-        return `C+${it.combatBonus} D+${it.defenseBonus}${tags}`;
+        const bits: string[] = [];
+        if (it.combatBonus > 0) bits.push(`Combat +${it.combatBonus}`);
+        if (it.defenseBonus > 0) bits.push(`Defense +${it.defenseBonus}`);
+        if (it.tags?.length) {
+          bits.push(
+            ...it.tags.map((t) =>
+              t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+            ),
+          );
+        }
+        return bits.length > 0 ? bits.join(' · ') : 'No combat stats';
       };
       const itemDesc = (it: ReturnType<typeof itemDefById>): string =>
         escapeHtml(it.description || 'No description.');
@@ -2012,7 +2018,7 @@ export class Game3DScene extends Phaser.Scene {
 
       return this.drawerChrome(
         'Research & gear',
-        `Cash <b>$${me.cash}</b> · <span class="tech-pipe">Blueprint</span> → <span class="tech-pipe">Fabricate</span> → <span class="tech-pipe">Equip</span> · C/D = combat &amp; defense bonuses`,
+        `Cash <b>$${me.cash}</b> · <span class="tech-pipe">Blueprint</span> → <span class="tech-pipe">Fabricate</span> → <span class="tech-pipe">Equip</span>`,
         `<h3 class="drawer-section">1 · Research blueprints</h3>
         ${research}
         <h3 class="drawer-section">2 · Fabricate gear</h3>
