@@ -1911,6 +1911,17 @@ export class Game3DScene extends Phaser.Scene {
       const gang = this.selectedGang ? state.gangs[this.selectedGang] : null;
       const gangName = gang ? gangDefById(gang.defId).name : null;
 
+      /** Compact stats + flavor for tech drawer cards (wraps; title has full text). */
+      const itemBlurb = (it: ReturnType<typeof itemDefById>): string => {
+        const tags =
+          it.tags?.length > 0
+            ? ` · ${it.tags.map((t) => t.replace(/_/g, ' ')).join(', ')}`
+            : '';
+        return `C+${it.combatBonus} D+${it.defenseBonus}${tags}`;
+      };
+      const itemDesc = (it: ReturnType<typeof itemDefById>): string =>
+        escapeHtml(it.description || 'No description.');
+
       let research = '<p class="muted">Select a crew first — research uses their Tech rating.</p>';
       if (gang && gang.ownerId === this.controller.humanId) {
         const opts = researchableItems(state, this.controller.humanId, gang.id);
@@ -1932,11 +1943,12 @@ export class Game3DScene extends Phaser.Scene {
                 .slice(0, 8)
                 .map((it) => {
                   const bp = itemBlueprintUrl(it);
-                  return `<button class="act item-card research" data-act="research-${it.id}">
+                  return `<button type="button" class="act item-card research" data-act="research-${it.id}" title="${itemDesc(it)}">
                     <img class="item-art bp" src="${bp}" alt="" loading="lazy" />
                     <span class="item-meta">
-                      <span class="act-label" style="text-transform:none">Research ${escapeHtml(it.name)}</span>
-                      <span class="act-sub">Blueprint · Tech ${it.techLevel} · ${it.researchCost} pts · ${it.type} · C+${it.combatBonus} D+${it.defenseBonus}</span>
+                      <span class="act-label">Research ${escapeHtml(it.name)}</span>
+                      <span class="item-desc">${itemDesc(it)}</span>
+                      <span class="act-sub">Blueprint · Tech ${it.techLevel} · ${it.researchCost} pts · ${it.type} · ${itemBlurb(it)}</span>
                     </span>
                   </button>`;
                 })
@@ -1951,11 +1963,12 @@ export class Game3DScene extends Phaser.Scene {
           const have = me.inventory[id] ?? 0;
           const can = me.cash >= it.fabricateCost;
           const icon = itemIconUrl(it);
-          return `<button class="act item-card" data-act="fabricate-${id}" ${can ? '' : 'disabled'}>
+          return `<button type="button" class="act item-card" data-act="fabricate-${id}" ${can ? '' : 'disabled'} title="${itemDesc(it)}">
             <img class="item-art" src="${icon}" alt="" loading="lazy" />
             <span class="item-meta">
-              <span class="act-label" style="text-transform:none">Build ${escapeHtml(it.name)} · $${it.fabricateCost}</span>
-              <span class="act-sub">${it.type} · stash ×${have} · C+${it.combatBonus} D+${it.defenseBonus}</span>
+              <span class="act-label">Build ${escapeHtml(it.name)} · $${it.fabricateCost}</span>
+              <span class="item-desc">${itemDesc(it)}</span>
+              <span class="act-sub">${it.type} · stash ×${have} · ${itemBlurb(it)}</span>
             </span>
           </button>`;
         })
@@ -1968,11 +1981,12 @@ export class Game3DScene extends Phaser.Scene {
           const n = me.inventory[id] ?? 0;
           const canEq = !!gang && gang.ownerId === this.controller.humanId;
           const icon = itemIconUrl(it);
-          return `<button class="act primary item-card" data-act="equip-${id}" ${canEq ? '' : 'disabled'}>
+          return `<button type="button" class="act primary item-card" data-act="equip-${id}" ${canEq ? '' : 'disabled'} title="${itemDesc(it)}">
             <img class="item-art" src="${icon}" alt="" loading="lazy" />
             <span class="item-meta">
-              <span class="act-label" style="text-transform:none">Equip ${escapeHtml(it.name)}${n > 1 ? ` ×${n}` : ''}</span>
-              <span class="act-sub">${canEq ? `On ${escapeHtml(gangName!)}` : 'Select a crew first'} · ${it.type}</span>
+              <span class="act-label">Equip ${escapeHtml(it.name)}${n > 1 ? ` ×${n}` : ''}</span>
+              <span class="item-desc">${itemDesc(it)}</span>
+              <span class="act-sub">${canEq ? `On ${escapeHtml(gangName!)}` : 'Select a crew first'} · ${it.type} · ${itemBlurb(it)}</span>
             </span>
           </button>`;
         })
@@ -1984,11 +1998,12 @@ export class Game3DScene extends Phaser.Scene {
               .map((id) => {
                 const it = itemDefById(id);
                 const icon = itemIconUrl(it);
-                return `<button class="act danger item-card" data-act="unequip-${id}">
+                return `<button type="button" class="act danger item-card" data-act="unequip-${id}" title="${itemDesc(it)}">
                   <img class="item-art" src="${icon}" alt="" loading="lazy" />
                   <span class="item-meta">
-                    <span class="act-label" style="text-transform:none">Unequip ${escapeHtml(it.name)}</span>
-                    <span class="act-sub">Return to stash · ${it.type}</span>
+                    <span class="act-label">Unequip ${escapeHtml(it.name)}</span>
+                    <span class="item-desc">${itemDesc(it)}</span>
+                    <span class="act-sub">Return to stash · ${it.type} · ${itemBlurb(it)}</span>
                   </span>
                 </button>`;
               })
@@ -1997,7 +2012,7 @@ export class Game3DScene extends Phaser.Scene {
 
       return this.drawerChrome(
         'Research & gear',
-        `Cash <b>$${me.cash}</b> · <span class="tech-pipe">Blueprint</span> → <span class="tech-pipe">Fabricate</span> → <span class="tech-pipe">Equip</span>`,
+        `Cash <b>$${me.cash}</b> · <span class="tech-pipe">Blueprint</span> → <span class="tech-pipe">Fabricate</span> → <span class="tech-pipe">Equip</span> · C/D = combat &amp; defense bonuses`,
         `<h3 class="drawer-section">1 · Research blueprints</h3>
         ${research}
         <h3 class="drawer-section">2 · Fabricate gear</h3>
