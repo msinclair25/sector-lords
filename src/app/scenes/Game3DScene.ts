@@ -1103,6 +1103,12 @@ export class Game3DScene extends Phaser.Scene {
     // Preserve side-panel scroll so NEXT / crew cycle doesn't jump the list
     const sideEl = this.root.querySelector('#sl-side') as HTMLElement | null;
     const sideScroll = sideEl?.scrollTop ?? 0;
+    // Preserve Hire / Tech / Jobs drawer scroll (fabricate/equip must not jump the list)
+    const drawerBody = this.root.querySelector(
+      '#sl-drawer .drawer-body',
+    ) as HTMLElement | null;
+    const drawerScroll = drawerBody?.scrollTop ?? 0;
+    const drawerWasOpen = this.drawer !== 'none';
     const state = this.controller.state;
     const me = state.players[this.controller.humanId]!;
     const paths = pathsToVictory(state);
@@ -1212,6 +1218,15 @@ export class Game3DScene extends Phaser.Scene {
     const sideAfter = this.root.querySelector('#sl-side') as HTMLElement | null;
     if (sideAfter) {
       sideAfter.scrollTop = sideScroll;
+    }
+    // Restore drawer scroll after fabricate / equip / research list refresh
+    if (drawerWasOpen && this.drawer !== 'none') {
+      const drawerAfter = this.root.querySelector(
+        '#sl-drawer .drawer-body',
+      ) as HTMLElement | null;
+      if (drawerAfter) {
+        drawerAfter.scrollTop = drawerScroll;
+      }
     }
     // Do not scrollIntoView on selection — that re-jumps the roster every click
   }
