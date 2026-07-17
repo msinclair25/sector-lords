@@ -773,20 +773,17 @@
 }
 
 /* ── Coach / tutorial ── */
-/* Field guide — bottom banner so the board stays free for action */
 #sl-coach {
   position: absolute;
   left: 50%;
-  top: auto;
-  bottom: 168px;
+  top: 76px;
   transform: translateX(-50%);
-  max-width: min(560px, 94vw);
-  width: min(560px, 94vw);
+  max-width: min(520px, 94vw);
   border-color: rgba(252, 238, 10, 0.65);
   padding: 0;
   overflow: hidden;
   box-shadow: var(--shadow), 0 0 32px rgba(252, 238, 10, 0.22);
-  z-index: 14;
+  z-index: 8;
 }
 
 #sl-coach .coach-top {
@@ -1239,18 +1236,16 @@
   text-transform: uppercase;
 }
 
-/* ── Drawer (Hire / Jobs / Tech) — bottom sheets, not mid-screen plates ── */
+/* ── Drawer (Hire / Jobs / Tech) ── */
 #sl-drawer {
   position: absolute;
   left: 12px;
-  right: auto;
-  top: auto;
-  bottom: 148px;
-  z-index: 16;
-  width: min(360px, 42vw);
+  bottom: 200px;
+  z-index: 12;
+  width: min(320px, 44vw);
   padding: 0;
   font-size: 13px;
-  max-height: min(48vh, calc(100vh - 280px));
+  max-height: min(52vh, calc(100vh - 260px));
   overflow: hidden;
   display: none;
   border-color: var(--stroke);
@@ -1263,7 +1258,7 @@
 }
 
 @keyframes sl-drawer-in {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -1351,17 +1346,17 @@
 }
 
 /*
- * Hire pool — wide bottom sheet so the board (deploy targets) stays visible above.
- * Sits above the action bar; does not cover the center of the map.
+ * Hire pool — compact wide sheet, not full-screen plate.
+ * Clears the bottom action bar so buttons stay readable.
  */
 #sl-drawer.hire-wide {
   left: 50%;
   right: auto;
-  top: auto;
-  bottom: 132px;
+  top: 80px;
+  bottom: auto;
   transform: translateX(-50%);
-  width: min(960px, calc(100vw - 24px));
-  max-height: min(46vh, calc(100vh - 280px));
+  width: min(900px, calc(100vw - 32px));
+  max-height: calc(100vh - 80px - 210px);
   height: auto;
   display: none;
   z-index: 18;
@@ -2707,24 +2702,21 @@ button.crew-filter:disabled {
   #sl-drawer {
     left: 0;
     right: 0;
-    top: auto;
     width: auto;
     bottom: 0;
-    max-height: min(58dvh, calc(100dvh - 120px));
+    max-height: min(62dvh, calc(100dvh - 100px));
     border-radius: 12px 12px 0 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    z-index: 22;
   }
 
-  /* Hire: bottom sheet only — leave upper board visible for deploy taps */
   #sl-drawer.hire-wide {
     left: 0;
     right: 0;
-    top: auto;
+    top: max(48px, calc(40px + env(safe-area-inset-top, 0px)));
     bottom: 0;
     transform: none;
     width: auto;
-    max-height: min(52dvh, calc(100dvh - 140px));
+    max-height: none;
     height: auto;
     border-radius: 12px 12px 0 0;
   }
@@ -2765,13 +2757,11 @@ button.crew-filter:disabled {
 
   #sl-coach {
     top: auto;
-    bottom: max(118px, calc(106px + env(safe-area-inset-bottom, 0px)));
+    bottom: max(124px, calc(112px + env(safe-area-inset-bottom, 0px)));
     left: 8px;
     right: 8px;
-    width: auto;
     transform: none;
     max-width: none;
-    z-index: 15;
   }
 
   #sl-coach button {
