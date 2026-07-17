@@ -48,11 +48,6 @@ function monogramOf(name: string): string {
   return s.slice(0, 2).toUpperCase() || '??';
 }
 
-function shortCrewName(name: string): string {
-  if (name.length <= 11) return name;
-  return `${name.slice(0, 10)}…`;
-}
-
 function orderTypeLabel(type: string): string {
   const t = (type || 'move').toLowerCase();
   if (t === 'claim') return 'CLAIM';
