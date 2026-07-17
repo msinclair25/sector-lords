@@ -2504,8 +2504,8 @@ button.crew-filter:disabled {
   }
 
   #sl-brand .brand-audio button {
-    min-height: 36px;
-    min-width: 40px;
+    min-height: 40px;
+    min-width: 44px;
     touch-action: manipulation;
   }
 
@@ -2560,26 +2560,42 @@ button.crew-filter:disabled {
     bottom: auto;
     width: auto;
     max-width: min(260px, calc(100vw - 56px));
-    max-height: none;
+    max-height: min(48dvh, 320px);
     z-index: 12;
+    overflow: hidden;
   }
 
   @media (max-height: 700px) {
     #sl-legend {
-      top: max(102px, calc(90px + env(safe-area-inset-top, 0px)));
+      top: max(96px, calc(84px + env(safe-area-inset-top, 0px)));
+      max-height: min(40dvh, 260px);
     }
+    /* Keep SFX/Music reachable — only hide title, not the audio row */
     #sl-brand {
-      display: none; /* reclaim vertical space: stats stay, brand hides */
+      display: flex;
+      padding: 2px 6px 2px 8px;
+      min-height: 0;
+    }
+    #sl-brand h1 {
+      display: none;
+    }
+    #sl-brand .brand-audio {
+      margin: 0;
+      width: 100%;
+      justify-content: flex-end;
     }
   }
 
   #sl-legend.is-open {
     width: min(280px, calc(100vw - 16px));
+    display: flex;
+    flex-direction: column;
   }
 
   #sl-legend .legend-toggle {
     padding: 8px 10px;
-    min-height: 40px;
+    min-height: 44px;
+    flex-shrink: 0;
   }
 
   #sl-legend .legend-title {
@@ -2589,6 +2605,11 @@ button.crew-filter:disabled {
   #sl-legend .legend-body.legend-compact {
     gap: 5px;
     padding: 6px 10px 10px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    max-height: min(32dvh, 200px);
+    min-height: 0;
   }
 
   #sl-legend .legend-body.legend-compact .legend-row {
@@ -2818,21 +2839,27 @@ button.crew-filter:disabled {
   #sl-drawer {
     left: 0;
     right: 0;
+    top: auto;
     width: auto;
     bottom: 0;
-    max-height: min(62dvh, calc(100dvh - 100px));
+    max-height: min(58dvh, calc(100dvh - 120px));
     border-radius: 12px 12px 0 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 22;
   }
 
+  /*
+   * Hire: bottom sheet only — leave upper board visible for deploy taps.
+   * Full-screen hire sheet made phone hire/deploy feel broken.
+   */
   #sl-drawer.hire-wide {
     left: 0;
     right: 0;
-    top: max(48px, calc(40px + env(safe-area-inset-top, 0px)));
+    top: auto;
     bottom: 0;
     transform: none;
     width: auto;
-    max-height: none;
+    max-height: min(52dvh, calc(100dvh - 140px));
     height: auto;
     border-radius: 12px 12px 0 0;
   }
@@ -2849,6 +2876,7 @@ button.crew-filter:disabled {
 
   #sl-hybrid-root button.hire-card {
     touch-action: manipulation;
+    min-height: 0;
   }
 
   #sl-hybrid-root button.hire-card .hire-meta {
@@ -2866,6 +2894,28 @@ button.crew-filter:disabled {
     align-items: center;
   }
 
+  /* Jobs Accept cards — thumb-friendly */
+  #sl-drawer button.act.job-card {
+    min-height: 56px;
+    gap: 8px;
+    padding: 10px 10px 10px 12px;
+    touch-action: manipulation;
+  }
+
+  #sl-drawer button.act.job-card .job-accept {
+    min-width: 72px;
+    min-height: 48px;
+    padding: 8px 10px;
+  }
+
+  #sl-drawer button.act.job-card .job-goal {
+    font-size: 11px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   #sl-drawer .drawer-body {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
@@ -2873,16 +2923,41 @@ button.crew-filter:disabled {
 
   #sl-coach {
     top: auto;
-    bottom: max(124px, calc(112px + env(safe-area-inset-bottom, 0px)));
+    bottom: max(118px, calc(106px + env(safe-area-inset-bottom, 0px)));
     left: 8px;
-    right: 8px;
+    /* Leave room for Crew FAB on the right */
+    right: max(64px, calc(56px + env(safe-area-inset-right, 0px)));
     transform: none;
     max-width: none;
+    width: auto;
+    z-index: 15;
+  }
+
+  #sl-coach .coach-text {
+    font-size: 13px;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  #sl-coach .coach-visual {
+    font-size: 11px;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   #sl-coach button {
     min-height: 44px;
     touch-action: manipulation;
+  }
+
+  /* Cash/status lines get long with upkeep — keep readable */
+  #sl-status {
+    -webkit-line-clamp: 3;
   }
 
   #sl-drawer .empire-hub {

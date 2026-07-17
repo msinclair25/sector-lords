@@ -1956,6 +1956,36 @@
     height: 30px;
     border-width: 2px;
   }
+  /* Compact role chips + YOU so they don't eat the face */
+  .sl-tile-portraits .sl-role-chip {
+    font-size: 6px;
+    min-width: 18px;
+    padding: 1px 2px;
+    bottom: 1px;
+    transform: translateX(calc(-50% + 11px));
+  }
+  .sl-tile-portraits .sl-you-tag {
+    font-size: 7px;
+    padding: 2px 4px 1px;
+  }
+  /* Order ribbons: tighter on phone cells */
+  .sl-order-mark {
+    width: min(96%, 64px);
+    top: 3%;
+  }
+  .sl-route-badge {
+    min-height: 15px;
+    padding: 1px 3px 1px 1px;
+  }
+  .sl-route-mono {
+    width: 13px;
+    height: 13px;
+    font-size: 6px;
+  }
+  .sl-route-act {
+    font-size: 7px;
+    letter-spacing: 0.02em;
+  }
   .sl-tile-portraits .sl-stack-next {
     min-width: 30px;
     min-height: 30px;

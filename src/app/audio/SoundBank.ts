@@ -52,10 +52,13 @@ function isIOSLike(): boolean {
   return false;
 }
 
-/** Prefer streaming music on iOS / coarse mobile to avoid decode crashes */
+/** Prefer streaming music on iOS / Android phones to avoid decode RAM crashes */
 function preferHtmlMusic(): boolean {
   if (typeof navigator === 'undefined') return false;
   if (isIOSLike()) return true;
+  const ua = navigator.userAgent || '';
+  // Android Chrome / WebView: large PCM decode of MP3 themes is flaky on mid-range devices
+  if (/Android/i.test(ua) && window.innerWidth < 1000) return true;
   try {
     if (window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 900) {
       return true;

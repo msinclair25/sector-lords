@@ -281,9 +281,11 @@ export class BoardTabletop {
   async loadArt(): Promise<void> {
     // iOS: skip bulk district preload (lazy via CSS). Prefetching all JPGs at once
     // spikes RAM and contributes to Safari/Chrome tab kills.
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
     const lowMem =
       typeof navigator !== 'undefined' &&
-      (/iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+      (/iPad|iPhone|iPod/i.test(ua) ||
+        /Android/i.test(ua) ||
         (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints ?? 0) > 1) ||
         (typeof window !== 'undefined' &&
           window.matchMedia('(pointer: coarse)').matches &&

@@ -214,6 +214,22 @@ export class Game3DScene extends Phaser.Scene {
   private suppressSync = false;
   /** Coalesce multiple render() calls into one per animation frame */
   private renderRaf: number | null = null;
+  /** Last known phone layout — re-paint HUD when orientation crosses the breakpoint */
+  private lastMobileUi: boolean | null = null;
+  private onViewportLayout = (): void => {
+    if (!this.root || !this.board) return;
+    const mobile = this.isMobileUi();
+    if (this.lastMobileUi !== null && this.lastMobileUi !== mobile) {
+      this.lastMobileUi = mobile;
+      // Side panel always-open on desktop; slide-over on phone
+      if (!mobile) this.sideMobileOpen = false;
+      this.render();
+    } else {
+      this.lastMobileUi = mobile;
+    }
+    // Hit targets / projected board bounds depend on viewport padding
+    this.board.scheduleCenter?.(false);
+  };
 
   constructor() {
     super('Game3D');
@@ -324,6 +340,9 @@ export class Game3DScene extends Phaser.Scene {
 
       window.addEventListener('keydown', this.onKeyDown);
       window.addEventListener('sl-music-track', this.onMusicTrack);
+      this.lastMobileUi = this.isMobileUi();
+      window.addEventListener('resize', this.onViewportLayout, { passive: true });
+      window.visualViewport?.addEventListener('resize', this.onViewportLayout);
 
       this.render();
       this.applyTutorialBoardHints();
@@ -1037,6 +1056,8 @@ export class Game3DScene extends Phaser.Scene {
   private teardown(): void {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('sl-music-track', this.onMusicTrack);
+    window.removeEventListener('resize', this.onViewportLayout);
+    window.visualViewport?.removeEventListener('resize', this.onViewportLayout);
     this.unsub?.();
     this.unsub = null;
     if (this.renderRaf != null) {
@@ -1722,11 +1743,16 @@ export class Game3DScene extends Phaser.Scene {
 
   private isMobileUi(): boolean {
     if (typeof window === 'undefined') return false;
-    // Width OR short iOS chrome height OR coarse pointer phone
+    // Width, short coarse viewport, iOS, or Android phone UA (not just iPhone)
+    const ua = navigator.userAgent || '';
+    const phoneUa =
+      /iPad|iPhone|iPod|Android.+Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+        ua,
+      ) && window.innerWidth < 900;
     return (
       window.matchMedia('(max-width: 720px)').matches ||
       window.matchMedia('(max-height: 500px) and (pointer: coarse)').matches ||
-      (/iPad|iPhone|iPod/i.test(navigator.userAgent) && window.innerWidth < 900)
+      phoneUa
     );
   }
 
