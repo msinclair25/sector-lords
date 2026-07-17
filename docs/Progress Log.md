@@ -4,6 +4,32 @@ Reverse-chronological ship log. Add new entries at the top.
 
 ---
 
+## 2026-07-16 — Session wrap (chat close)
+
+**Live:** https://sectorlords.com · build through **v32** (`21ff894`)  
+**Itch:** `sector-lords-itch.zip` rebuilt with v32 (~38.3 MB) — re-upload if storefront lags  
+**Repo:** https://github.com/msinclair25/sector-lords `main`
+
+### Shipped this session
+1. **We Playtest Tier A/B** — jobs Accept, cash/upkeep line, idle copy, coach steps, ATK/DEF chips, music Off/Low/Med/High, ownership YOU/rim, odds power labels  
+2. **Board polish** — compact order badges (`MOVE → x,y`), role chips only on free crews, max 2 badges +N  
+3. **UI reverts at user request** — popups back mid-screen (not bottom banner); KEY legend back **left panel** (not top banner)  
+4. **Mobile pass** — hire bottom sheet, audio stays on short screens, Android HTMLAudio + light art, orientation re-layout  
+5. **Mobile boot fix** — Jack In no longer blocked by hanging `AudioContext.resume()`  
+
+### Tier C (archived — not soon)
+Full campaign tutorial mode · free 3D orbit · auto-accept jobs · strip KEY · major menu redesign  
+→ see [[Player Feedback]]
+
+### Open / next session
+- Confirm mobile Jack In on **real** iPhone Safari + Android Chrome + itch embed after hard refresh / zip re-upload  
+- Watch next cold playtests for residual onboarding density  
+- Optional: further dim destination order badges if mid-game still noisy  
+- Untracked art only: `art/itch_page_bg_tile*.jpg` (not committed)
+
+### Devlog draft (itch)
+See last chat message “playtest + mobile polish” — safe to paste on itch with zip upload.
+
 ## 2026-07-16 — We Playtest UX (Tier A/B)
 
 Cold-playtest fixes from [We Playtest Games video](https://www.youtube.com/watch?v=Jt6DNOjHliQ):
