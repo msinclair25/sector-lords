@@ -1037,20 +1037,22 @@ export class BoardTabletop {
       img.className = 'mine' + (busy ? ' is-busy' : '');
       if (faceId === selectedCrewId) img.classList.add('selected-crew');
       host.appendChild(img);
-      // ATK / DEF lean chip — glanceable combat role
-      const lean =
-        def.combat > def.defense ? 'atk' : def.defense > def.combat ? 'def' : 'bal';
-      const role = document.createElement('span');
-      role.className = `sl-role-chip ${lean}`;
-      role.textContent = lean === 'atk' ? 'ATK' : lean === 'def' ? 'DEF' : 'BAL';
-      role.title =
-        lean === 'atk'
-          ? `Attack lean · C${def.combat} > D${def.defense}`
-          : lean === 'def'
-            ? `Defense lean · D${def.defense} > C${def.combat}`
-            : `Balanced · C${def.combat}/D${def.defense}`;
-      role.setAttribute('aria-hidden', 'true');
-      host.appendChild(role);
+      // Role chip only when free (not ordered) — ordered tiles already have MOVE/CLAIM badges
+      if (!busy) {
+        const lean =
+          def.combat > def.defense ? 'atk' : def.defense > def.combat ? 'def' : 'bal';
+        const role = document.createElement('span');
+        role.className = `sl-role-chip ${lean}`;
+        role.textContent = lean === 'atk' ? 'ATK' : lean === 'def' ? 'DEF' : 'BAL';
+        role.title =
+          lean === 'atk'
+            ? `Attack lean · C${def.combat} > D${def.defense}`
+            : lean === 'def'
+              ? `Defense lean · D${def.defense} > C${def.combat}`
+              : `Balanced · C${def.combat}/D${def.defense}`;
+        role.setAttribute('aria-hidden', 'true');
+        host.appendChild(role);
+      }
     } else if (tileId && state.sectors[tileId]?.owner === this.humanId) {
       // Empty owned turf — clear YOU tag so ownership is obvious without a crew
       const you = document.createElement('span');
@@ -1357,20 +1359,36 @@ export class BoardTabletop {
 
       let hasFrom = false;
       let hasTo = false;
-      const html: string[] = [];
       for (const b of badges) {
         if (b.role === 'from') hasFrom = true;
         else hasTo = true;
-        html.push(this.routeBadgeHtml(b));
+      }
+      // Prefer outbound (from) first; cap visual stack so mid-game stays readable
+      const sorted = [...badges].sort((a, b) => {
+        if (a.role !== b.role) return a.role === 'from' ? -1 : 1;
+        return 0;
+      });
+      const maxShow = 2;
+      const shown = sorted.slice(0, maxShow);
+      const extra = sorted.length - shown.length;
+      const html = shown.map((b) => this.routeBadgeHtml(b));
+      if (extra > 0) {
+        html.push(
+          `<div class="sl-route-badge more" title="${extra} more order${extra === 1 ? '' : 's'} on this block">+${extra}</div>`,
+        );
       }
       if (hasFrom) el.classList.add('is-order-from');
       if (hasTo) el.classList.add('is-order-to');
       mark.hidden = false;
-      mark.classList.toggle('stacked', badges.length > 1);
+      mark.classList.toggle('stacked', sorted.length > 1);
       mark.innerHTML = html.join('');
     }
   }
 
+  /**
+   * Compact board ribbon: monogram + action only (full name in title).
+   * Origin: MOVE → 2,1 · Destination: ← MOVE
+   */
   private routeBadgeHtml(b: {
     role: 'from' | 'to';
     order: PendingOrderMark;
@@ -1378,24 +1396,17 @@ export class BoardTabletop {
   }): string {
     const o = b.order;
     const mono = monogramOf(o.name);
-    const who = shortCrewName(o.name);
     const kind = orderTypeClass(o.type);
     const typeLbl = orderTypeLabel(o.type);
     if (b.role === 'from') {
-      return `<div class="sl-route-badge from ${kind}" style="--route:${b.color}" title="${escapeHtml(o.name)} → ${escapeHtml(o.to)} (${typeLbl})">
+      return `<div class="sl-route-badge from ${kind} compact" style="--route:${b.color}" title="${escapeHtml(o.name)} → ${escapeHtml(o.to)} (${typeLbl})">
         <span class="sl-route-mono" aria-hidden="true">${escapeHtml(mono)}</span>
-        <span class="sl-route-meta">
-          <span class="sl-route-who">${escapeHtml(who)}</span>
-          <span class="sl-route-act">→ ${typeLbl} ${escapeHtml(o.to)}</span>
-        </span>
+        <span class="sl-route-act">${typeLbl} → ${escapeHtml(o.to)}</span>
       </div>`;
     }
-    return `<div class="sl-route-badge to ${kind}" style="--route:${b.color}" title="${escapeHtml(o.name)} arriving · ${typeLbl}">
+    return `<div class="sl-route-badge to ${kind} compact" style="--route:${b.color}" title="${escapeHtml(o.name)} arriving · ${typeLbl}">
       <span class="sl-route-mono" aria-hidden="true">${escapeHtml(mono)}</span>
-      <span class="sl-route-meta">
-        <span class="sl-route-who">${escapeHtml(who)}</span>
-        <span class="sl-route-act">${typeLbl} ←</span>
-      </span>
+      <span class="sl-route-act">← ${typeLbl}</span>
     </div>`;
   }
 

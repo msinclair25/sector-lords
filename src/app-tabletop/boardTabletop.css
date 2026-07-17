@@ -1387,18 +1387,21 @@
   overflow: visible;
 }
 
-/* ATK / DEF lean on board portraits */
+/*
+ * ATK / DEF lean — only drawn for free crews (JS).
+ * Sit on the portrait, not competing with order ribbons above.
+ */
 .sl-tile-portraits .sl-role-chip {
   position: absolute;
   left: 50%;
-  bottom: 28px;
-  transform: translateX(calc(-50% - 14px));
+  bottom: 2px;
+  transform: translateX(calc(-50% + 12px));
   z-index: 9;
-  min-width: 22px;
+  min-width: 20px;
   padding: 1px 3px;
   border-radius: 2px;
   font: 800 7px/1.1 "Segoe UI", system-ui, sans-serif;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-align: center;
   pointer-events: none;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
@@ -1675,16 +1678,16 @@
 .sl-order-mark {
   position: absolute;
   left: 50%;
-  top: 6%;
+  top: 5%;
   transform: translateX(-50%);
   z-index: 7;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 3px;
+  gap: 2px;
   pointer-events: none;
-  width: min(96%, 74px);
-  max-width: 96%;
+  width: min(94%, 72px);
+  max-width: 94%;
 }
 
 .sl-order-mark.stacked {
@@ -1692,87 +1695,88 @@
   gap: 2px;
 }
 
-/* Angular route ribbon — monogram + who + action (no portraits) */
+/* Compact route ribbon — monogram + one action line (full name in title) */
 .sl-route-badge {
   --route: #2bf0ff;
   display: flex;
   align-items: center;
   gap: 4px;
-  min-height: 22px;
-  padding: 2px 5px 2px 2px;
+  min-height: 18px;
+  padding: 1px 5px 1px 2px;
   background: linear-gradient(
     105deg,
-    color-mix(in srgb, var(--route) 22%, #0a0614) 0%,
-    rgba(6, 4, 14, 0.94) 100%
+    color-mix(in srgb, var(--route) 18%, #0a0614) 0%,
+    rgba(6, 4, 14, 0.92) 100%
   );
-  border: 1px solid color-mix(in srgb, var(--route) 75%, #fff 5%);
+  border: 1px solid color-mix(in srgb, var(--route) 65%, #fff 5%);
   box-shadow:
-    0 0 12px color-mix(in srgb, var(--route) 40%, transparent),
-    0 2px 6px rgba(0, 0, 0, 0.55);
-  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%);
+    0 0 10px color-mix(in srgb, var(--route) 32%, transparent),
+    0 2px 5px rgba(0, 0, 0, 0.5);
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+}
+
+.sl-route-badge.compact {
+  min-height: 17px;
 }
 
 .sl-route-badge.from {
-  border-color: color-mix(in srgb, var(--route) 55%, #fcee0a 35%);
+  /* Cyan family — distinct from gold ownership rim */
+  border-color: color-mix(in srgb, var(--route) 70%, #2bf0ff 15%);
 }
 
 .sl-route-badge.to {
-  border-color: color-mix(in srgb, var(--route) 70%, #2bf0ff 20%);
+  border-color: color-mix(in srgb, var(--route) 55%, #7dff6b 25%);
+  opacity: 0.92;
 }
 
 .sl-route-badge.kind-claim {
   box-shadow:
-    0 0 12px color-mix(in srgb, var(--route) 30%, #7dff6b 25%),
-    0 2px 6px rgba(0, 0, 0, 0.55);
+    0 0 10px color-mix(in srgb, var(--route) 25%, #7dff6b 22%),
+    0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 .sl-route-badge.kind-attack {
   box-shadow:
-    0 0 12px color-mix(in srgb, var(--route) 30%, #ff3d5a 30%),
-    0 2px 6px rgba(0, 0, 0, 0.55);
+    0 0 10px color-mix(in srgb, var(--route) 25%, #ff3d5a 28%),
+    0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.sl-route-badge.more {
+  --route: #8fa8b8;
+  justify-content: center;
+  min-height: 14px;
+  padding: 1px 6px;
+  font: 800 8px/1 "Orbitron", "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  color: #c8d4e0;
+  opacity: 0.9;
 }
 
 .sl-route-mono {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   display: grid;
   place-items: center;
-  font: 800 8px/1 "Orbitron", "Segoe UI", system-ui, sans-serif;
+  font: 800 7px/1 "Orbitron", "Segoe UI", system-ui, sans-serif;
   letter-spacing: 0.02em;
   color: #041018;
   background: var(--route);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--route) 70%, transparent);
-  clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%);
-}
-
-.sl-route-meta {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  line-height: 1.05;
-}
-
-.sl-route-who {
-  font: 700 8px/1.1 "Rajdhani", "Segoe UI", system-ui, sans-serif;
-  color: #f4f0ff;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-shadow: 0 1px 2px #000;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--route) 60%, transparent);
+  clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 0 100%);
 }
 
 .sl-route-act {
-  font: 800 7px/1.1 "Orbitron", "Segoe UI", system-ui, sans-serif;
-  letter-spacing: 0.06em;
+  min-width: 0;
+  flex: 1;
+  font: 800 8px/1.15 "Orbitron", "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--route);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 0 6px color-mix(in srgb, var(--route) 50%, transparent);
+  text-shadow: 0 0 5px color-mix(in srgb, var(--route) 45%, transparent);
 }
 
 .sl-route-badge.kind-claim .sl-route-act {
@@ -1788,22 +1792,18 @@
 }
 
 .sl-order-mark.stacked .sl-route-badge {
-  min-height: 18px;
+  min-height: 15px;
   padding: 1px 4px 1px 1px;
 }
 
 .sl-order-mark.stacked .sl-route-mono {
-  width: 15px;
-  height: 15px;
-  font-size: 7px;
-}
-
-.sl-order-mark.stacked .sl-route-who {
-  font-size: 7px;
+  width: 14px;
+  height: 14px;
+  font-size: 6px;
 }
 
 .sl-order-mark.stacked .sl-route-act {
-  font-size: 6px;
+  font-size: 7px;
 }
 
 .sl-tile.fx-combat .sl-tile-top {
