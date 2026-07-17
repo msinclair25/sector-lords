@@ -348,9 +348,17 @@ export class Game3DScene extends Phaser.Scene {
       this.applyTutorialBoardHints();
       // One more pass after HUD chrome exists so padding / safe rect is final
       requestAnimationFrame(() => this.board?.scheduleCenter(true));
-      void SFX.unlock().then(() => {
-        SFX.play('endTurn');
-        SFX.startMusic();
+      // Never block boot on audio — mobile resume can hang
+      void Promise.race([
+        SFX.unlock(),
+        new Promise<void>((r) => window.setTimeout(r, 400)),
+      ]).then(() => {
+        try {
+          SFX.play('endTurn');
+          SFX.startMusic();
+        } catch {
+          /* ignore */
+        }
       });
     } catch (e) {
       console.error('[Sector Lords] tabletop boot failed', e);

@@ -300,6 +300,7 @@ class SoundBankImpl {
 
   /**
    * Call from any click/key handler. Required by browser autoplay policy.
+   * Never hangs — iOS/Android can leave AudioContext.resume() pending forever.
    */
   async unlock(): Promise<void> {
     if (this.unlocked && this.ctx?.state === 'running') return;
@@ -317,27 +318,37 @@ class SoundBankImpl {
             this.unlocked = true;
             return;
           }
-          this.ctx = new AC({ latencyHint: 'interactive' } as AudioContextOptions);
+          try {
+            this.ctx = new AC({ latencyHint: 'interactive' } as AudioContextOptions);
+          } catch {
+            this.ctx = new AC();
+          }
         }
         if (this.ctx.state === 'suspended') {
-          await this.ctx.resume();
+          // Race resume — some mobile browsers never settle the promise
+          await Promise.race([
+            this.ctx.resume().catch(() => undefined),
+            new Promise<void>((r) => window.setTimeout(r, 400)),
+          ]);
         }
         if (this.ctx.state === 'running') {
-          const g = this.ctx.createGain();
-          g.gain.value = 0.0001;
-          const o = this.ctx.createOscillator();
-          o.connect(g);
-          g.connect(this.ctx.destination);
-          o.start();
-          o.stop(this.ctx.currentTime + 0.02);
-          this.unlocked = true;
+          try {
+            const g = this.ctx.createGain();
+            g.gain.value = 0.0001;
+            const o = this.ctx.createOscillator();
+            o.connect(g);
+            g.connect(this.ctx.destination);
+            o.start();
+            o.stop(this.ctx.currentTime + 0.02);
+          } catch {
+            /* ignore oscillator probe */
+          }
           // Desktop only: prefetch first theme as AudioBuffer
           if (!this.useHtmlMusic) {
             void this.ensureTrack(0).catch(() => undefined);
           }
-        } else {
-          this.unlocked = true; // allow HTMLAudio attempt
         }
+        this.unlocked = true; // always allow HTMLAudio / later resume
       } catch (e) {
         console.warn('[Sector Lords] audio unlock failed', e);
         this.unlocked = true;
@@ -346,7 +357,16 @@ class SoundBankImpl {
       }
     })();
 
-    return this.unlockPromise;
+    // Outer deadline so callers never block Jack In / scene starts
+    return Promise.race([
+      this.unlockPromise,
+      new Promise<void>((r) => {
+        window.setTimeout(() => {
+          this.unlocked = true;
+          r();
+        }, 600);
+      }),
+    ]);
   }
 
   private ensure(): AudioContext | null {

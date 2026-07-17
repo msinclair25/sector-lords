@@ -195,11 +195,18 @@ export class MenuScene extends Phaser.Scene {
     `;
 
     for (const btn of this.root.querySelectorAll<HTMLButtonElement>('button[data-act]')) {
-      btn.addEventListener('click', () => this.onAct(btn.dataset.act!));
+      btn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        const act = btn.dataset.act;
+        if (act) this.onAct(act);
+      });
     }
   }
 
+  private launching = false;
+
   private onAct(act: string): void {
+    // Kick audio unlock without blocking UI
     void SFX.unlock();
 
     if (act === 'scen-prev') {
@@ -260,23 +267,45 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private async launchHybrid(continueSave: boolean): Promise<void> {
-    await SFX.unlock();
-    // Keep player music level; only ensure something plays if they left it on
-    if (SFX.isMusicEnabled()) SFX.startMusic();
-    SFX.play('endTurn');
+    // Guard double-tap (touch pointerup + click) on Jack In
+    if (this.launching) return;
+    this.launching = true;
 
+    // Show loading FIRST — never wait on audio before leaving the menu
     if (this.root) {
       const load = document.createElement('div');
       load.className = 'sl-loading';
       load.textContent = 'SPINNING UP WAR TABLE…';
+      load.style.cssText =
+        'position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,2,10,0.92);color:#fcee0a;font-family:Orbitron,system-ui,sans-serif;letter-spacing:0.12em;font-size:13px;pointer-events:none;';
       this.root.appendChild(load);
+    }
+
+    // Soft unlock with hard timeout (never block scene start on mobile)
+    try {
+      await Promise.race([
+        SFX.unlock(),
+        new Promise<void>((r) => window.setTimeout(r, 350)),
+      ]);
+    } catch {
+      /* ignore */
+    }
+    try {
+      if (SFX.isMusicEnabled()) SFX.startMusic();
+      SFX.play('endTurn');
+    } catch {
+      /* ignore */
     }
 
     try {
       if (!this.scene.get('Game3D')) {
         this.scene.add('Game3D', Game3DScene, false);
       }
-      SFX.startMusic();
+      try {
+        SFX.startMusic();
+      } catch {
+        /* ignore */
+      }
       this.teardown();
       this.scene.start('Game3D', {
         scenarioId: SCENARIOS[this.scenarioIndex]!.id,
@@ -285,13 +314,22 @@ export class MenuScene extends Phaser.Scene {
       });
     } catch (e) {
       console.error('[Sector Lords] failed to start Game3D', e);
+      this.launching = false;
+      // Recreate menu shell so the player is not stuck on a dead root
+      if (!this.root) {
+        this.create();
+      }
       if (this.root) {
         const load = this.root.querySelector('.sl-loading');
         if (load) {
           load.classList.add('error');
+          (load as HTMLElement).style.pointerEvents = 'auto';
           load.innerHTML = `FAILED TO START<br/><small>${
             e instanceof Error ? escapeHtml(e.message) : escapeHtml(String(e))
-          }</small>`;
+          }</small><br/><button type="button" class="sl-btn primary" data-retry style="margin-top:12px">Retry</button>`;
+          load.querySelector('[data-retry]')?.addEventListener('click', () => {
+            void this.launchHybrid(continueSave);
+          });
         }
       }
       SFX.play('error');
