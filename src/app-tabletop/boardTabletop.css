@@ -1185,17 +1185,17 @@
     inset 0 -14px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Yours — hairline warm rim + soft bloom (subtle claim cue) */
+/* Yours — stronger warm rim so ownership reads at a glance */
 .sl-tile.is-mine .sl-tile-top {
   box-shadow:
     3px 4px 0 #0a0814,
     6px 10px 14px rgba(0, 0, 0, 0.48),
     /* inner edge catch */
-    inset 0 0 0 1px rgba(255, 236, 150, 0.55),
-    /* thin outer rim */
-    0 0 0 1px rgba(230, 195, 70, 0.45),
-    /* quiet ambient halo */
-    0 0 10px rgba(252, 210, 80, 0.2),
+    inset 0 0 0 1.5px rgba(255, 236, 150, 0.72),
+    /* outer gold rim */
+    0 0 0 2px rgba(252, 220, 80, 0.7),
+    /* ambient halo */
+    0 0 14px rgba(252, 210, 80, 0.32),
     inset 0 -14px 20px rgba(0, 0, 0, 0.4) !important;
 }
 
@@ -1385,6 +1385,50 @@
   box-sizing: border-box;
   /* Don't crop faces — tile overflow is visible; foe stack is self-contained */
   overflow: visible;
+}
+
+/* ATK / DEF lean on board portraits */
+.sl-tile-portraits .sl-role-chip {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(calc(-50% - 14px));
+  z-index: 9;
+  min-width: 22px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  font: 800 7px/1.1 "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+.sl-tile-portraits .sl-role-chip.atk {
+  color: #1a0508;
+  background: #ff6b7a;
+  border: 1px solid rgba(255, 200, 200, 0.7);
+}
+.sl-tile-portraits .sl-role-chip.def {
+  color: #041018;
+  background: #5ec8ff;
+  border: 1px solid rgba(180, 230, 255, 0.75);
+}
+.sl-tile-portraits .sl-role-chip.bal {
+  color: #0a0814;
+  background: #c8c0e0;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+/* Empty owned turf marker */
+.sl-tile-portraits .sl-you-tag {
+  font: 800 8px/1 "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  color: #0a0814;
+  background: linear-gradient(180deg, #ffe66a, #e8c420);
+  padding: 3px 5px 2px;
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(252, 220, 80, 0.45);
+  pointer-events: none;
 }
 
 .sl-tile-portraits img {

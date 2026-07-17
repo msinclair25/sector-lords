@@ -34,7 +34,8 @@ Do **not** force-push or rewrite history on a shared remote without saying so.
 - itch.io page
 - Custom domain if traction
 - Further HUD incremental render (perf) only if lag appears
-- **Player feedback parked** → see [[Player Feedback]] (act when themes repeat, not from one comment)
+- **Player feedback** → We Playtest Tier A/B shipped (v29); Tier C archived in [[Player Feedback]]
+- Watch next cold playtests for residual onboarding pain
 
 ## 3. Docs habit
 

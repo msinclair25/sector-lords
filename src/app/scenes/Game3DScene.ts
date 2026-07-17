@@ -15,6 +15,7 @@ import { flashArtUrl } from '../../content/eventArt';
 import {
   areAdjacent,
   computeIncomeBreakdown,
+  computeUpkeep,
   describeVictoryGoal,
   formatOdds,
   HEAT_BANDS,
@@ -59,12 +60,31 @@ const REEL_STEP_MS = 480;
 function loadLegendOpen(): boolean {
   try {
     const raw = localStorage.getItem(LEGEND_KEY);
-    // Default open so Support/etc. are explained on first run
-    if (raw === null) return true;
+    // Default closed — field guide teaches first; KEY is optional denser glossary
+    if (raw === null) return false;
     return raw === '1';
   } catch {
-    return true;
+    return false;
   }
+}
+
+/** Combat vs defense lean for portrait chips (ATK / DEF / BAL). */
+function crewRoleLean(combat: number, defense: number): 'atk' | 'def' | 'bal' {
+  if (combat > defense) return 'atk';
+  if (defense > combat) return 'def';
+  return 'bal';
+}
+
+function crewRoleChipHtml(combat: number, defense: number): string {
+  const lean = crewRoleLean(combat, defense);
+  const label = lean === 'atk' ? 'ATK' : lean === 'def' ? 'DEF' : 'BAL';
+  const title =
+    lean === 'atk'
+      ? `Attack lean · Combat ${combat} > Defense ${defense}`
+      : lean === 'def'
+        ? `Defense lean · Defense ${defense} > Combat ${combat}`
+        : `Balanced · Combat ${combat} / Defense ${defense}`;
+  return `<span class="role-chip ${lean}" title="${title}">${label}</span>`;
 }
 
 function loadSideCollapsed(): Record<string, boolean> {
@@ -124,10 +144,24 @@ const TUTORIAL: TutStep[] = [
   },
   {
     title: 'Influence a business',
-    body: 'On your owned turf, open a site card in the side panel. Influence Casino for cash, Lab for research, Armory for combat, Clinic for heal.',
-    visual: '→ Business cards highlighted when you’re on owned ground',
+    body: 'On your owned turf: Influence locks a permanent racket (Casino cash, Lab research…). Unrest is different — cash now, +heat, temporary.',
+    visual: '→ Business cards · Influence = permanent · Unrest = one-shot cash',
     board: 'home',
     ui: ['sites'],
+  },
+  {
+    title: 'Jobs = cash contracts',
+    body: 'Open Jobs and tap Accept on a contract. Goals only progress after you accept — the list is not a free checklist.',
+    visual: '→ Jobs button · Accept · $ reward on each card',
+    board: 'none',
+    ui: [],
+  },
+  {
+    title: 'Cash & upkeep',
+    body: 'Each End Turn: territory + sites pay income, then crew upkeep is deducted. The →$ on Cash is your projected net next turn.',
+    visual: '→ Cash stat · status line after End Turn shows income − upkeep',
+    board: 'none',
+    ui: [],
   },
 ];
 
@@ -1131,9 +1165,9 @@ export class Game3DScene extends Phaser.Scene {
               <span class="audio-lbl">SFX</span>
               <span class="audio-state">${SFX.isEnabled() ? 'ON' : 'OFF'}</span>
             </button>
-            <button type="button" class="audio-tog music${SFX.isMusicEnabled() ? ' on' : ''}" data-act="music-toggle" title="Toggle music">
+            <button type="button" class="audio-tog music${SFX.isMusicEnabled() ? ' on' : ''}" data-act="music-toggle" title="Cycle music: Off → Low → Med → High">
               <span class="audio-lbl">MUSIC</span>
-              <span class="audio-state">${SFX.isMusicEnabled() ? 'ON' : 'OFF'}</span>
+              <span class="audio-state">${SFX.getMusicLevelLabel()}</span>
             </button>
           </div>
           <div id="sl-now-playing" class="now-playing${SFX.isMusicEnabled() ? '' : ' off'}" title="Now playing">
@@ -1147,7 +1181,9 @@ export class Game3DScene extends Phaser.Scene {
               ? state.turn
               : `${state.turn}/${'turns' in state.victory ? state.victory.turns : '—'}`
           }</span></div>
-          <div class="stat" title="Territory $${incomeBr.territory} · Sites $${incomeBr.sites} · Unrest $${incomeBr.unrest} · Landmarks $${incomeBr.landmarks}"><span class="lbl">Cash</span><span class="val">$${me.cash}<small>→$${nextCash}</small></span></div>
+          <div class="stat" title="${escapeHtml(
+            `Territory $${incomeBr.territory} · Sites $${incomeBr.sites} · Unrest $${incomeBr.unrest} · Landmarks $${incomeBr.landmarks} · Crew upkeep −$${computeUpkeep(state, me.id)} · →$${nextCash} is projected net next End Turn`,
+          )}"><span class="lbl">Cash</span><span class="val">$${me.cash}<small>→$${nextCash}</small></span></div>
           <div class="stat" title="Empire loyalty score. Gained from owned blocks, influenced sites, and landmarks. Empty owned blocks bleed support. Counts toward Combined victory."><span class="lbl">Support</span><span class="val">${me.support}</span></div>
           <div class="stat heat-stat heat-${heatBand(state.cityHeat)}${(state.crackdownCooldown ?? 0) > 0 ? ' cooloff' : ''}${
             state.cityHeat >= HEAT_BANDS.crackdownAt && (state.crackdownCooldown ?? 0) === 0
@@ -1299,8 +1335,11 @@ export class Game3DScene extends Phaser.Scene {
               const orderLine = ord
                 ? `<span class="gp-order">${this.orderPlainLabel(ord)}</span>`
                 : `<span class="gp-meta">Block ${g.sectorId} · HP ${g.hp}${gearN ? ` · ${gearN} gear` : ''}</span>`;
-              return `<button type="button" class="act gang-pick${sel}${ord ? ' has-order' : ''}" data-act="pick-gang-${g.id}" data-gang-row="${g.id}" title="Select ${escapeHtml(d.name)}">
-                <img src="${img}" alt="" />
+              return `<button type="button" class="act gang-pick${sel}${ord ? ' has-order' : ''}" data-act="pick-gang-${g.id}" data-gang-row="${g.id}" title="Select ${escapeHtml(d.name)} · C${d.combat}/D${d.defense}">
+                <span class="gp-art-wrap">
+                  <img src="${img}" alt="" />
+                  ${crewRoleChipHtml(d.combat, d.defense)}
+                </span>
                 <span class="gp-text">
                   <span class="gp-name">${escapeHtml(d.name)}</span>
                   ${orderLine}
@@ -1664,6 +1703,7 @@ export class Game3DScene extends Phaser.Scene {
     return `<div id="sl-crew-dock"${dockCollapsed ? ' class="is-collapsed"' : ''}>
       <div class="dock-hero">
         <img class="dock-art" src="${art}" alt="${escapeHtml(def.name)}" />
+        ${crewRoleChipHtml(def.combat, def.defense)}
         <div class="dock-hero-fade" aria-hidden="true"></div>
         <div class="dock-hero-meta">
           <div class="dock-kicker">// SELECTED CREW</div>
@@ -1867,7 +1907,10 @@ export class Game3DScene extends Phaser.Scene {
           );
           const canAfford = cash >= d.hireCost;
           return `<button class="act hire-card" data-act="hire-${i}" ${canAfford ? '' : 'disabled'} title="${escapeHtml(d.description)}">
-            <img src="${art}" alt="${escapeHtml(d.name)}" loading="lazy" />
+            <span class="hire-art-wrap">
+              <img src="${art}" alt="${escapeHtml(d.name)}" loading="lazy" />
+              ${crewRoleChipHtml(d.combat, d.defense)}
+            </span>
             <div class="hire-meta">
               <div class="hire-name">${escapeHtml(d.name)}</div>
               <div class="hire-stats">C${d.combat} · D${d.defense} · T${d.tech} · upk $${d.upkeep}</div>
@@ -1887,9 +1930,15 @@ export class Game3DScene extends Phaser.Scene {
       const board = state.jobBoard
         .map((id, i) => {
           const j = jobDefById(id);
-          return `<button class="act" data-act="job-${i}" style="width:100%;margin:4px 0;align-items:flex-start;text-align:left;text-transform:none;letter-spacing:0.02em">
-            <span class="act-label" style="text-transform:none;letter-spacing:0.02em">${escapeHtml(j.name)}</span>
-            <span class="act-sub">Reward $${j.rewardCash} · ${escapeHtml(j.description)}</span>
+          return `<button type="button" class="act job-card" data-act="job-${i}">
+            <span class="job-card-main">
+              <span class="act-label">${escapeHtml(j.name)}</span>
+              <span class="job-goal">${escapeHtml(j.description)}</span>
+            </span>
+            <span class="job-accept">
+              <span class="job-accept-lab">Accept</span>
+              <span class="job-accept-pay">$${j.rewardCash}</span>
+            </span>
           </button>`;
         })
         .join('');
@@ -1902,9 +1951,12 @@ export class Game3DScene extends Phaser.Scene {
         .join('');
       return this.drawerChrome(
         'City jobs',
-        'Take contracts for cash and progress. Esc or ✕ closes.',
+        'Tap <b>Accept</b> to take a contract — goals only track after you accept. Esc or ✕ closes.',
         `${board || '<p class="muted">No contracts right now.</p>'}
-        <h3 class="drawer-section">Active</h3>${active || '<p class="muted">None yet.</p>'}`,
+        <h3 class="drawer-section">Active</h3>${
+          active ||
+          '<p class="muted">No active contracts — accept one above for cash.</p>'
+        }`,
       );
     }
     if (this.drawer === 'tech') {
@@ -2178,10 +2230,10 @@ export class Game3DScene extends Phaser.Scene {
         label: 'Unrest',
         sub: unrestPrev
           ? unrestPrev.unrestGain > 0
-            ? `+$${unrestPrev.cash} · +${unrestPrev.unrestGain} unrest · heat +${unrestPrev.heatSpike} (End Turn)`
+            ? `Shake for cash now · +$${unrestPrev.cash} · heat +${unrestPrev.heatSpike} (temp, not a racket)`
             : 'Block maxed at 10 unrest'
           : onOwn
-            ? 'Cash + heat on End Turn'
+            ? 'One-shot cash + heat (not permanent)'
             : 'Stand on your turf',
         disabled: !unrestReady,
       });
@@ -2192,9 +2244,9 @@ export class Game3DScene extends Phaser.Scene {
         label: 'Influence',
         sub:
           openSites === 1
-            ? '1 open site · click to order it'
+            ? 'Lock permanent racket on this site'
             : openSites > 1
-              ? `${openSites} open · pick site (costs order)`
+              ? `${openSites} open · permanent passive bonus`
               : onOwn
                 ? 'All sites yours already'
                 : 'Crew must stand on your block',
@@ -2322,9 +2374,7 @@ export class Game3DScene extends Phaser.Scene {
     }
     if (act === 'music-toggle') {
       void SFX.unlock().then(() => {
-        const next = !SFX.isMusicEnabled();
-        SFX.setMusicEnabled(next);
-        if (next) SFX.startMusic();
+        SFX.cycleMusicLevel();
         if (SFX.isEnabled()) SFX.play('ui');
         this.render();
       });
@@ -2389,7 +2439,9 @@ export class Game3DScene extends Phaser.Scene {
       return;
     }
     if (act === 'jobs-open') {
-      this.drawer = this.drawer === 'jobs' ? 'none' : 'jobs';
+      const opening = this.drawer !== 'jobs';
+      this.drawer = opening ? 'jobs' : 'none';
+      if (opening && this.coachStep === 4) this.advanceCoach();
       this.render();
       SFX.play('ui');
       return;
@@ -2505,6 +2557,7 @@ export class Game3DScene extends Phaser.Scene {
         const msg = this.controller.acceptJob(id);
         this.statusMsg = msg;
         SFX.play(msg.startsWith('Accepted') ? 'ui' : 'error');
+        if (msg.startsWith('Accepted') && this.coachStep === 4) this.advanceCoach();
         this.render();
       }
       return;
@@ -3077,15 +3130,15 @@ export class Game3DScene extends Phaser.Scene {
         : `${names.slice(0, 2).join(', ')} +${names.length - 2} more`;
     return `<div id="sl-end-warn" class="pe" role="alertdialog" aria-labelledby="sl-end-warn-title">
       <div class="end-warn-main">
-        <div id="sl-end-warn-title" class="end-warn-title">Idle crews</div>
+        <div id="sl-end-warn-title" class="end-warn-title">Crews without orders</div>
         <p class="end-warn-copy">
           <b>${free.length}</b> crew${free.length === 1 ? '' : 's'} still free
-          (${escapeHtml(list)}). They will sit this turn out if you continue.
+          (${escapeHtml(list)}). They’ll <b>stay put</b> this turn — not fired, just idle.
         </p>
       </div>
       <div class="end-warn-actions">
         <button type="button" class="act ghost" data-act="end-cancel">
-          <span class="act-label">Keep ordering</span>
+          <span class="act-label">Go assign them</span>
         </button>
         ${
           free.length >= 1
@@ -3096,8 +3149,8 @@ export class Game3DScene extends Phaser.Scene {
             : ''
         }
         <button type="button" class="act end-turn" data-act="end-confirm">
-          <span class="act-label">End turn anyway</span>
-          <span class="act-sub">Leave them idle</span>
+          <span class="act-label">End turn with idle crews</span>
+          <span class="act-sub">They stay put</span>
         </button>
       </div>
     </div>`;
@@ -3164,7 +3217,8 @@ export class Game3DScene extends Phaser.Scene {
         this.suppressSync = false;
         this.resolving = false;
         this.statusMsg = message;
-        if (this.coachStep === 2) this.advanceCoach();
+        // Field guide: step 2 = first end turn; step 5 = cash/upkeep after a later resolve
+        if (this.coachStep === 2 || this.coachStep === 5) this.advanceCoach();
         this.refreshBoard();
         this.render();
         if (combats > 0) SFX.play('combat');

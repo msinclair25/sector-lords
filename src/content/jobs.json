@@ -2,7 +2,7 @@
   {
     "id": "shake_casinos",
     "name": "Shake the Tables",
-    "description": "Influence 2 casino sites before the mark moves on.",
+    "description": "Lock influence on 2 Casino sites (permanent rackets on your turf).",
     "goalType": "influence_site",
     "goalTarget": "casino",
     "goalCount": 2,
@@ -14,7 +14,7 @@
   {
     "id": "claim_sprawl",
     "name": "Claim the Sprawl",
-    "description": "Hold at least 6 sectors at once.",
+    "description": "Own 6 sectors at the same time (count of turf you hold — not stand still).",
     "goalType": "own_sectors",
     "goalTarget": "",
     "goalCount": 6,
@@ -26,7 +26,7 @@
   {
     "id": "street_war",
     "name": "Street War Contract",
-    "description": "Win 2 attacks (successful sector takes).",
+    "description": "Win 2 attacks (you take the block after a fight).",
     "goalType": "win_attacks",
     "goalTarget": "",
     "goalCount": 2,
@@ -38,7 +38,7 @@
   {
     "id": "lab_capture",
     "name": "Capture a Lab",
-    "description": "Influence a Black Lab site.",
+    "description": "Lock influence on 1 Black Lab site for research.",
     "goalType": "influence_site",
     "goalTarget": "lab",
     "goalCount": 1,
@@ -50,7 +50,7 @@
   {
     "id": "unrest_merchant",
     "name": "Unrest Merchant",
-    "description": "Raise unrest 3 times.",
+    "description": "Issue Raise Unrest 3 times (cash now, +heat — not permanent).",
     "goalType": "unrest_actions",
     "goalTarget": "",
     "goalCount": 3,
@@ -62,7 +62,7 @@
   {
     "id": "arm_the_crew",
     "name": "Arm the Crew",
-    "description": "Research any item (complete unlock).",
+    "description": "Finish researching any item (complete the blueprint unlock).",
     "goalType": "research_complete",
     "goalTarget": "",
     "goalCount": 1,
@@ -74,7 +74,7 @@
   {
     "id": "border_push",
     "name": "Border Push",
-    "description": "Claim 3 empty sectors.",
+    "description": "Claim 3 empty (unclaimed) sectors.",
     "goalType": "claim_sectors",
     "goalTarget": "",
     "goalCount": 3,

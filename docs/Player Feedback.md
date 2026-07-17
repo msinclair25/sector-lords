@@ -110,6 +110,23 @@ Collect external playtest notes here. **Do not ship knee-jerk changes from a sin
 5. **Volume slider** + single music mute state  
 6. Reduce simultaneous onboarding text (coach vs KEY)
 
+#### Shipped (2026-07-16, v29) — Tier A/B from this review
+- Field guide: KEY default closed; +jobs +cash steps; Influence vs Unrest one-liners  
+- Jobs: **Accept · $** cards + clearer `jobs.json` copy  
+- End Turn: income − upkeep status line; softer idle-crew warning  
+- ATK/DEF/BAL role chips on board, hire, roster, dock  
+- Music: **Off / Low / Med / High** cycle (menu + in-game)  
+- Stronger mine rim + **YOU** tag on empty owned blocks  
+- Combat odds show **ATK x vs DEF y**
+
+#### Archived — Tier C (not soon)
+Parked intentionally; do not pull into active sprint without a new decision:
+- Full guided campaign tutorial mode (beyond field guide extension)
+- Free 3D orbit on war table
+- Auto-accept jobs
+- Strip KEY entirely
+- Major menu redesign
+
 #### Quote (closing)
 > “I found this game a bit complicated… I started to understand it the more I played. But there’s a lot of stuff I haven’t understood. Basically just scratched the surface.”
 

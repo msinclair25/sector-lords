@@ -349,10 +349,11 @@ export class GameController {
     const debrief = this.state.winnerId ? buildDebrief(this.state, this.humanId) : null;
     const humanName = this.state.players[this.humanId]?.name ?? 'You';
     // Surface human unrest payoffs so "raise unrest" doesn't feel like a no-op
+    const turnJustEnded = this.state.turn - 1;
     const unrestBits = this.state.log
       .filter(
         (l) =>
-          l.turn === this.state.turn - 1 &&
+          l.turn === turnJustEnded &&
           l.kind === 'economy' &&
           l.message.includes('raises unrest') &&
           l.message.startsWith(humanName),
@@ -362,13 +363,30 @@ export class GameController {
       unrestBits.length > 0
         ? ` · ${unrestBits.slice(0, 2).join(' · ')}${unrestBits.length > 2 ? '…' : ''}`
         : '';
+    // Human cash line: income vs crew upkeep (answers “where did my money go?”)
+    const ecoMsg = this.state.log.find(
+      (l) =>
+        l.turn === turnJustEnded &&
+        l.kind === 'economy' &&
+        l.message.startsWith(humanName) &&
+        l.message.includes('upkeep'),
+    )?.message;
+    let cashTail = '';
+    if (ecoMsg) {
+      const inc = ecoMsg.match(/\+\$(\d+)\s+income/);
+      const upk = ecoMsg.match(/-\$(\d+)\s+upkeep/);
+      const net = ecoMsg.match(/net ([+\-]?\d+)/);
+      if (inc && upk && net) {
+        cashTail = ` · Cash +$${inc[1]} income −$${upk[1]} upkeep (net ${net[1]})`;
+      }
+    }
     const msg = this.state.winnerId
       ? `${this.state.players[this.state.winnerId]?.name} wins!`
       : cityEvent?.id === 'police_crackdown'
-        ? `Turn ${this.state.turn} · POLICE CRACKDOWN — check hit blocks (RAID badge). Cool-off active.${unrestTail}`
+        ? `Turn ${this.state.turn} · POLICE CRACKDOWN — check hit blocks (RAID badge). Cool-off active.${cashTail}${unrestTail}`
         : cityEvent
-          ? `Turn ${this.state.turn} · City event: ${cityEvent.name}${unrestTail}`
-          : `Turn ${this.state.turn} begins. ${combats.length} battle(s)${unrestTail || ' resolved.'}`;
+          ? `Turn ${this.state.turn} · City event: ${cityEvent.name}${cashTail}${unrestTail}`
+          : `Turn ${this.state.turn} begins. ${combats.length} battle(s)${cashTail}${unrestTail || ' resolved.'}`;
     return {
       combats: combats.length,
       message: msg,

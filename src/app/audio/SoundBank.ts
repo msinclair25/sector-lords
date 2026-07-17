@@ -23,14 +23,23 @@ export type Sfx =
 
 const SFX_KEY = 'sector-lords-sfx';
 const MUSIC_KEY = 'sector-lords-music';
+const MUSIC_LEVEL_KEY = 'sector-lords-music-level';
+
+/** Simple music loudness — cycle Off → Low → Med → High */
+export type MusicLevel = 'off' | 'low' | 'med' | 'high';
+const MUSIC_LEVELS: MusicLevel[] = ['off', 'low', 'med', 'high'];
+/** Relative music bus gain per level (multiplied by master) */
+const MUSIC_LEVEL_GAIN: Record<Exclude<MusicLevel, 'off'>, number> = {
+  low: 0.22,
+  med: 0.55,
+  high: 0.92,
+};
 
 /** War-table playlist — plays in order, then loops the list */
 const THEME_TRACKS: ReadonlyArray<{ url: string; title: string }> = [
   { url: assetUrl('assets/audio/The_Iron_Litany.mp3'), title: 'The Iron Litany' },
   { url: assetUrl('assets/audio/Iron_Vesper.mp3'), title: 'Iron Vesper' },
 ];
-/** Music bus gain (0–1 before master) */
-const MUSIC_GAIN = 0.55;
 
 function isIOSLike(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -61,6 +70,7 @@ class SoundBankImpl {
   private ctx: AudioContext | null = null;
   private sfxOn = true;
   private musicOn = true;
+  private musicLevel: MusicLevel = 'med';
   private master = 0.4;
   private musicBus: GainNode | null = null;
   private musicNodes: AudioNode[] = [];
@@ -128,22 +138,103 @@ class SoundBankImpl {
   }
 
   setMusicEnabled(on: boolean): void {
-    this.musicOn = on;
-    try {
-      localStorage.setItem(MUSIC_KEY, on ? '1' : '0');
-    } catch {
-      /* ignore */
-    }
     if (on) {
-      void this.unlock().then(() => this.startMusic());
+      // Restore a playable level if we were off
+      if (this.musicLevel === 'off') this.musicLevel = 'med';
+      this.musicOn = true;
+      this.persistMusic();
+      void this.unlock().then(() => {
+        this.startMusic();
+        this.applyMusicGain();
+      });
     } else {
+      this.musicOn = false;
+      this.musicLevel = 'off';
+      this.persistMusic();
       this.stopMusic();
       this.emitTrackChange();
     }
   }
 
   isMusicEnabled(): boolean {
-    return this.musicOn;
+    return this.musicOn && this.musicLevel !== 'off';
+  }
+
+  getMusicLevel(): MusicLevel {
+    return this.musicOn ? this.musicLevel : 'off';
+  }
+
+  /** Short label for HUD / menu pills */
+  getMusicLevelLabel(): string {
+    const lv = this.getMusicLevel();
+    if (lv === 'off') return 'OFF';
+    if (lv === 'low') return 'LOW';
+    if (lv === 'med') return 'MED';
+    return 'HIGH';
+  }
+
+  setMusicLevel(level: MusicLevel): void {
+    this.musicLevel = level;
+    this.musicOn = level !== 'off';
+    this.persistMusic();
+    if (this.musicOn) {
+      void this.unlock().then(() => {
+        this.startMusic();
+        this.applyMusicGain();
+      });
+    } else {
+      this.stopMusic();
+      this.emitTrackChange();
+    }
+  }
+
+  /** Cycle Off → Low → Med → High → Off (menu + in-game share this). */
+  cycleMusicLevel(): MusicLevel {
+    const cur = this.getMusicLevel();
+    const idx = MUSIC_LEVELS.indexOf(cur);
+    const next = MUSIC_LEVELS[(idx + 1) % MUSIC_LEVELS.length]!;
+    this.setMusicLevel(next);
+    return next;
+  }
+
+  private musicGainTarget(): number {
+    if (!this.musicOn || this.musicLevel === 'off') return 0;
+    const base = MUSIC_LEVEL_GAIN[this.musicLevel];
+    return Math.min(1, base * this.master * 1.35);
+  }
+
+  private applyMusicGain(): void {
+    const target = Math.max(0.0001, this.musicGainTarget());
+    if (this.htmlAudio) {
+      try {
+        this.htmlAudio.volume = Math.min(1, target);
+      } catch {
+        /* ignore */
+      }
+    }
+    if (this.musicBus && this.ctx) {
+      try {
+        const t0 = this.ctx.currentTime;
+        this.musicBus.gain.cancelScheduledValues(t0);
+        this.musicBus.gain.setValueAtTime(this.musicBus.gain.value || 0.0001, t0);
+        this.musicBus.gain.exponentialRampToValueAtTime(target, t0 + 0.12);
+      } catch {
+        try {
+          this.musicBus.gain.value = target;
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+  }
+
+  private persistMusic(): void {
+    try {
+      localStorage.setItem(MUSIC_KEY, this.musicOn && this.musicLevel !== 'off' ? '1' : '0');
+      localStorage.setItem(MUSIC_LEVEL_KEY, this.getMusicLevel());
+    } catch {
+      /* ignore */
+    }
   }
 
   getNowPlaying(): {
@@ -184,9 +275,21 @@ class SoundBankImpl {
   loadPreference(): void {
     try {
       if (localStorage.getItem(SFX_KEY) === '0') this.sfxOn = false;
-      const m = localStorage.getItem(MUSIC_KEY);
-      if (m === '0') this.musicOn = false;
-      else this.musicOn = true;
+      const levelRaw = localStorage.getItem(MUSIC_LEVEL_KEY);
+      if (levelRaw === 'off' || levelRaw === 'low' || levelRaw === 'med' || levelRaw === 'high') {
+        this.musicLevel = levelRaw;
+        this.musicOn = levelRaw !== 'off';
+      } else {
+        // Migrate legacy on/off flag
+        const m = localStorage.getItem(MUSIC_KEY);
+        if (m === '0') {
+          this.musicOn = false;
+          this.musicLevel = 'off';
+        } else {
+          this.musicOn = true;
+          this.musicLevel = 'med';
+        }
+      }
     } catch {
       /* ignore */
     }
@@ -489,7 +592,7 @@ class SoundBankImpl {
     audio.preload = 'auto';
     audio.src = track.url;
     audio.loop = false;
-    audio.volume = Math.min(1, MUSIC_GAIN * this.master * 1.35);
+    audio.volume = Math.min(1, this.musicGainTarget() || 0.001);
     // playsInline helps iOS not force fullscreen video-style playback
     audio.setAttribute('playsinline', 'true');
     audio.setAttribute('webkit-playsinline', 'true');
@@ -559,8 +662,8 @@ class SoundBankImpl {
     src.connect(bus);
     src.start(0);
 
-    const target = MUSIC_GAIN * this.master * 1.4;
-    bus.gain.exponentialRampToValueAtTime(Math.max(0.001, target), ctx.currentTime + 1.0);
+    const target = Math.max(0.001, this.musicGainTarget());
+    bus.gain.exponentialRampToValueAtTime(target, ctx.currentTime + 1.0);
 
     this.musicBus = bus;
     this.themeSource = src;
@@ -604,7 +707,8 @@ class SoundBankImpl {
     const master = c.createGain();
     master.gain.value = 0.0001;
     master.connect(c.destination);
-    master.gain.exponentialRampToValueAtTime(0.12 * this.master * 2, c.currentTime + 1.0);
+    const synthTarget = Math.max(0.001, this.musicGainTarget() * 0.45);
+    master.gain.exponentialRampToValueAtTime(synthTarget, c.currentTime + 1.0);
     this.musicBus = master;
 
     const mkPad = (freq: number, type: OscillatorType, gain: number, detune = 0) => {

@@ -1037,6 +1037,27 @@ export class BoardTabletop {
       img.className = 'mine' + (busy ? ' is-busy' : '');
       if (faceId === selectedCrewId) img.classList.add('selected-crew');
       host.appendChild(img);
+      // ATK / DEF lean chip — glanceable combat role
+      const lean =
+        def.combat > def.defense ? 'atk' : def.defense > def.combat ? 'def' : 'bal';
+      const role = document.createElement('span');
+      role.className = `sl-role-chip ${lean}`;
+      role.textContent = lean === 'atk' ? 'ATK' : lean === 'def' ? 'DEF' : 'BAL';
+      role.title =
+        lean === 'atk'
+          ? `Attack lean · C${def.combat} > D${def.defense}`
+          : lean === 'def'
+            ? `Defense lean · D${def.defense} > C${def.combat}`
+            : `Balanced · C${def.combat}/D${def.defense}`;
+      role.setAttribute('aria-hidden', 'true');
+      host.appendChild(role);
+    } else if (tileId && state.sectors[tileId]?.owner === this.humanId) {
+      // Empty owned turf — clear YOU tag so ownership is obvious without a crew
+      const you = document.createElement('span');
+      you.className = 'sl-you-tag';
+      you.textContent = 'YOU';
+      you.title = 'Your turf (no crew here)';
+      host.appendChild(you);
     }
 
     // Big NEXT control when multiple of your crews share the tile

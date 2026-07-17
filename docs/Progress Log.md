@@ -4,6 +4,20 @@ Reverse-chronological ship log. Add new entries at the top.
 
 ---
 
+## 2026-07-16 — We Playtest UX (Tier A/B)
+
+Cold-playtest fixes from [We Playtest Games video](https://www.youtube.com/watch?v=Jt6DNOjHliQ):
+
+- **Jobs:** Accept · $ cards; clearer goal copy in `jobs.json`
+- **Cash:** End Turn status shows income − upkeep; Cash tooltip includes upkeep
+- **Idle warn:** softer “stay put / not fired” copy
+- **Coach:** KEY default closed; +Jobs +Cash steps; Influence vs Unrest wording
+- **Roles:** ATK/DEF/BAL chips on board, hire, roster, dock
+- **Music:** Off / Low / Med / High cycle (menu + in-game share SoundBank)
+- **Ownership:** stronger gold rim; **YOU** on empty owned blocks
+- **Odds:** ATK power vs DEF power in formatOdds
+- Tier C archived in [[Player Feedback]] (no full tutorial mode / 3D orbit / menu redesign soon)
+
 ## 2026-07-15 — iOS Safari/Chrome stability
 
 - **Music on iOS:** HTMLAudioElement stream (no `decodeAudioData` of 4MB MP3s → RAM crash)

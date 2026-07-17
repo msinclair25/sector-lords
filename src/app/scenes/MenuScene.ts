@@ -119,7 +119,7 @@ export class MenuScene extends Phaser.Scene {
           <div class="sl-status-row">
             <span class="sl-status-pill diff">DIFF // ${diff.toUpperCase()}</span>
             <span class="sl-status-pill ${SFX.isEnabled() ? 'on' : ''}">SFX // ${SFX.isEnabled() ? 'ON' : 'OFF'}</span>
-            <span class="sl-status-pill music ${SFX.isMusicEnabled() ? 'on' : ''}">MUSIC // ${SFX.isMusicEnabled() ? 'ON' : 'OFF'}</span>
+            <span class="sl-status-pill music ${SFX.isMusicEnabled() ? 'on' : ''}">MUSIC // ${SFX.getMusicLevelLabel()}</span>
             <span class="sl-status-pill ${loadBoardViewMode() === 'flat' ? 'on' : ''}">BOARD // ${loadBoardViewMode() === 'flat' ? 'FLAT' : 'TABLE'}</span>
           </div>
 
@@ -133,7 +133,7 @@ export class MenuScene extends Phaser.Scene {
           </div>
           <div class="sl-row">
             <button type="button" class="sl-btn ghost" data-act="sfx">Toggle SFX</button>
-            <button type="button" class="sl-btn ghost" data-act="music">Toggle Music</button>
+            <button type="button" class="sl-btn ghost" data-act="music">Music: ${SFX.getMusicLevelLabel()} (cycle)</button>
           </div>
           <div class="sl-row">
             <button type="button" class="sl-btn ghost" data-act="board-view" style="width:100%">
@@ -236,9 +236,7 @@ export class MenuScene extends Phaser.Scene {
     }
     if (act === 'music') {
       void SFX.unlock().then(() => {
-        const next = !SFX.isMusicEnabled();
-        SFX.setMusicEnabled(next);
-        if (next) SFX.startMusic();
+        SFX.cycleMusicLevel();
         SFX.play('ui');
         this.render();
       });
@@ -263,8 +261,8 @@ export class MenuScene extends Phaser.Scene {
 
   private async launchHybrid(continueSave: boolean): Promise<void> {
     await SFX.unlock();
-    if (!SFX.isMusicEnabled()) SFX.setMusicEnabled(true);
-    SFX.startMusic();
+    // Keep player music level; only ensure something plays if they left it on
+    if (SFX.isMusicEnabled()) SFX.startMusic();
     SFX.play('endTurn');
 
     if (this.root) {
