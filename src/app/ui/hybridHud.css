@@ -54,20 +54,25 @@
   position: relative;
 }
 
-/* ── Board glossary (top-left over the map) ── */
+/* ── Board glossary (top banner under stats — free the map corners) ── */
 #sl-legend {
   position: absolute;
   left: 12px;
-  top: 108px;
+  /* Leave the right crew panel clear on desktop */
+  right: calc(min(312px, 34vw) + 24px);
+  top: 100px;
   z-index: 7;
-  width: min(280px, calc(100vw - 24px));
-  /* Size to content — no internal scroll */
+  width: auto;
+  max-width: none;
   max-height: none;
   overflow: visible;
   display: flex;
   flex-direction: column;
   border-color: rgba(252, 238, 10, 0.35);
   box-shadow: var(--shadow), 0 0 20px rgba(252, 238, 10, 0.12);
+  /* Banner feel: wide strip, not a tall card */
+  clip-path: none;
+  border-radius: 2px;
 }
 
 #sl-legend .legend-toggle {
@@ -76,15 +81,16 @@
   gap: 8px;
   width: 100%;
   margin: 0;
-  padding: 8px 10px 8px 12px;
+  padding: 6px 12px 6px 14px;
   border: none;
-  background: linear-gradient(90deg, rgba(252, 238, 10, 0.12), rgba(43, 240, 255, 0.05));
+  background: linear-gradient(90deg, rgba(252, 238, 10, 0.14), rgba(43, 240, 255, 0.06) 40%, rgba(252, 238, 10, 0.08));
   color: var(--text);
   cursor: pointer;
   font-family: var(--font-ui);
   text-align: left;
   pointer-events: auto;
   touch-action: manipulation;
+  min-height: 34px;
 }
 
 #sl-legend .legend-toggle:hover,
@@ -116,32 +122,39 @@
 }
 
 #sl-legend .legend-body {
-  padding: 4px 10px 10px 12px;
-  overflow: visible;
+  padding: 8px 12px 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
   border-top: 1px solid rgba(43, 240, 255, 0.15);
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
+  /* Multi-column banner grid — short height, wide spread */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 14px;
+  max-height: min(36vh, 240px);
+  background: linear-gradient(180deg, rgba(12, 8, 22, 0.92), rgba(8, 6, 16, 0.96));
 }
 
 #sl-legend .legend-lead {
-  margin: 4px 0 0;
+  margin: 0;
+  padding: 4px 0 0;
   font-family: var(--font-display);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.16em;
   color: var(--gold);
+  grid-column: 1 / -1;
 }
 
 #sl-legend .legend-lead:first-child {
-  margin-top: 0;
+  padding-top: 0;
 }
 
 #sl-legend .legend-row {
   display: grid;
-  grid-template-columns: 52px 1fr;
-  gap: 6px 8px;
+  grid-template-columns: 40px 1fr;
+  gap: 4px 8px;
   align-items: center;
+  min-width: 0;
 }
 
 #sl-legend .legend-k {
@@ -2421,21 +2434,21 @@ button.crew-filter:disabled {
     padding-bottom: 8px;
   }
 
-  /* KEY under top stack — lower on short iOS viewports */
+  /* KEY as full-width banner under the top stack (not a corner card) */
   #sl-legend {
-    left: 6px;
-    right: auto;
-    top: max(118px, calc(104px + env(safe-area-inset-top, 0px)));
+    left: 4px;
+    right: 4px;
+    top: max(108px, calc(94px + env(safe-area-inset-top, 0px)));
     bottom: auto;
     width: auto;
-    max-width: min(260px, calc(100vw - 56px));
+    max-width: none;
     max-height: none;
     z-index: 12;
   }
 
   @media (max-height: 700px) {
     #sl-legend {
-      top: max(102px, calc(90px + env(safe-area-inset-top, 0px)));
+      top: max(92px, calc(80px + env(safe-area-inset-top, 0px)));
     }
     #sl-brand {
       display: none; /* reclaim vertical space: stats stay, brand hides */
@@ -2443,11 +2456,11 @@ button.crew-filter:disabled {
   }
 
   #sl-legend.is-open {
-    width: min(280px, calc(100vw - 16px));
+    width: auto;
   }
 
   #sl-legend .legend-toggle {
-    padding: 8px 10px;
+    padding: 8px 12px;
     min-height: 40px;
   }
 
@@ -2456,17 +2469,19 @@ button.crew-filter:disabled {
   }
 
   #sl-legend .legend-body.legend-compact {
-    gap: 5px;
-    padding: 6px 10px 10px;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 10px;
+    padding: 8px 10px 10px;
+    max-height: min(32vh, 200px);
   }
 
   #sl-legend .legend-body.legend-compact .legend-row {
-    grid-template-columns: 40px 1fr;
-    gap: 6px;
+    grid-template-columns: 36px 1fr;
+    gap: 4px 6px;
   }
 
   #sl-legend .legend-body.legend-compact .legend-v {
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.3;
   }
 

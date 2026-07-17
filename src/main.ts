@@ -11,7 +11,7 @@ import { GameScene } from './app/scenes/GameScene';
 const parent = document.getElementById('app') ?? undefined;
 
 // Cache-bust: touch a runtime string so Vite emits a new asset hash after CDN mishaps.
-const BUILD_ID = '2026-07-15-item-stats-plain-v24';
+const BUILD_ID = '2026-07-16-legend-banner-v25';
 if (typeof window !== 'undefined') {
   (window as unknown as { __SECTOR_LORDS_BUILD__?: string }).__SECTOR_LORDS_BUILD__ =
     BUILD_ID;

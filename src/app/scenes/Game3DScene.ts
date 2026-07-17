@@ -1779,8 +1779,8 @@ export class Game3DScene extends Phaser.Scene {
       <aside id="sl-legend" class="pe${open ? ' is-open' : ''}${mobile ? ' is-mobile' : ''}" aria-label="Board key">
         <button type="button" class="legend-toggle" data-act="legend-toggle" aria-expanded="${open ? 'true' : 'false'}" title="Toggle board key">
           <span class="legend-tag">KEY</span>
-          <span class="legend-title">${open ? (mobile ? 'Close' : 'Hide glossary') : mobile ? 'Board key' : 'What do stats mean?'}</span>
-          <span class="legend-chev" aria-hidden="true">${open ? '▾' : '▸'}</span>
+          <span class="legend-title">${open ? (mobile ? 'Close' : 'Hide glossary') : mobile ? 'Board key' : 'What do board markers mean?'}</span>
+          <span class="legend-chev" aria-hidden="true">${open ? '▴' : '▾'}</span>
         </button>
         ${body}
       </aside>`;
